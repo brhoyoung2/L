@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>웹툰 프롬프트 아카이브</title>
+  
+  <!-- Tailwind CSS (스타일링) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome (아이콘) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel (브라우저에서 JSX 컴파일) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 overflow-hidden">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useRef, useEffect } = React;
+
+    // --- 카테고리 구조 ---
+    const CATEGORIES = {
+      '캐릭터 등장 및 소개 컷': ['서서 등장', '앉아서 등장', '누워서 등장', '달려서/이동하며 등장', '기대어 등장', '돌아서서 등장', '쪼그려 앉아 등장', '점프/뛰어 등장', '기어다니며 등장', '숨겨진 등장'],
+      '대화 및 상호작용 컷': ['서서 대화', '앉아서 대화', '누워서 대화', '걸으며 대화', '기대어 대화', '돌아서 대화', '쪼그려 대화', '안아서 대화', '손잡고 대화', '멀리서 대화'],
+      '관계 빌드업 컷': ['서서 다가옴', '앉아서 유혹', '누워서 초대', '달려 안김', '기대어 밀착', '돌아서 유혹', '쪼그려 터치', '점프 안기', '기어 다가옴', '숨겨진 터치'],
+      '관계 절정 컷': ['서서 접촉', '앉아서 친밀', '누워서 절정', '이동하며', '기대어', '돌아서', '쪼그려', '점프/동적', '기어', '숨겨진/변형'],
+      '관계 후속 및 결말 컷': ['서서 여운', '앉아서 반성', '누워서 휴식', '일어나 이동', '기대어 대화', '돌아서 이별', '쪼그려 위로', '점프 기쁨', '기어 장난', '숨겨진 마무리']
+    };
+
+    // --- 초기 기본 데이터 ---
+    const INITIAL_DATA = [
+      { id: '1', main: '캐릭터 등장 및 소개 컷', sub: '서서 등장', image: '', pose: '뒤 돌아보며 웃는 표정', prompt: '1girl, looking back, over shoulder, turning around, back turned, smile, playful smile, teasing smile, smirk, eye contact, half-lidded eyes, upper body twist, leaning slightly forward, seductive pose, relaxed posture', remarks: '매혹적인 느낌' },
+      { id: '2', main: '캐릭터 등장 및 소개 컷', sub: '서서 등장', image: '', pose: '뒷짐지고 앞으로 기울이며 웃는 표정', prompt: '1girl, looking at viewer, leaning forward, upper body leaning forward, bending at waist, torso tilt, hands behind back, arms behind back, clasped hands behind back, smile, playful smile, teasing smile, open mouth smile, eye contact, teasing pose, playful pose, slightly hunched forward', remarks: '장난스러운 느낌' },
+      { id: '3', main: '캐릭터 등장 및 소개 컷', sub: '서서 등장', image: '', pose: '휴대폰을 내려보며 화난 표정', prompt: '1girl, solo, holding smartphone, looking at phone, phone in hand, one hand holding phone, from below, low angle, looking down at viewer, upper body, portrait, close-up, arm extended forward, hand in foreground, head slightly tilted, confident posture angry, furious, rage, glaring, angry expression, frown, scowl, furrowed brow, clenched teeth, gritted teeth, vein popping, intense glare', remarks: '강렬한 분노' },
+      { id: '4', main: '캐릭터 등장 및 소개 컷', sub: '서서 등장', image: '', pose: '놀라며 손으로 입가리며 부끄러워 하는 표정', prompt: '1girl, solo, upper body, bust shot, close-up, slight high angle, from above, looking up at viewer, wide eyes, shocked expression, flustered, embarrassed, blush, heavy blush, sweatdrop, hands to mouth, fingers near lips, both hands near face, raised shoulders, tense posture, looking at viewer', remarks: '수줍음, 당황' },
+      { id: '5', main: '캐릭터 등장 및 소개 컷', sub: '서서 등장', image: '', pose: '고개를 들며 웃는 표정', prompt: '1girl, smile, looking at viewer, head tilted up, own hand touching own chin, finger on chin, hand under chin, from side, side view, profile angle, blushing, happy expression, upper body, white background, simple background', remarks: '' },
+      { id: '6', main: '캐릭터 등장 및 소개 컷', sub: '서서 등장', image: '', pose: '자신감 있는 미소', prompt: 'girl, smile, smug smile, slight smile, closed mouth smile, half-closed eyes, sleepy eyes, droopy eyes, looking at viewer, facing viewer, straight on, front view, floating hair, wind, hair flowing, slight hair movement, bust shot, bust up, white background, simple background', remarks: '' }
+    ];
+
+    const GITHUB_BASE_URL = "https://raw.githubusercontent.com/brhoyoung2/L/main/webtoon";
+
+    // --- 유틸리티 함수 ---
+    const parseCSV = (text) => {
+      let result = [], row = [], inQuotes = false, value = '';
+      for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        if (inQuotes) {
+          if (char === '"') {
+            if (i + 1 < text.length && text[i + 1] === '"') { value += '"'; i++; } 
+            else { inQuotes = false; }
+          } else { value += char; }
+        } else {
+          if (char === '"') { inQuotes = true; } 
+          else if (char === ',') { row.push(value); value = ''; } 
+          else if (char === '\n' || char === '\r') {
+            row.push(value);
+            if (row.length > 1 || row[0] !== '') result.push(row);
+            row = []; value = '';
+            if (char === '\r' && text[i + 1] === '\n') i++;
+          } else { value += char; }
+        }
+      }
+      if (value || row.length > 0) { row.push(value); result.push(row); }
+      return result;
+    };
+
+    const escapeCSV = (str) => {
+      if (str === null || str === undefined) return '';
+      const stringified = String(str);
+      if (stringified.includes(',') || stringified.includes('"') || stringified.includes('\n')) {
+        return `"${stringified.replace(/"/g, '""')}"`;
+      }
+      return stringified;
+    };
+
+    const generateCSVString = (dataArray) => {
+      const headers = ['메인 카테고리', '서브 카테고리', '이미지', '포즈', '프롬프트', '비고'];
+      const rows = dataArray.map(item => [
+        escapeCSV(item.main), escapeCSV(item.sub), escapeCSV(item.image), escapeCSV(item.pose), escapeCSV(item.prompt), escapeCSV(item.remarks)
+      ]);
+      return [headers.join(','), ...rows.map(e => e.join(','))].join("\n");
+    };
+
+    const utf8ToBase64 = (str) => {
+      const utf8Bytes = new TextEncoder().encode(str);
+      return btoa(Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join(''));
+    };
+
+    // --- 컴포넌트: 카드 이미지 ---
+    const CardImage = ({ item, globalIndex, localImage }) => {
+      const paddedIndex = String(globalIndex + 1).padStart(3, '0');
+      const githubUrl = `${GITHUB_BASE_URL}/${paddedIndex}.jpeg`;
+      const initialSrc = localImage || item.image || githubUrl;
+      
+      const [imgSrc, setImgSrc] = useState(initialSrc);
+      const [hasError, setHasError] = useState(false);
+
+      useEffect(() => {
+        setImgSrc(localImage || item.image || githubUrl);
+        setHasError(false);
+      }, [localImage, item.image, githubUrl]);
+
+      return (
+        <div className="h-64 w-full bg-gray-900 border-b border-gray-700 relative flex items-center justify-center overflow-hidden shrink-0">
+          {!hasError ? (
+            <img 
+              src={imgSrc} alt={item.pose} 
+              className="w-full h-full object-cover transition-opacity duration-300" 
+              onError={() => setHasError(true)} 
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-gray-600">
+              <i className="fas fa-image text-4xl mb-2 opacity-30"></i>
+              <span className="text-xs font-medium px-4 text-center">{paddedIndex}.jpeg<br/>이미지를 찾을 수 없음</span>
+            </div>
+          )}
+          <div className="absolute top-2 left-2 bg-black/70 text-white text-sm px-2.5 py-1 rounded-md font-mono font-bold tracking-widest shadow-lg border border-gray-700/50">
+            #{paddedIndex}
+          </div>
+        </div>
+      );
+    };
+
+    // --- 메인 앱 ---
+    function App() {
+      const [data, setData] = useState(INITIAL_DATA);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [copiedId, setCopiedId] = useState(null);
+      const [syncStatus, setSyncStatus] = useState(null);
+      const [localImages, setLocalImages] = useState({});
+      
+      const [activeMain, setActiveMain] = useState('전체');
+      const [activeSub, setActiveSub] = useState('전체');
+      const [expandedCategories, setExpandedCategories] = useState({ '캐릭터 등장 및 소개 컷': true });
+
+      const [showGithubModal, setShowGithubModal] = useState(false);
+      const [isPushing, setIsPushing] = useState(false);
+      const [githubConfig, setGithubConfig] = useState({ token: '', path: 'webtoon/db.csv' });
+      
+      const csvInputRef = useRef(null);
+      const imageInputRef = useRef(null);
+
+      const toggleCategory = (category) => {
+        setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }));
+        if (activeMain !== category) {
+          setActiveMain(category);
+          setActiveSub('전체');
+        }
+      };
+
+      const filteredData = useMemo(() => {
+        return data
+          .map((item, index) => ({ ...item, globalIndex: index }))
+          .filter(item => {
+            const matchMain = activeMain === '전체' || item.main === activeMain;
+            const matchSub = activeSub === '전체' || item.sub === activeSub;
+            const searchLower = searchTerm.toLowerCase();
+            const matchSearch = (item.pose && item.pose.toLowerCase().includes(searchLower)) || 
+                                (item.prompt && item.prompt.toLowerCase().includes(searchLower)) ||
+                                (item.remarks && item.remarks.toLowerCase().includes(searchLower));
+            return matchMain && matchSub && matchSearch;
+          });
+      }, [data, activeMain, activeSub, searchTerm]);
+
+      const handleCopy = (id, text) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      };
+
+      const updateItem = (id, field, value) => {
+        setData(prevData => prevData.map(item => item.id === id ? { ...item, [field]: value } : item));
+      };
+
+      const addNewItem = () => {
+        const defaultMain = activeMain !== '전체' ? activeMain : Object.keys(CATEGORIES)[0];
+        const defaultSub = activeSub !== '전체' ? activeSub : CATEGORIES[defaultMain][0];
+        
+        const newItem = {
+          id: `new-${Date.now()}`,
+          main: defaultMain, sub: defaultSub,
+          image: '', pose: '', prompt: '', remarks: ''
+        };
+        setData([...data, newItem]);
+      };
+
+      const pushToGitHub = async () => {
+        if (!githubConfig.token) { setShowGithubModal(true); return; }
+        setIsPushing(true); setSyncStatus('syncing');
+        try {
+          const csvContent = generateCSVString(data);
+          const base64Content = utf8ToBase64("\uFEFF" + csvContent);
+          const url = `https://api.github.com/repos/brhoyoung2/L/contents/${githubConfig.path}`;
+          
+          let sha = null;
+          try {
+            const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
+            if (getRes.ok) { const fileData = await getRes.json(); sha = fileData.sha; }
+          } catch (e) { console.log("새 파일 생성"); }
+
+          const putRes = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: "웹툰 프롬프트 DB 업데이트 (카테고리 구조 반영)",
+              content: base64Content, ...(sha && { sha })
+            })
+          });
+
+          if (putRes.ok) setSyncStatus('push_success');
+          else throw new Error("Push failed");
+        } catch (error) {
+          console.error(error); setSyncStatus('error');
+        } finally {
+          setIsPushing(false); setTimeout(() => setSyncStatus(null), 4000);
+        }
+      };
+
+      const downloadCSV = () => {
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + generateCSVString(data);
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "webtoon_prompt_db.csv");
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      };
+
+      const handleCSVUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const parsedRows = parseCSV(event.target.result);
+            if (parsedRows.length < 2) throw new Error("데이터가 부족합니다.");
+
+            const firstRow = parsedRows[0];
+            const isNewFormat = firstRow[0]?.includes('카테고리');
+            const dataRows = parsedRows.slice(1);
+
+            const newData = dataRows.map((row, index) => {
+              if (isNewFormat) {
+                return {
+                  id: `up-${Date.now()}-${index}`,
+                  main: row[0] || '미분류', sub: row[1] || '미분류',
+                  image: row[2] || '', pose: row[3] || '', prompt: row[4] || '', remarks: row[5] || ''
+                };
+              } else {
+                return {
+                  id: `up-${Date.now()}-${index}`,
+                  main: '미분류', sub: '미분류',
+                  image: row[0] || '', pose: row[1] || '', prompt: row[2] || '', remarks: row[3] || ''
+                };
+              }
+            }).filter(item => item.pose.trim() !== '' || item.prompt.trim() !== '');
+
+            setData(newData); setSyncStatus('success'); setTimeout(() => setSyncStatus(null), 3000);
+          } catch (error) {
+            setSyncStatus('error'); setTimeout(() => setSyncStatus(null), 3000);
+          }
+        };
+        reader.readAsText(file); e.target.value = null;
+      };
+
+      const handleBulkImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        const newLocalImages = { ...localImages };
+        let uploadCount = 0;
+
+        files.forEach(file => {
+          const nameMatch = file.name.match(/^(\d+)\.(jpe?g|png|gif|webp)$/i);
+          if (nameMatch) {
+            const paddedNumber = nameMatch[1].padStart(3, '0');
+            newLocalImages[paddedNumber] = URL.createObjectURL(file);
+            uploadCount++;
+          }
+        });
+
+        if (uploadCount > 0) {
+          setLocalImages(newLocalImages); setSyncStatus(`img_success_${uploadCount}`);
+          setTimeout(() => setSyncStatus(null), 3000);
+        }
+        e.target.value = null;
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-900 text-gray-100 font-sans flex flex-col h-screen overflow-hidden">
+          {/* Header */}
+          <header className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex flex-col gap-4 shrink-0 z-20">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
+                  웹툰 프롬프트 DB 아카이브
+                </h1>
+                <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
+                  <i className="fas fa-exclamation-circle"></i>
+                  서버 연동: GitHub (001.jpeg 자동 매칭 & 카테고리 지원)
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={() => setShowGithubModal(true)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-600" title="서버 연동 설정">
+                  <i className="fas fa-cog"></i>
+                </button>
+                <button onClick={pushToGitHub} disabled={isPushing} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg">
+                  {isPushing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fab fa-github"></i>}
+                  <span className="hidden sm:inline">서버 동기화 (Push)</span>
+                </button>
+
+                <button onClick={downloadCSV} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-600">
+                  <i className="fas fa-download"></i>
+                  <span className="hidden sm:inline">CSV 다운로드</span>
+                </button>
+                
+                <input type="file" accept=".csv" ref={csvInputRef} onChange={handleCSVUpload} className="hidden" />
+                <button onClick={() => csvInputRef.current.click()} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg">
+                  <i className="fas fa-upload"></i>
+                  <span>CSV 연동</span>
+                </button>
+
+                <input type="file" accept="image/*" multiple ref={imageInputRef} onChange={handleBulkImageUpload} className="hidden" />
+                <button onClick={() => imageInputRef.current.click()} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg">
+                  <i className="fas fa-images"></i>
+                  <span className="hidden sm:inline">이미지 일괄 선택</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 w-full pt-2">
+              <div className="w-full md:w-1/2 relative">
+                <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input 
+                  type="text" 
+                  placeholder="포즈, 프롬프트, 비고 검색..." 
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <div className="h-6 flex items-center">
+                {syncStatus === 'success' && <span className="text-green-400 text-sm flex items-center gap-1 font-medium bg-green-400/10 px-3 py-1 rounded-full"><i className="fas fa-check"></i> CSV 로컬 연동 완료!</span>}
+                {syncStatus === 'syncing' && <span className="text-blue-400 text-sm flex items-center gap-1 font-medium bg-blue-400/10 px-3 py-1 rounded-full"><i className="fas fa-spinner fa-spin"></i> 서버에 동기화 중...</span>}
+                {syncStatus === 'push_success' && <span className="text-green-400 text-sm flex items-center gap-1 font-medium bg-green-400/10 px-3 py-1 rounded-full"><i className="fas fa-check"></i> 서버(GitHub) 동기화 성공!</span>}
+                {syncStatus?.startsWith('img_success') && <span className="text-emerald-400 text-sm flex items-center gap-1 font-medium bg-emerald-400/10 px-3 py-1 rounded-full"><i className="fas fa-check"></i> {syncStatus.split('_')[2]}개의 이미지 연동 완료!</span>}
+                {syncStatus === 'error' && <span className="text-red-400 text-sm flex items-center gap-1 font-medium bg-red-400/10 px-3 py-1 rounded-full"><i className="fas fa-exclamation-circle"></i> 오류 발생! 확인해주세요.</span>}
+              </div>
+            </div>
+          </header>
+
+          <div className="flex flex-1 overflow-hidden">
+            {/* Sidebar (Categories) */}
+            <aside className="w-64 bg-gray-800 border-r border-gray-700 overflow-y-auto hidden md:block shrink-0">
+              <div className="p-4">
+                <button 
+                  onClick={() => { setActiveMain('전체'); setActiveSub('전체'); }}
+                  className={`w-full text-left px-3 py-2 mb-4 rounded-md text-sm font-bold transition-colors ${activeMain === '전체' ? 'bg-indigo-600/20 text-indigo-400' : 'text-gray-300 hover:bg-gray-700'}`}
+                >
+                  모든 카테고리 보기
+                </button>
+                
+                <nav className="space-y-1">
+                  {Object.keys(CATEGORIES).map((mainCat) => (
+                    <div key={mainCat} className="flex flex-col">
+                      <button 
+                        onClick={() => toggleCategory(mainCat)}
+                        className={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${activeMain === mainCat ? 'text-indigo-400' : 'text-gray-300 hover:text-white'}`}
+                      >
+                        <span className="truncate pr-2">{mainCat}</span>
+                        {expandedCategories[mainCat] ? <i className="fas fa-chevron-down text-xs"></i> : <i className="fas fa-chevron-right text-xs"></i>}
+                      </button>
+                      
+                      {expandedCategories[mainCat] && (
+                        <div className="pl-4 mb-2 space-y-0.5 border-l border-gray-700 ml-3">
+                          <button
+                            onClick={() => { setActiveMain(mainCat); setActiveSub('전체'); }}
+                            className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors ${activeSub === '전체' && activeMain === mainCat ? 'bg-gray-700 text-white font-bold' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}`}
+                          >
+                            전체 보기
+                          </button>
+                          {CATEGORIES[mainCat].map(subCat => (
+                            <button
+                              key={subCat}
+                              onClick={() => { setActiveMain(mainCat); setActiveSub(subCat); }}
+                              className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors truncate ${activeSub === subCat && activeMain === mainCat ? 'bg-indigo-600/20 text-indigo-300 font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}`}
+                            >
+                              {subCat}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </nav>
+              </div>
+            </aside>
+
+            {/* Mobile Category Select */}
+            <div className="md:hidden p-4 bg-gray-800 border-b border-gray-700 flex flex-col gap-2 shrink-0">
+              <select 
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white"
+                value={activeMain} onChange={(e) => { setActiveMain(e.target.value); setActiveSub('전체'); }}
+              >
+                <option value="전체">모든 카테고리 보기</option>
+                {Object.keys(CATEGORIES).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+              {activeMain !== '전체' && (
+                <select 
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white"
+                  value={activeSub} onChange={(e) => setActiveSub(e.target.value)}
+                >
+                  <option value="전체">서브 카테고리 전체</option>
+                  {CATEGORIES[activeMain]?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                </select>
+              )}
+            </div>
+
+            {/* Main Content Grid */}
+            <main className="flex-1 overflow-y-auto p-6 bg-gray-950 relative">
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {activeMain === '전체' ? '전체 프롬프트' : activeMain} 
+                    {activeSub !== '전체' && <span className="text-gray-400 text-lg font-normal"> / {activeSub}</span>}
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">
+                    검색된 데이터: <span className="text-indigo-400 font-bold">{filteredData.length}</span> / 전체: {data.length}
+                  </p>
+                </div>
+                
+                <button onClick={addNewItem} className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                  <i className="fas fa-plus"></i> 데이터 추가
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
+                {filteredData.map((item) => (
+                  <div key={item.id} className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-indigo-500/50 transition-all flex flex-col group shadow-lg">
+                    
+                    <CardImage item={item} globalIndex={item.globalIndex} localImage={localImages[String(item.globalIndex + 1).padStart(3, '0')]} />
+                    
+                    <div className="p-4 flex-1 flex flex-col gap-3">
+                      <div className="flex gap-2">
+                        <select 
+                          value={item.main || '미분류'} onChange={(e) => updateItem(item.id, 'main', e.target.value)}
+                          className="bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded px-2 py-1 flex-1 outline-none focus:border-indigo-500"
+                        >
+                          <option value="미분류">미분류</option>
+                          {Object.keys(CATEGORIES).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        </select>
+                        <select 
+                          value={item.sub || '미분류'} onChange={(e) => updateItem(item.id, 'sub', e.target.value)}
+                          className="bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded px-2 py-1 flex-1 outline-none focus:border-indigo-500"
+                          disabled={!CATEGORIES[item.main]}
+                        >
+                          <option value="미분류">미분류</option>
+                          {CATEGORIES[item.main]?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <textarea 
+                          value={item.pose} onChange={(e) => updateItem(item.id, 'pose', e.target.value)}
+                          placeholder="포즈 설명 입력..."
+                          className="w-full text-lg font-bold text-white leading-snug bg-transparent border border-transparent hover:border-gray-600 focus:border-indigo-500 focus:bg-gray-900 rounded-md p-1 resize-none transition-colors outline-none"
+                          rows={2}
+                        />
+                        <div className="mt-1 flex items-center">
+                          <input 
+                            value={item.remarks || ''} onChange={(e) => updateItem(item.id, 'remarks', e.target.value)}
+                            placeholder="비고 (태그)..."
+                            className="text-sm text-indigo-400 font-medium bg-indigo-500/10 hover:bg-indigo-500/20 focus:bg-indigo-500/20 border border-transparent focus:border-indigo-500/50 px-2 py-0.5 rounded outline-none w-full transition-colors"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-auto relative group/prompt flex-1 flex flex-col">
+                        <div className="absolute -top-3 left-2 bg-gray-800 px-1 text-xs text-gray-400 font-semibold z-10 flex items-center gap-1">
+                          Prompt <i className="fas fa-save opacity-50"></i>
+                        </div>
+                        <textarea
+                          value={item.prompt} onChange={(e) => updateItem(item.id, 'prompt', e.target.value)}
+                          placeholder="프롬프트를 입력하세요..."
+                          className="flex-1 w-full bg-gray-950 rounded-lg p-4 pt-5 text-sm text-gray-300 font-mono border border-gray-700 hover:border-gray-500 focus:border-indigo-500 outline-none resize-y leading-relaxed transition-colors min-h-[8rem]"
+                        />
+                        
+                        <button 
+                          onClick={() => handleCopy(item.id, item.prompt)}
+                          className={`absolute right-2 top-2 p-2 rounded-md transition-all shadow-md ${copiedId === item.id ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white opacity-0 group-hover/prompt:opacity-100'}`}
+                          title="프롬프트 복사"
+                        >
+                          {copiedId === item.id ? <i className="fas fa-check"></i> : <i className="fas fa-copy"></i>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </main>
+          </div>
+
+          {/* GitHub 설정 모달 */}
+          {showGithubModal && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold flex items-center gap-2"><i className="fab fa-github"></i> 서버 동기화 설정</h2>
+                  <button onClick={() => setShowGithubModal(false)} className="text-gray-400 hover:text-white"><i className="fas fa-times"></i></button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">GitHub 토큰 (Personal Access Token)</label>
+                    <input 
+                      type="password" value={githubConfig.token} onChange={(e) => setGithubConfig({...githubConfig, token: e.target.value})}
+                      placeholder="ghp_xxxxxxxxxxxx" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">저장될 파일 경로</label>
+                    <input 
+                      type="text" value={githubConfig.path} onChange={(e) => setGithubConfig({...githubConfig, path: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-gray-300"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex gap-3">
+                  <button onClick={() => setShowGithubModal(false)} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-medium transition-colors">취소</button>
+                  <button 
+                    onClick={() => { setShowGithubModal(false); if(githubConfig.token) pushToGitHub(); }} 
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <i className="fas fa-upload"></i> 동기화 진행
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
