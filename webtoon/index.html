@@ -143,6 +143,11 @@
       const [isPushing, setIsPushing] = useState(false);
       const [githubConfig, setGithubConfig] = useState({ token: '', path: 'webtoon/db.csv' });
       
+      const [showAddModal, setShowAddModal] = useState(false);
+      const [newItemData, setNewItemData] = useState(null);
+      
+      const [itemToDelete, setItemToDelete] = useState(null); // 삭제할 아이템 ID를 저장하는 상태
+
       const csvInputRef = useRef(null);
       const imageInputRef = useRef(null);
 
@@ -178,16 +183,42 @@
         setData(prevData => prevData.map(item => item.id === id ? { ...item, [field]: value } : item));
       };
 
-      const addNewItem = () => {
+      const openAddModal = () => {
         const defaultMain = activeMain !== '전체' ? activeMain : Object.keys(CATEGORIES)[0];
         const defaultSub = activeSub !== '전체' ? activeSub : CATEGORIES[defaultMain][0];
         
-        const newItem = {
+        setNewItemData({
           id: `new-${Date.now()}`,
           main: defaultMain, sub: defaultSub,
           image: '', pose: '', prompt: '', remarks: ''
-        };
-        setData([...data, newItem]);
+        });
+        setShowAddModal(true);
+      };
+
+      const confirmAddNewItem = () => {
+        if(newItemData) {
+          setData([...data, newItemData]);
+          setShowAddModal(false);
+          setNewItemData(null);
+        }
+      };
+
+      // 삭제 버튼 클릭 시 팝업 띄우기
+      const handleDeleteClick = (id) => {
+        setItemToDelete(id);
+      };
+
+      // 팝업에서 '예' 클릭 시 삭제 처리
+      const confirmDelete = () => {
+        if (itemToDelete) {
+          setData(prevData => prevData.filter(item => item.id !== itemToDelete));
+          setItemToDelete(null);
+        }
+      };
+
+      // 팝업에서 '아니오' 클릭 시 취소
+      const cancelDelete = () => {
+        setItemToDelete(null);
       };
 
       const pushToGitHub = async () => {
@@ -208,7 +239,7 @@
             method: 'PUT',
             headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              message: "웹툰 프롬프트 DB 업데이트 (카테고리 구조 반영)",
+              message: "웹툰 프롬프트 DB 업데이트",
               content: base64Content, ...(sha && { sha })
             })
           });
@@ -434,17 +465,26 @@
                   </p>
                 </div>
                 
-                <button onClick={addNewItem} className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                <button onClick={openAddModal} className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg">
                   <i className="fas fa-plus"></i> 데이터 추가
                 </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
                 {filteredData.map((item) => (
-                  <div key={item.id} className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-indigo-500/50 transition-all flex flex-col group shadow-lg">
+                  <div key={item.id} className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-indigo-500/50 transition-all flex flex-col group shadow-lg relative">
                     
                     <CardImage item={item} globalIndex={item.globalIndex} localImage={localImages[String(item.globalIndex + 1).padStart(3, '0')]} />
                     
+                    {/* 우측 상단 휴지통 삭제 버튼 (마우스를 올렸을 때만 표시됨) */}
+                    <button 
+                      onClick={() => handleDeleteClick(item.id)}
+                      className="absolute top-2 right-2 bg-black/60 hover:bg-red-600 text-white w-8 h-8 rounded-md flex items-center justify-center transition-colors shadow-lg border border-gray-700/50 z-10 opacity-0 group-hover:opacity-100"
+                      title="삭제"
+                    >
+                      <i className="fas fa-trash-alt"></i>
+                    </button>
+
                     <div className="p-4 flex-1 flex flex-col gap-3">
                       <div className="flex gap-2">
                         <select 
@@ -543,6 +583,107 @@
               </div>
             </div>
           )}
+
+          {/* 새 데이터 추가 모달 (단일 카드 팝업) */}
+          {showAddModal && newItemData && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-2xl flex flex-col max-w-md w-full">
+                
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center bg-gray-900">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <i className="fas fa-plus-circle text-indigo-400"></i> 새 프롬프트 카드 추가
+                  </h3>
+                  <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                    <i className="fas fa-times text-xl"></i>
+                  </button>
+                </div>
+                
+                {/* Form Body (Card Style) */}
+                <div className="p-6 flex flex-col gap-5">
+                  <div className="flex gap-3">
+                    <select 
+                      value={newItemData.main} 
+                      onChange={(e) => setNewItemData({...newItemData, main: e.target.value, sub: CATEGORIES[e.target.value][0]})}
+                      className="bg-gray-900 border border-gray-600 text-gray-300 text-sm rounded-lg px-3 py-2 flex-1 outline-none focus:border-indigo-500 transition-colors"
+                    >
+                      {Object.keys(CATEGORIES).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                    <select 
+                      value={newItemData.sub} 
+                      onChange={(e) => setNewItemData({...newItemData, sub: e.target.value})}
+                      className="bg-gray-900 border border-gray-600 text-gray-300 text-sm rounded-lg px-3 py-2 flex-1 outline-none focus:border-indigo-500 transition-colors"
+                    >
+                      {CATEGORIES[newItemData.main]?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <textarea 
+                      value={newItemData.pose} 
+                      onChange={(e) => setNewItemData({...newItemData, pose: e.target.value})}
+                      placeholder="포즈 설명 입력 (예: 뒤 돌아보며 웃는 표정)"
+                      className="w-full text-base font-bold text-white bg-gray-900 border border-gray-600 focus:border-indigo-500 rounded-lg p-3 resize-none outline-none transition-colors"
+                      rows={2}
+                    />
+                    <input 
+                      value={newItemData.remarks} 
+                      onChange={(e) => setNewItemData({...newItemData, remarks: e.target.value})}
+                      placeholder="비고 태그 (예: 매혹적인 느낌)"
+                      className="mt-3 w-full text-sm text-indigo-400 font-medium bg-gray-900 border border-gray-600 focus:border-indigo-500 px-3 py-2 rounded-lg outline-none transition-colors"
+                    />
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col relative mt-2">
+                    <div className="absolute -top-2.5 left-3 bg-gray-800 px-1 text-xs text-gray-400 font-semibold z-10">
+                      영문 프롬프트 (Prompt)
+                    </div>
+                    <textarea
+                      value={newItemData.prompt} 
+                      onChange={(e) => setNewItemData({...newItemData, prompt: e.target.value})}
+                      placeholder="1girl, looking back, smile..."
+                      className="w-full bg-gray-950 rounded-lg p-4 pt-5 text-sm text-gray-300 font-mono border border-gray-600 focus:border-indigo-500 outline-none resize-y min-h-[8rem] transition-colors"
+                    />
+                  </div>
+
+                  <button 
+                    onClick={confirmAddNewItem}
+                    className="mt-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/50"
+                  >
+                    <i className="fas fa-check"></i> 카드 추가 완료
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 삭제 확인 모달 (팝업창) */}
+          {itemToDelete && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl flex flex-col max-w-sm w-full p-6 text-center">
+                <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">삭제 하시겠습니까?</h3>
+                <p className="text-sm text-gray-400 mb-6">삭제 후에는 복구할 수 없습니다.</p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={cancelDelete}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-lg font-medium transition-colors"
+                  >
+                    아니오
+                  </button>
+                  <button 
+                    onClick={confirmDelete}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium transition-colors"
+                  >
+                    예
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       );
     }
