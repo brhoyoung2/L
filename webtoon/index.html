@@ -92,14 +92,26 @@
       return btoa(Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join(''));
     };
 
-    // --- 컴포넌트: 카드 이미지 ---
-    const CardImage = ({ item, globalIndex, localImage }) => {
+    // 파일 객체를 Base64 문자열로 변환
+    const readFileAsBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    };
+
+    // --- 컴포넌트: 카드 이미지 (개별 업로드 기능 추가) ---
+    const CardImage = ({ item, globalIndex, localImage, isPending, onUpload }) => {
       const paddedIndex = String(globalIndex + 1).padStart(3, '0');
-      const githubUrl = `${GITHUB_BASE_URL}/${paddedIndex}.jpeg`;
+      // 깃허브 이미지 경로를 /image/ 폴더 내부로 설정
+      const githubUrl = `${GITHUB_BASE_URL}/image/${paddedIndex}.jpeg`;
       const initialSrc = localImage || item.image || githubUrl;
       
       const [imgSrc, setImgSrc] = useState(initialSrc);
       const [hasError, setHasError] = useState(false);
+      const fileInputRef = useRef(null);
 
       useEffect(() => {
         setImgSrc(localImage || item.image || githubUrl);
@@ -107,7 +119,7 @@
       }, [localImage, item.image, githubUrl]);
 
       return (
-        <div className="h-64 w-full bg-gray-900 border-b border-gray-700 relative flex items-center justify-center overflow-hidden shrink-0">
+        <div className="h-64 w-full bg-gray-900 border-b border-gray-700 relative flex items-center justify-center overflow-hidden shrink-0 group/img">
           {!hasError ? (
             <img 
               src={imgSrc} alt={item.pose} 
@@ -115,14 +127,37 @@
               onError={() => setHasError(true)} 
             />
           ) : (
-            <div className="flex flex-col items-center justify-center text-gray-600">
+            <div className="flex flex-col items-center justify-center text-gray-600 z-0">
               <i className="fas fa-image text-4xl mb-2 opacity-30"></i>
-              <span className="text-xs font-medium px-4 text-center">{paddedIndex}.jpeg<br/>이미지를 찾을 수 없음</span>
+              <span className="text-xs font-medium px-4 text-center text-gray-500">{paddedIndex}.jpeg<br/>이미지를 찾을 수 없음</span>
             </div>
           )}
-          <div className="absolute top-2 left-2 bg-black/70 text-white text-sm px-2.5 py-1 rounded-md font-mono font-bold tracking-widest shadow-lg border border-gray-700/50">
+          
+          <div className="absolute top-2 left-2 bg-black/70 text-white text-sm px-2.5 py-1 rounded-md font-mono font-bold tracking-widest shadow-lg border border-gray-700/50 z-10 pointer-events-none">
             #{paddedIndex}
           </div>
+
+          {/* 마우스 오버 시 이미지 업로드 레이어 */}
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-all duration-200 z-20 backdrop-blur-sm">
+            <button 
+              onClick={() => fileInputRef.current.click()} 
+              className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-2xl transform hover:scale-110 transition-all border-2 border-indigo-400/50"
+              title="이미지 업로드"
+            >
+              <i className="fas fa-camera text-2xl"></i>
+            </button>
+          </div>
+          <input 
+            type="file" accept="image/*" className="hidden" ref={fileInputRef} 
+            onChange={(e) => { if(e.target.files[0]) onUpload(e.target.files[0]); e.target.value = null; }} 
+          />
+
+          {/* 동기화 대기중 뱃지 */}
+          {isPending && (
+            <div className="absolute bottom-2 right-2 bg-yellow-500 text-black text-xs px-2.5 py-1 rounded font-bold shadow-lg z-10 flex items-center gap-1 pointer-events-none">
+              <i className="fas fa-cloud-upload-alt"></i> 서버 동기화 대기
+            </div>
+          )}
         </div>
       );
     };
@@ -133,7 +168,9 @@
       const [searchTerm, setSearchTerm] = useState('');
       const [copiedId, setCopiedId] = useState(null);
       const [syncStatus, setSyncStatus] = useState(null);
-      const [localImages, setLocalImages] = useState({});
+      
+      const [localImages, setLocalImages] = useState({}); // 바로 보여주기 위한 로컬 URL
+      const [pendingImages, setPendingImages] = useState({}); // 서버에 올리기 대기 중인 Base64 데이터
       
       const [activeMain, setActiveMain] = useState('전체');
       const [activeSub, setActiveSub] = useState('전체');
@@ -146,7 +183,7 @@
       const [showAddModal, setShowAddModal] = useState(false);
       const [newItemData, setNewItemData] = useState(null);
       
-      const [itemToDelete, setItemToDelete] = useState(null); // 삭제할 아이템 ID를 저장하는 상태
+      const [itemToDelete, setItemToDelete] = useState(null); // 삭제할 아이템 ID
 
       const csvInputRef = useRef(null);
       const imageInputRef = useRef(null);
@@ -203,49 +240,110 @@
         }
       };
 
-      // 삭제 버튼 클릭 시 팝업 띄우기
-      const handleDeleteClick = (id) => {
-        setItemToDelete(id);
-      };
-
-      // 팝업에서 '예' 클릭 시 삭제 처리
+      const handleDeleteClick = (id) => setItemToDelete(id);
+      
       const confirmDelete = () => {
         if (itemToDelete) {
           setData(prevData => prevData.filter(item => item.id !== itemToDelete));
           setItemToDelete(null);
         }
       };
+      
+      const cancelDelete = () => setItemToDelete(null);
 
-      // 팝업에서 '아니오' 클릭 시 취소
-      const cancelDelete = () => {
-        setItemToDelete(null);
+      // 개별 카드 이미지 업로드 핸들러
+      const handleSingleImageUpload = async (globalIndex, file) => {
+        const paddedNumber = String(globalIndex + 1).padStart(3, '0');
+        const localUrl = URL.createObjectURL(file);
+        const base64 = await readFileAsBase64(file);
+
+        setLocalImages(prev => ({ ...prev, [paddedNumber]: localUrl }));
+        setPendingImages(prev => ({ ...prev, [paddedNumber]: base64 }));
       };
 
+      // 다중 일괄 이미지 업로드 핸들러
+      const handleBulkImageUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        const newLocalImages = { ...localImages };
+        const newPendingImages = { ...pendingImages };
+        let uploadCount = 0;
+
+        for (const file of files) {
+          const nameMatch = file.name.match(/^(\d+)\.(jpe?g|png|gif|webp)$/i);
+          if (nameMatch) {
+            const paddedNumber = nameMatch[1].padStart(3, '0');
+            newLocalImages[paddedNumber] = URL.createObjectURL(file);
+            const base64 = await readFileAsBase64(file);
+            newPendingImages[paddedNumber] = base64;
+            uploadCount++;
+          }
+        }
+
+        if (uploadCount > 0) {
+          setLocalImages(newLocalImages);
+          setPendingImages(newPendingImages);
+          setSyncStatus(`img_success_${uploadCount}`);
+          setTimeout(() => setSyncStatus(null), 3000);
+        }
+        e.target.value = null;
+      };
+
+      // 서버로 Push (CSV 파일 + 이미지 파일들)
       const pushToGitHub = async () => {
         if (!githubConfig.token) { setShowGithubModal(true); return; }
         setIsPushing(true); setSyncStatus('syncing');
         try {
-          const csvContent = generateCSVString(data);
-          const base64Content = utf8ToBase64("\uFEFF" + csvContent);
-          const url = `https://api.github.com/repos/brhoyoung2/L/contents/${githubConfig.path}`;
-          
-          let sha = null;
-          try {
-            const getRes = await fetch(url, { headers: { 'Authorization': `token ${githubConfig.token}` } });
-            if (getRes.ok) { const fileData = await getRes.json(); sha = fileData.sha; }
-          } catch (e) { console.log("새 파일 생성"); }
+          const headers = {
+            'Authorization': `token ${githubConfig.token}`,
+            'Content-Type': 'application/json'
+          };
 
-          const putRes = await fetch(url, {
+          // 1. CSV 데이터베이스 파일 Push
+          const csvContent = generateCSVString(data);
+          const base64Csv = utf8ToBase64("\uFEFF" + csvContent);
+          const csvUrl = `https://api.github.com/repos/brhoyoung2/L/contents/${githubConfig.path}`;
+          
+          let csvSha = null;
+          try {
+            const getRes = await fetch(csvUrl, { headers });
+            if (getRes.ok) { const fileData = await getRes.json(); csvSha = fileData.sha; }
+          } catch (e) {}
+
+          await fetch(csvUrl, {
             method: 'PUT',
-            headers: { 'Authorization': `token ${githubConfig.token}`, 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
               message: "웹툰 프롬프트 DB 업데이트",
-              content: base64Content, ...(sha && { sha })
+              content: base64Csv, ...(csvSha && { sha: csvSha })
             })
           });
 
-          if (putRes.ok) setSyncStatus('push_success');
-          else throw new Error("Push failed");
+          // 2. 업로드된 이미지 파일들 Push (/image/ 폴더)
+          const pendingKeys = Object.keys(pendingImages);
+          for (const paddedIndex of pendingKeys) {
+            const base64Img = pendingImages[paddedIndex];
+            const imgPath = `webtoon/image/${paddedIndex}.jpeg`; // 확장자를 .jpeg로 통일
+            const imgUrl = `https://api.github.com/repos/brhoyoung2/L/contents/${imgPath}`;
+
+            let imgSha = null;
+            try {
+              const getRes = await fetch(imgUrl, { headers });
+              if (getRes.ok) { const fileData = await getRes.json(); imgSha = fileData.sha; }
+            } catch (e) {}
+
+            await fetch(imgUrl, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                message: `웹툰 레퍼런스 이미지 ${paddedIndex}.jpeg 자동 업로드`,
+                content: base64Img,
+                ...(imgSha && { sha: imgSha })
+              })
+            });
+          }
+
+          setPendingImages({}); // 푸시 성공 후 대기열 비우기
+          setSyncStatus('push_success');
         } catch (error) {
           console.error(error); setSyncStatus('error');
         } finally {
@@ -300,27 +398,6 @@
         reader.readAsText(file); e.target.value = null;
       };
 
-      const handleBulkImageUpload = (e) => {
-        const files = Array.from(e.target.files);
-        const newLocalImages = { ...localImages };
-        let uploadCount = 0;
-
-        files.forEach(file => {
-          const nameMatch = file.name.match(/^(\d+)\.(jpe?g|png|gif|webp)$/i);
-          if (nameMatch) {
-            const paddedNumber = nameMatch[1].padStart(3, '0');
-            newLocalImages[paddedNumber] = URL.createObjectURL(file);
-            uploadCount++;
-          }
-        });
-
-        if (uploadCount > 0) {
-          setLocalImages(newLocalImages); setSyncStatus(`img_success_${uploadCount}`);
-          setTimeout(() => setSyncStatus(null), 3000);
-        }
-        e.target.value = null;
-      };
-
       return (
         <div className="min-h-screen bg-gray-900 text-gray-100 font-sans flex flex-col h-screen overflow-hidden">
           {/* Header */}
@@ -332,7 +409,7 @@
                 </h1>
                 <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
                   <i className="fas fa-exclamation-circle"></i>
-                  서버 연동: GitHub (001.jpeg 자동 매칭 & 카테고리 지원)
+                  GitHub 폴더 연동 (경로: webtoon/image/001.jpeg)
                 </p>
               </div>
               
@@ -340,9 +417,16 @@
                 <button onClick={() => setShowGithubModal(true)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-600" title="서버 연동 설정">
                   <i className="fas fa-cog"></i>
                 </button>
-                <button onClick={pushToGitHub} disabled={isPushing} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg">
+                <button onClick={pushToGitHub} disabled={isPushing} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg relative">
                   {isPushing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fab fa-github"></i>}
                   <span className="hidden sm:inline">서버 동기화 (Push)</span>
+                  {/* 동기화 대기 항목 개수 표시 알림 */}
+                  {Object.keys(pendingImages).length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                  )}
                 </button>
 
                 <button onClick={downloadCSV} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-600">
@@ -377,8 +461,8 @@
               
               <div className="h-6 flex items-center">
                 {syncStatus === 'success' && <span className="text-green-400 text-sm flex items-center gap-1 font-medium bg-green-400/10 px-3 py-1 rounded-full"><i className="fas fa-check"></i> CSV 로컬 연동 완료!</span>}
-                {syncStatus === 'syncing' && <span className="text-blue-400 text-sm flex items-center gap-1 font-medium bg-blue-400/10 px-3 py-1 rounded-full"><i className="fas fa-spinner fa-spin"></i> 서버에 동기화 중...</span>}
-                {syncStatus === 'push_success' && <span className="text-green-400 text-sm flex items-center gap-1 font-medium bg-green-400/10 px-3 py-1 rounded-full"><i className="fas fa-check"></i> 서버(GitHub) 동기화 성공!</span>}
+                {syncStatus === 'syncing' && <span className="text-blue-400 text-sm flex items-center gap-1 font-medium bg-blue-400/10 px-3 py-1 rounded-full"><i className="fas fa-spinner fa-spin"></i> CSV 및 이미지 서버에 동기화 중...</span>}
+                {syncStatus === 'push_success' && <span className="text-green-400 text-sm flex items-center gap-1 font-medium bg-green-400/10 px-3 py-1 rounded-full"><i className="fas fa-check"></i> 서버(GitHub) 동기화 완료!</span>}
                 {syncStatus?.startsWith('img_success') && <span className="text-emerald-400 text-sm flex items-center gap-1 font-medium bg-emerald-400/10 px-3 py-1 rounded-full"><i className="fas fa-check"></i> {syncStatus.split('_')[2]}개의 이미지 연동 완료!</span>}
                 {syncStatus === 'error' && <span className="text-red-400 text-sm flex items-center gap-1 font-medium bg-red-400/10 px-3 py-1 rounded-full"><i className="fas fa-exclamation-circle"></i> 오류 발생! 확인해주세요.</span>}
               </div>
@@ -474,12 +558,19 @@
                 {filteredData.map((item) => (
                   <div key={item.id} className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-indigo-500/50 transition-all flex flex-col group shadow-lg relative">
                     
-                    <CardImage item={item} globalIndex={item.globalIndex} localImage={localImages[String(item.globalIndex + 1).padStart(3, '0')]} />
+                    {/* 카드 썸네일 영역 (개별 업로드 기능 연동) */}
+                    <CardImage 
+                      item={item} 
+                      globalIndex={item.globalIndex} 
+                      localImage={localImages[String(item.globalIndex + 1).padStart(3, '0')]} 
+                      isPending={!!pendingImages[String(item.globalIndex + 1).padStart(3, '0')]}
+                      onUpload={(file) => handleSingleImageUpload(item.globalIndex, file)}
+                    />
                     
-                    {/* 우측 상단 휴지통 삭제 버튼 (마우스를 올렸을 때만 표시됨) */}
+                    {/* 우측 상단 휴지통 삭제 버튼 */}
                     <button 
                       onClick={() => handleDeleteClick(item.id)}
-                      className="absolute top-2 right-2 bg-black/60 hover:bg-red-600 text-white w-8 h-8 rounded-md flex items-center justify-center transition-colors shadow-lg border border-gray-700/50 z-10 opacity-0 group-hover:opacity-100"
+                      className="absolute top-2 right-2 bg-black/60 hover:bg-red-600 text-white w-8 h-8 rounded-md flex items-center justify-center transition-colors shadow-lg border border-gray-700/50 z-30 opacity-0 group-hover:opacity-100"
                       title="삭제"
                     >
                       <i className="fas fa-trash-alt"></i>
@@ -584,12 +675,11 @@
             </div>
           )}
 
-          {/* 새 데이터 추가 모달 (단일 카드 팝업) */}
+          {/* 새 데이터 추가 모달 */}
           {showAddModal && newItemData && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
               <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-2xl flex flex-col max-w-md w-full">
                 
-                {/* Header */}
                 <div className="px-5 py-4 border-b border-gray-700 flex justify-between items-center bg-gray-900">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <i className="fas fa-plus-circle text-indigo-400"></i> 새 프롬프트 카드 추가
@@ -599,7 +689,6 @@
                   </button>
                 </div>
                 
-                {/* Form Body (Card Style) */}
                 <div className="p-6 flex flex-col gap-5">
                   <div className="flex gap-3">
                     <select 
@@ -657,7 +746,7 @@
             </div>
           )}
 
-          {/* 삭제 확인 모달 (팝업창) */}
+          {/* 삭제 확인 모달 */}
           {itemToDelete && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
               <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl flex flex-col max-w-sm w-full p-6 text-center">
@@ -667,23 +756,12 @@
                 <h3 className="text-xl font-bold text-white mb-2">삭제 하시겠습니까?</h3>
                 <p className="text-sm text-gray-400 mb-6">삭제 후에는 복구할 수 없습니다.</p>
                 <div className="flex gap-3">
-                  <button 
-                    onClick={cancelDelete}
-                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-lg font-medium transition-colors"
-                  >
-                    아니오
-                  </button>
-                  <button 
-                    onClick={confirmDelete}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium transition-colors"
-                  >
-                    예
-                  </button>
+                  <button onClick={cancelDelete} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-lg font-medium transition-colors">아니오</button>
+                  <button onClick={confirmDelete} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium transition-colors">예</button>
                 </div>
               </div>
             </div>
           )}
-
         </div>
       );
     }
