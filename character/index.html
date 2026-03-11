@@ -1646,15 +1646,34 @@ function clearToastLog() {
 async function doCommit() {
   if (!ghToken) { openSettings(); return; }
 
-  // file:// 환경 감지 → GitHub API CORS 차단됨
+  // file:// 환경 → 팝업으로 안내하고 즉시 종료 (오류 메시지 없음)
   if (location.protocol === 'file:') {
-    clearToastLog();
-    showToast();
-    document.getElementById('sync-toast-title-text').textContent = '⚠ 로컬 파일에서 불가';
-    document.getElementById('sync-toast-icon').textContent = '⚠';
-    toastLog('cors', '❌ file:// 환경에서는 GitHub API가 차단됩니다', 'error');
-    toastLog('fix', '💡 아래 GitHub Pages URL에서 열어주세요:', 'pending');
-    toastLog('url', `🌐 https://${GH.owner}.github.io/${GH.repo}/character/`, 'pending');
+    showPopup('🔒 로컬 파일에서는 배포 불가', `
+      <div class="popup-icon">🖥️</div>
+      <div class="popup-title">GitHub Pages URL에서 열어주세요</div>
+      <div class="popup-body">
+        <div class="popup-warn">
+          현재 <b>file://</b> 로컬 파일로 열려 있어서<br>
+          브라우저 보안 정책(CORS)으로 GitHub API가 <b>완전히 차단</b>됩니다.<br>
+          이미지 업로드와 커밋은 아래 URL에서만 작동합니다.
+        </div>
+        <div class="popup-step"><div class="popup-step-num">1</div>
+          <div>이 <code>index.html</code>을 GitHub <code>character/</code> 폴더에 업로드</div>
+        </div>
+        <div class="popup-step"><div class="popup-step-num">2</div>
+          <div>아래 링크로 접속해서 사용</div>
+        </div>
+        <div style="margin-top:10px;padding:10px 14px;background:#0a0a18;border-radius:8px;border:1px solid #2a2a40;font-size:12px;font-family:'DM Mono',monospace;color:#88aaff;word-break:break-all">
+          https://${GH.owner}.github.io/${GH.repo}/character/
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#4a4a6a">
+          💡 이미지는 로컬에서 미리보기만 가능하고, 배포 후 웹에서 보입니다.
+        </div>
+      </div>`, [
+      {label:'✕ 닫기', cls:'secondary'},
+      {label:'🌐 GitHub Pages 열기', cls:'primary-blue',
+        href:`https://${GH.owner}.github.io/${GH.repo}/character/`},
+    ]);
     return;
   }
 
@@ -2164,14 +2183,20 @@ document.getElementById('settings-save').addEventListener('click', saveSettings)
 document.getElementById('test-conn-btn').addEventListener('click', testConn);
 document.getElementById('settings-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeSettings(); });
 
-/* ── file:// 환경 감지 → 상단 바 경고 ── */
+/* ── file:// 환경 감지 → 커밋 버튼 비활성 표시 + 경고 배너 ── */
 if (location.protocol === 'file:') {
+  // 경고 배너
   const hint = document.createElement('a');
   hint.href = `https://${GH.owner}.github.io/${GH.repo}/character/`;
   hint.target = '_blank';
   hint.style.cssText = 'font-size:11px;color:#ddaa44;text-decoration:none;background:#1a1200;border:1px solid #5a4000;border-radius:7px;padding:5px 11px;white-space:nowrap';
-  hint.textContent = '⚠ 로컬파일 — GitHub Pages에서 열기';
+  hint.textContent = '⚠ 로컬 파일 — GitHub Pages에서 열기';
   document.getElementById('top-bar').insertBefore(hint, document.getElementById('commit-btn'));
+
+  // 커밋 버튼 → 회색 잠금 표시 (클릭하면 안내 팝업)
+  const btn = document.getElementById('commit-btn');
+  btn.style.cssText += ';opacity:.45;cursor:not-allowed;filter:grayscale(.8)';
+  btn.title = 'file:// 환경에서는 GitHub API가 차단됩니다. GitHub Pages URL에서 열어주세요.';
 }
 if (characters.length) selectedId = characters[0].id;
 
