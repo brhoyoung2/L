@@ -225,7 +225,46 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
 #add-char-btn:active{transform:scale(.97)}
 #empty-state{text-align:center;color:#3a3a5a;margin-top:80px;font-size:13px}
 
-/* Animations */
+/* CSV toolbar */
+#csv-bar{height:40px;min-height:40px;background:#07070f;border-bottom:1px solid #16162a;display:flex;align-items:center;padding:0 16px;gap:8px;z-index:99;flex-wrap:nowrap;overflow-x:auto}
+#csv-bar::-webkit-scrollbar{height:0}
+.csv-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;white-space:nowrap;transition:all .13s}
+.csv-btn:active{transform:scale(.97)}
+.csv-btn.sheets{background:#0f2a1a;color:#44cc88;border:1px solid #1a4a2a}
+.csv-btn.sheets:hover{background:#143520}
+.csv-btn.dl{background:#0f1a2a;color:#4499cc;border:1px solid #1a3a4a}
+.csv-btn.dl:hover{background:#142030}
+.csv-btn.ul{background:#1a1a0f;color:#aaaa44;border:1px solid #3a3a1a}
+.csv-btn.ul:hover{background:#222210}
+.csv-btn.sync{background:#1a0f2a;color:#9944cc;border:1px solid #3a1a4a}
+.csv-btn.sync:hover{background:#22143a}
+.csv-btn:disabled{opacity:.4;cursor:default}
+#csv-status{font-size:10px;color:#4a4a6a;flex:1;text-align:right;font-family:'DM Mono',monospace}
+#csv-status.ok{color:#44aa66}
+#csv-status.err{color:#cc5555}
+#csv-status.info{color:#6688cc}
+#csv-file-input{display:none}
+
+.csv-btn.export{background:#1a0f0f;color:#cc8844;border:1px solid #4a2a1a}
+.csv-btn.export:hover{background:#221510}
+
+/* 알림 팝업 (범용) */
+#popup-modal .modal-box{max-width:500px}
+.popup-icon{font-size:42px;text-align:center;margin-bottom:12px}
+.popup-title{font-size:16px;font-weight:700;text-align:center;margin-bottom:8px;color:#e0e0f0}
+.popup-body{font-size:13px;color:#8080a8;line-height:1.75;text-align:left}
+.popup-body b{color:#b0b0d0}
+.popup-body code{font-family:'DM Mono',monospace;font-size:11px;background:#0a0a18;padding:2px 6px;border-radius:4px;color:#88aaff;border:1px solid #1a1a30}
+.popup-step{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #0f0f1a}
+.popup-step:last-child{border-bottom:none}
+.popup-step-num{width:22px;height:22px;min-width:22px;border-radius:50%;background:#1a1a3a;color:#6688cc;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.popup-warn{background:#1a1200;border:1px solid #4a3800;border-radius:9px;padding:10px 14px;font-size:12px;color:#ddaa44;margin-top:12px;line-height:1.6}
+.popup-btns{display:flex;gap:8px;margin-top:18px}
+#csv-modal .modal-box{max-width:640px}
+#csv-preview-table{width:100%;border-collapse:collapse;font-size:11px;font-family:'DM Mono',monospace;max-height:320px;display:block;overflow-y:auto}
+#csv-preview-table th{background:#0f0f1a;color:#6666aa;padding:5px 8px;text-align:left;border-bottom:1px solid #1a1a28;position:sticky;top:0}
+#csv-preview-table td{padding:4px 8px;border-bottom:1px solid #0f0f18;color:#b0b0d0;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#csv-preview-table tr:hover td{background:#0d0d1a}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -250,6 +289,19 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
       <span id="commit-btn-icon">⬆</span>
       <span id="commit-btn-label">커밋 &amp; 배포</span>
     </button>
+  </div>
+
+  <!-- ══ CSV / SHEETS 툴바 ══ -->
+  <div id="csv-bar">
+    <span style="font-size:10px;color:#3a3a5a;letter-spacing:.08em;font-weight:600;margin-right:2px">DB</span>
+    <button class="csv-btn sheets" id="btn-open-sheets">📊 스프레드시트 열기</button>
+    <button class="csv-btn sync"   id="btn-sync-sheets">🔄 시트에서 불러오기</button>
+    <button class="csv-btn export" id="btn-export-sheets">📤 시트로 내보내기</button>
+    <div style="width:1px;height:20px;background:#1a1a2a;margin:0 2px"></div>
+    <button class="csv-btn dl"     id="btn-csv-dl">⬇ CSV 다운로드</button>
+    <button class="csv-btn ul"     id="btn-csv-ul">⬆ CSV 업로드</button>
+    <input type="file" id="csv-file-input" accept=".csv"/>
+    <span id="csv-status"></span>
   </div>
 
   <!-- ══ MAIN AREA ══ -->
@@ -366,6 +418,42 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
   <button id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt=""/>
   <div id="lightbox-name"></div>
+</div>
+
+<!-- CSV 업로드 프리뷰 모달 -->
+<div id="csv-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:700px;width:95vw">
+    <div class="modal-header">
+      <div class="modal-title">⬆ CSV 업로드 프리뷰</div>
+      <button class="modal-close" id="csv-modal-close">✕</button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <div id="csv-summary" style="font-size:12px;color:#7070a0;padding:8px 12px;background:#0a0a18;border-radius:8px;border:1px solid #1a1a2a"></div>
+      <div style="overflow:auto;max-height:320px;border-radius:8px;border:1px solid #1a1a28">
+        <table id="csv-preview-table">
+          <thead id="csv-thead"></thead>
+          <tbody id="csv-tbody"></tbody>
+        </table>
+      </div>
+      <div id="csv-warn" style="display:none;font-size:11px;color:#ddaa44;padding:8px 12px;background:#1a1200;border-radius:8px;border:1px solid #5a4000"></div>
+      <div class="row-btns">
+        <button class="row-btn secondary" id="csv-cancel-btn">취소</button>
+        <button class="row-btn primary-green" id="csv-apply-btn">✓ 적용 (프롬프트 업데이트)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 범용 팝업 모달 -->
+<div id="popup-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <button id="popup-back-btn" style="display:none;background:none;border:none;color:#5566ff;font-size:12px;cursor:pointer;padding:2px 6px;font-family:inherit;align-items:center;gap:4px">← 뒤로</button>
+      <div class="modal-title" id="popup-modal-title">안내</div>
+      <button class="modal-close" id="popup-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="popup-modal-body" style="gap:0"></div>
+  </div>
 </div>
 
 <!-- Sync Toast -->
@@ -1664,6 +1752,308 @@ async function testConn() {
   }
   finally { btn.textContent='연결 테스트'; btn.disabled=false; }
 }
+
+/* ════════════════════════════════════════
+   CSV / GOOGLE SHEETS
+════════════════════════════════════════ */
+const SHEETS_URL  = 'https://docs.google.com/spreadsheets/d/1LtD9zUNBmaJp3jsRc0668RI6OTF9aRMwchH-d2oq2hw';
+const SHEETS_EDIT = SHEETS_URL + '/edit?usp=sharing';
+const SHEETS_CSV  = SHEETS_URL + '/export?format=csv&gid=0';
+
+/* CSV 컬럼 정의 — 순서 고정 */
+const CSV_COLS = ['id','name','gender','genre','tags','base','hair','skin','eyes','accessories','top','bottom','legwear','shoes'];
+const PROMPT_KEYS = ['base','hair','skin','eyes','accessories','top','bottom','legwear','shoes'];
+
+/* characters → CSV 문자열 */
+function charsToCSV(chars) {
+  const escape = v => {
+    const s = String(v ?? '');
+    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  // 헤더: 기존 컬럼 + 합산 2개 추가
+  const header = [...CSV_COLS, 'prompt_full', 'prompt_with_style'].join(',');
+  const rows = chars.map(c => {
+    const p = c.prompts || {};
+    const baseCols = CSV_COLS.map(col => {
+      if (col === 'tags') return escape((c.tags||[]).join('|'));
+      if (PROMPT_KEYS.includes(col)) return escape(p[col] || '');
+      return escape(c[col] ?? '');
+    });
+    const promptFull     = PROMPT_KEYS.map(k => p[k]).filter(Boolean).join(', ');
+    const promptWithStyle = artStyle ? `${artStyle}, ${promptFull}` : promptFull;
+    return [...baseCols, escape(promptFull), escape(promptWithStyle)].join(',');
+  });
+  return [header, ...rows].join('\r\n');
+}
+
+/* CSV 문자열 파싱 → 행 배열 */
+function parseCSV(text) {
+  const rows = [];
+  let cur = '', inQ = false, row = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"' && text[i+1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQ = false;
+      else cur += ch;
+    } else {
+      if (ch === '"') { inQ = true; }
+      else if (ch === ',') { row.push(cur); cur = ''; }
+      else if (ch === '\n' || (ch === '\r' && text[i+1] === '\n')) {
+        if (ch === '\r') i++;
+        row.push(cur); rows.push(row); row = []; cur = '';
+      } else { cur += ch; }
+    }
+  }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim()));
+}
+
+/* CSV rows → characters 배열 (이미지 보존) */
+function csvToChars(rows) {
+  if (!rows.length) return null;
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  const idx = col => header.indexOf(col);
+  const get = (row, col) => (row[idx(col)] ?? '').trim();
+
+  const promptKeys = ['base','hair','skin','eyes','accessories','top','bottom','legwear','shoes'];
+  const result = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row.length || !get(row,'name')) continue;
+    const id = parseInt(get(row,'id')) || (i + 1000);
+    const existing = characters.find(c => c.id === id);
+    const prompts = {};
+    promptKeys.forEach(k => { prompts[k] = get(row, k); });
+    result.push({
+      id,
+      name:    get(row,'name'),
+      gender:  get(row,'gender') || 'female',
+      genre:   get(row,'genre')  || 'modern',
+      img:     existing?.img || null,
+      tags:    get(row,'tags') ? get(row,'tags').split('|').map(t=>t.trim()) : (existing?.tags||[]),
+      prompts,
+    });
+  }
+  return result.length ? result : null;
+}
+
+let csvParsedData = null;
+
+function setCsvStatus(msg, type='') {
+  const el = document.getElementById('csv-status');
+  el.textContent = msg;
+  el.className = type ? `csv-status ${type}` : 'csv-status';
+  el.style.color = type==='ok'?'#44aa66':type==='err'?'#cc5555':type==='info'?'#6688cc':'#4a4a6a';
+}
+
+/* 다운로드 */
+/* ── CSV 다운로드 헬퍼 (샌드박스 대응) ── */
+function downloadCSV() {
+  const csv = charsToCSV(characters);
+  const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `charprompt_${new Date().toISOString().slice(0,10)}.csv`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true, view:window}));
+  setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+  setCsvStatus(`✓ CSV ${characters.length}명 다운로드 완료`, 'ok');
+  setTimeout(() => setCsvStatus(''), 3000);
+}
+
+document.getElementById('btn-csv-dl').addEventListener('click', downloadCSV);
+
+/* 스프레드시트 열기 */
+document.getElementById('btn-open-sheets').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = SHEETS_EDIT; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* ── 범용 팝업 헬퍼 ── */
+let _popupBackFn = null;
+function showPopup(title, bodyHTML, btns=[], backFn=null) {
+  _popupBackFn = backFn;
+  document.getElementById('popup-modal-title').textContent = title;
+
+  // 뒤로가기 버튼 표시 여부
+  const backBtn = document.getElementById('popup-back-btn');
+  if (backBtn) backBtn.style.display = backFn ? 'flex' : 'none';
+
+  const body = document.getElementById('popup-modal-body');
+  body.innerHTML = bodyHTML;
+
+  if (btns.length) {
+    const row = document.createElement('div');
+    row.className = 'popup-btns';
+    btns.forEach(b => {
+      if (b.href) {
+        // 링크 버튼 → <a> 태그로 (window.open 차단 우회)
+        const a = document.createElement('a');
+        a.href = b.href; a.target = '_blank'; a.rel = 'noopener';
+        a.className = 'row-btn ' + (b.cls || 'secondary');
+        a.textContent = b.label;
+        a.style.cssText = 'text-decoration:none;display:flex;align-items:center;justify-content:center';
+        row.appendChild(a);
+      } else {
+        const btn = document.createElement('button');
+        btn.className = 'row-btn ' + (b.cls || 'secondary');
+        btn.textContent = b.label;
+        btn.onclick = () => {
+          if (!b.keepOpen) closePopup();
+          b.action && b.action();
+        };
+        row.appendChild(btn);
+      }
+    });
+    body.appendChild(row);
+  }
+  document.getElementById('popup-modal').style.display = 'flex';
+}
+function closePopup() { document.getElementById('popup-modal').style.display = 'none'; _popupBackFn = null; }
+document.getElementById('popup-modal-close').addEventListener('click', closePopup);
+document.getElementById('popup-back-btn').addEventListener('click', () => { const fn = _popupBackFn; closePopup(); fn && fn(); });
+document.getElementById('popup-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closePopup(); });
+
+/* ── 시트에서 불러오기 ── */
+async function doSyncFromSheets() {
+  const btn = document.getElementById('btn-sync-sheets');
+  btn.disabled = true;
+  setCsvStatus('⏳ 구글 시트에서 불러오는 중…', 'info');
+  try {
+    const url = SHEETS_CSV + '&cachebust=' + Date.now();
+    let res;
+    try { res = await fetch(url); } catch(e) { throw {type:'network', msg:e.message}; }
+    if (res.status===401||res.status===403) throw {type:'auth'};
+    if (res.status===404) throw {type:'notfound'};
+    if (!res.ok) throw {type:'http', code:res.status};
+    const text = await res.text();
+    if (!text||text.length<10) throw {type:'empty'};
+    if (text.includes('<!DOCTYPE')||text.includes('차단')) throw {type:'blocked'};
+    const rows = parseCSV(text);
+    if (!rows.length||rows[0][0].trim().toLowerCase()!=='id') throw {type:'format'};
+    csvParsedData = csvToChars(rows);
+    if (!csvParsedData) throw {type:'nodata'};
+    showCsvPreview(rows, '구글 시트');
+    setCsvStatus(`✓ 시트에서 ${csvParsedData.length}명 불러옴`, 'ok');
+    btn.disabled = false;
+    return;
+  } catch(e) {
+    setCsvStatus('', '');
+    const t = e.type||'unknown';
+    const BLOCKED = `<div class="popup-icon">🔒</div><div class="popup-title">구글 시트 접근 차단됨</div><div class="popup-body"><div class="popup-warn">⚠️ 시트가 <b>비공개</b> 상태입니다. 공개로 변경해야 자동 동기화가 작동합니다.</div><div style="margin-top:14px;font-size:12px;color:#6a6a8a;font-weight:600;margin-bottom:8px">해결 방법</div><div class="popup-step"><div class="popup-step-num">1</div><div>구글 시트 → <b>공유 → 링크 공유</b></div></div><div class="popup-step"><div class="popup-step-num">2</div><div><b>링크가 있는 모든 사용자 → 뷰어</b> 변경</div></div><div class="popup-step"><div class="popup-step-num">3</div><div>저장 후 아래 <b>다시 시도</b> 클릭</div></div><div style="margin-top:10px;font-size:11px;color:#4a4a6a">또는 <b>⬇ CSV 다운로드</b> 후 시트에 가져오기로 수동 동기화 가능</div></div>`;
+    const AUTH   = `<div class="popup-icon">🚫</div><div class="popup-title">권한 없음 (403)</div><div class="popup-body"><div class="popup-warn">시트 접근 권한이 없습니다.</div><div class="popup-step"><div class="popup-step-num">1</div><div>시트 공유 → <b>링크가 있는 모든 사용자 → 뷰어</b></div></div><div class="popup-step"><div class="popup-step-num">2</div><div>변경 후 다시 시도</div></div></div>`;
+    const NOTFOUND=`<div class="popup-icon">🗑️</div><div class="popup-title">시트를 찾을 수 없음</div><div class="popup-body"><div class="popup-warn">시트가 삭제됐거나 링크가 변경됐습니다.</div><div class="popup-step"><div class="popup-step-num">1</div><div><b>CSV 다운로드</b> 후 새 시트에 가져오기</div></div></div>`;
+    const NETWORK=`<div class="popup-icon">📡</div><div class="popup-title">네트워크 오류</div><div class="popup-body"><div class="popup-warn">${e.msg||'연결 실패'}</div><div class="popup-step"><div class="popup-step-num">1</div><div>인터넷 연결 확인</div></div><div class="popup-step"><div class="popup-step-num">2</div><div><b>file://</b> 환경이면 GitHub Pages URL에서 열기</div></div></div>`;
+    const FORMAT =`<div class="popup-icon">📋</div><div class="popup-title">CSV 형식 오류</div><div class="popup-body"><div class="popup-warn">첫 컬럼이 <code>id</code> 여야 합니다.</div><div class="popup-step"><div class="popup-step-num">1</div><div><b>CSV 다운로드</b>로 올바른 형식 확인 후 시트에 가져오기</div></div></div>`;
+    const map = {blocked:BLOCKED, auth:AUTH, notfound:NOTFOUND, network:NETWORK, http:NETWORK, empty:FORMAT, format:FORMAT, nodata:FORMAT};
+    showPopup('⚠️ 시트 불러오기 실패', map[t]||NETWORK, [
+      {label:'← 닫기', cls:'secondary'},
+      {label:'🔄 다시 시도', cls:'primary-purple', action:doSyncFromSheets},
+      {label:'📊 시트 열기', cls:'primary-blue', href:SHEETS_EDIT},
+    ]);
+  }
+  btn.disabled = false;
+}
+document.getElementById('btn-sync-sheets').addEventListener('click', doSyncFromSheets);
+
+/* ── 시트로 내보내기 ── */
+document.getElementById('btn-export-sheets').addEventListener('click', () => {
+  const csv = charsToCSV(characters);
+  const html = `<div class="popup-icon">📤</div><div class="popup-title">구글 시트로 내보내기</div><div class="popup-body"><div style="font-size:12px;color:#6868a0;margin-bottom:12px">현재 <b style="color:#b0b0d0">${characters.length}개 캐릭터</b> 데이터를 구글 시트에 동기화합니다.</div><div class="popup-step"><div class="popup-step-num">1</div><div>아래 <b>CSV 다운로드</b> 클릭 → 파일 저장</div></div><div class="popup-step"><div class="popup-step-num">2</div><div>구글 시트 → <b>파일 → 가져오기(Import)</b></div></div><div class="popup-step"><div class="popup-step-num">3</div><div><b>업로드</b> 탭 → 다운받은 CSV 선택</div></div><div class="popup-step"><div class="popup-step-num">4</div><div><b>현재 시트 교체</b> 선택 → <b>데이터 가져오기</b></div></div><div class="popup-warn">💡 구글 시트 API 직접 쓰기는 OAuth 인증이 필요합니다.<br>CSV 가져오기가 가장 안정적인 동기화 방법입니다.</div></div>`;
+  showPopup('📤 시트로 내보내기', html, [
+    {label:'← 닫기', cls:'secondary'},
+    {label:'📊 시트 열기', cls:'primary-blue', href:SHEETS_EDIT},
+    {label:'⬇ CSV 다운로드', cls:'primary-green', keepOpen:true, action: downloadCSV},
+  ]);
+});
+
+/* 파일 업로드 */
+document.getElementById('btn-csv-ul').addEventListener('click', () => {
+  document.getElementById('csv-file-input').click();
+});
+document.getElementById('csv-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      // BOM 제거
+      const text = ev.target.result.replace(/^\uFEFF/, '');
+      const rows = parseCSV(text);
+      if (!rows.length || rows[0][0].trim().toLowerCase() !== 'id')
+        throw new Error('id 컬럼이 없거나 CSV 형식 오류');
+      csvParsedData = csvToChars(rows);
+      if (!csvParsedData) throw new Error('유효한 캐릭터 행 없음');
+      showCsvPreview(rows, file.name);
+      setCsvStatus(`✓ ${file.name} 파싱 완료 (${csvParsedData.length}명)`, 'ok');
+    } catch(e) {
+      setCsvStatus(`❌ ${e.message}`, 'err');
+      setTimeout(()=>setCsvStatus(''), 4000);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  e.target.value = '';
+});
+
+/* 프리뷰 테이블 표시 */
+function showCsvPreview(rows, source) {
+  if (!rows.length) return;
+  const header = rows[0];
+  const thead = document.getElementById('csv-thead');
+  const tbody = document.getElementById('csv-tbody');
+  thead.innerHTML = '<tr>' + header.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+  tbody.innerHTML = '';
+  const preview = rows.slice(1, 11); // 최대 10행 미리보기
+  preview.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = header.map((_,i)=>`<td title="${(row[i]||'').replace(/"/g,'&quot;')}">${row[i]||''}</td>`).join('');
+    tbody.appendChild(tr);
+  });
+
+  // 요약
+  const total = rows.length - 1;
+  document.getElementById('csv-summary').innerHTML =
+    `<b>출처:</b> ${source} &nbsp;·&nbsp; <b>총 캐릭터:</b> ${total}명 &nbsp;·&nbsp; <b>컬럼:</b> ${header.length}개` +
+    (total > 10 ? ` &nbsp;·&nbsp; <span style="color:#5a5a7a">미리보기 10행만 표시</span>` : '');
+
+  // 경고: 컬럼 누락 체크
+  const missing = CSV_COLS.filter(c => !header.map(h=>h.trim().toLowerCase()).includes(c));
+  const warnEl = document.getElementById('csv-warn');
+  if (missing.length) {
+    warnEl.style.display = 'block';
+    warnEl.textContent = `⚠ 누락된 컬럼: ${missing.join(', ')} — 해당 필드는 빈값으로 처리됩니다`;
+  } else { warnEl.style.display = 'none'; }
+
+  document.getElementById('csv-modal').style.display = 'flex';
+}
+
+/* 적용 버튼 */
+document.getElementById('csv-apply-btn').addEventListener('click', () => {
+  if (!csvParsedData) return;
+  characters = csvParsedData;
+  save();
+  markDirty();
+  renderAll();
+  document.getElementById('csv-modal').style.display = 'none';
+  setCsvStatus(`✓ ${characters.length}명 프롬프트 업데이트 완료`, 'ok');
+  setTimeout(()=>setCsvStatus(''), 4000);
+  csvParsedData = null;
+});
+
+/* 모달 닫기 */
+document.getElementById('csv-modal-close').addEventListener('click', () => {
+  document.getElementById('csv-modal').style.display = 'none'; csvParsedData = null;
+});
+document.getElementById('csv-cancel-btn').addEventListener('click', () => {
+  document.getElementById('csv-modal').style.display = 'none'; csvParsedData = null;
+});
+document.getElementById('csv-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) { document.getElementById('csv-modal').style.display='none'; csvParsedData=null; }
+});
 
 /* ════════════════════════════════════════
    EVENTS
