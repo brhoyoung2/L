@@ -17,10 +17,41 @@ textarea{resize:none}
 input::placeholder,textarea::placeholder{color:#4a4a6a}
 
 /* Layout */
-#app{display:flex;height:100vh;width:100%;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh;width:100%;overflow:hidden}
+#top-bar{height:52px;min-height:52px;background:#0a0a12;border-bottom:1px solid #1e1e2a;display:flex;align-items:center;padding:0 18px;gap:12px;z-index:100}
+#main-area{display:flex;flex:1;overflow:hidden}
 #left-panel{width:220px;min-width:220px;background:#0d0d16;border-right:1px solid #1a1a28;display:flex;flex-direction:column;padding:20px 16px;gap:18px;overflow-y:auto}
 #center-panel{flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:22px 20px}
 #right-panel{width:380px;min-width:380px;background:#0b0b14;border-left:1px solid #1a1a28;display:flex;flex-direction:column;overflow-y:auto}
+
+/* Top bar */
+#top-bar-logo{font-size:13px;font-weight:700;letter-spacing:.08em;color:#8888cc;white-space:nowrap}
+#top-bar-logo span{color:#5566ff}
+#dirty-indicator{display:none;align-items:center;gap:6px;padding:4px 10px;background:#1a1a10;border:1px solid #3a3a20;border-radius:6px;font-size:11px;color:#aaaa55}
+#dirty-indicator.show{display:flex}
+#dirty-dot{width:6px;height:6px;border-radius:50%;background:#dddd44;animation:pulse 1.2s ease infinite}
+#pages-link{display:flex;align-items:center;gap:5px;padding:6px 12px;background:#0f1a2a;border:1px solid #2a4a6a;border-radius:8px;font-size:11px;color:#5599cc;text-decoration:none;white-space:nowrap;transition:all .15s}
+#pages-link:hover{background:#142030;color:#88bbff}
+#pages-link.no-token{opacity:.35;pointer-events:none}
+#spacer{flex:1}
+#commit-btn{display:flex;align-items:center;gap:7px;padding:9px 18px;background:linear-gradient(135deg,#1a3a1a,#2a6a3a);color:#aaffcc;border:1px solid #2a5a2a;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+#commit-btn:hover{background:linear-gradient(135deg,#223a22,#337744);box-shadow:0 0 20px #44ff8820}
+#commit-btn:active{transform:scale(.97)}
+#commit-btn:disabled{background:#161620;color:#4a4a6a;border-color:#2a2a3a;cursor:default;box-shadow:none}
+#commit-btn.syncing{background:linear-gradient(135deg,#1a1a3a,#2a2a6a);color:#aaaaff;border-color:#3a3a6a}
+#commit-btn.success{background:linear-gradient(135deg,#1a3a1a,#2a7a3a);color:#aaffcc}
+
+/* Sync log toast */
+#sync-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f0f1a;border:1px solid #2a2a3a;border-radius:12px;padding:14px 20px;font-size:12px;color:#c8c8e0;box-shadow:0 8px 32px #00000088;z-index:500;min-width:320px;max-width:480px;display:none;animation:fadeUp .3s ease}
+#sync-toast-title{font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+#sync-log{display:flex;flex-direction:column;gap:4px;font-family:'DM Mono',monospace;font-size:11px;color:#8888aa}
+.log-line{display:flex;align-items:center;gap:8px}
+.log-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.log-dot.pending{background:#4a4a6a}
+.log-dot.running{background:#8888ff;animation:pulse 1s ease infinite}
+.log-dot.done{background:#44aa66}
+.log-dot.error{background:#cc5555}
+#sync-toast-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#5a5a7a;cursor:pointer;font-size:14px}
 
 /* Cards */
 .char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
@@ -161,11 +192,9 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
 .row-btn.primary-purple{background:linear-gradient(135deg,#2a2a6a,#4455aa);color:#ccccff;font-weight:600}
 .row-btn.primary-blue:disabled{background:#161626;color:#4a4a6a;cursor:default}
 
-/* Top bar of center */
+/* Center topbar */
 #center-topbar{margin-bottom:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #center-topbar h1{font-size:17px;font-weight:600;letter-spacing:-0.02em;flex:1}
-#gh-sync-btn{display:flex;align-items:center;gap:5px;padding:8px 13px;background:#131318;color:#5a5a7a;border-radius:9px;font-size:12px;border:1px solid #2a2a3a;cursor:pointer;font-family:inherit;transition:all .13s}
-#gh-sync-btn.connected{background:#0f1a0f;color:#44aa66;border-color:#2a4a2a}
 #add-char-btn{display:flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#3333aa,#5566ff);color:#fff;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 0 20px #5566ff22;cursor:pointer;border:none;font-family:inherit;transition:all .13s}
 #add-char-btn:active{transform:scale(.97)}
 #empty-state{text-align:center;color:#3a3a5a;margin-top:80px;font-size:13px}
@@ -180,6 +209,25 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
 </head>
 <body>
 <div id="app">
+  <!-- ══ GLOBAL TOP BAR ══ -->
+  <div id="top-bar">
+    <div id="top-bar-logo">Char<span>Prompt</span></div>
+    <div id="dirty-indicator">
+      <div id="dirty-dot"></div>
+      <span id="dirty-text">미저장 변경사항</span>
+    </div>
+    <div id="spacer"></div>
+    <a id="pages-link" href="https://brhoyoung2.github.io/L/character/" target="_blank" class="no-token">
+      🌐 GitHub Pages에서 보기
+    </a>
+    <button id="commit-btn" disabled>
+      <span id="commit-btn-icon">⬆</span>
+      <span id="commit-btn-label">커밋 &amp; 배포</span>
+    </button>
+  </div>
+
+  <!-- ══ MAIN AREA ══ -->
+  <div id="main-area">
   <div id="left-panel">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <span style="font-size:11px;letter-spacing:.15em;color:#4a4a6a;text-transform:uppercase;font-weight:600">CharPrompt</span>
@@ -218,7 +266,6 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
       <h1>캐릭터 갤러리</h1>
       <span id="filter-badge-gender" class="badge gender" style="display:none"></span>
       <span id="filter-badge-genre" class="badge genre" style="display:none"></span>
-      <button id="gh-sync-btn">⬆ GitHub 동기화</button>
       <button id="add-char-btn"><span style="font-size:17px;line-height:1">+</span> 캐릭터 추가</button>
     </div>
     <div id="char-grid" class="char-grid"></div>
@@ -260,6 +307,14 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
     </div>
     <div id="char-empty" style="display:none">캐릭터를 선택하세요</div>
   </div>
+  </div><!-- /#main-area -->
+</div><!-- /#app -->
+
+<!-- Sync Toast -->
+<div id="sync-toast">
+  <button id="sync-toast-close">✕</button>
+  <div id="sync-toast-title"><span id="sync-toast-icon">⬆</span><span id="sync-toast-title-text">GitHub 커밋 & 배포</span></div>
+  <div id="sync-log"></div>
 </div>
 
 <!-- Add Character Modal -->
@@ -396,8 +451,9 @@ let artEditing   = false;
 let ghToken      = '';
 let anthropicKey = '';
 let analyzedData = null;
-let addStep      = 'input'; // input | preview | done
+let addStep      = 'input';
 let uploadTargetId = null;
+let isDirty      = false; // tracks unsaved changes
 
 /* ── load persisted ── */
 try { characters = JSON.parse(localStorage.getItem('cp_chars')) || DEFAULT_CHARS; } catch { characters = DEFAULT_CHARS; }
@@ -408,6 +464,52 @@ try { anthropicKey = localStorage.getItem('cp_aikey') || ''; } catch {}
 function save() {
   try { localStorage.setItem('cp_chars', JSON.stringify(characters)); } catch {}
   try { localStorage.setItem('cp_art', artStyle); } catch {}
+}
+
+function markDirty() {
+  isDirty = true;
+  save();
+  updateCommitBtn();
+}
+
+function markClean() {
+  isDirty = false;
+  updateCommitBtn();
+}
+
+function updateCommitBtn() {
+  const btn = document.getElementById('commit-btn');
+  const dirty = document.getElementById('dirty-indicator');
+  const dirtyText = document.getElementById('dirty-text');
+  const pagesLink = document.getElementById('pages-link');
+
+  if (ghToken) {
+    pagesLink.classList.remove('no-token');
+  } else {
+    pagesLink.classList.add('no-token');
+  }
+
+  if (!ghToken) {
+    btn.disabled = true;
+    btn.querySelector('#commit-btn-label').textContent = '커밋 & 배포 (토큰 필요)';
+    dirty.classList.remove('show');
+    return;
+  }
+
+  if (isDirty) {
+    btn.disabled = false;
+    btn.classList.remove('syncing','success');
+    btn.querySelector('#commit-btn-label').textContent = '커밋 & 배포';
+    btn.querySelector('#commit-btn-icon').textContent = '⬆';
+    dirty.classList.add('show');
+    // count pending
+    const imgs = characters.filter(c=>c.img&&c.img.startsWith('data:')).length;
+    dirtyText.textContent = imgs > 0 ? `미저장 (이미지 ${imgs}개 포함)` : '미저장 변경사항';
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('syncing');
+    dirty.classList.remove('show');
+  }
 }
 
 /* ════════════════════════════════════════
@@ -733,6 +835,7 @@ function renderPromptFields(char) {
       if (!editedPrompts[char.id]) editedPrompts[char.id] = {};
       editedPrompts[char.id][field.key] = ta.value;
       ta.classList.add('edited');
+      markDirty();
       updatePreviewBox(char);
     };
 
@@ -791,16 +894,12 @@ function updatePreviewBox(char) {
 function renderGhStatus() {
   const icon = document.getElementById('gh-status-icon');
   const text = document.getElementById('gh-status-text');
-  const syncBtn = document.getElementById('gh-sync-btn');
   if (ghToken) {
     icon.textContent = '●'; icon.style.color = '#44aa66';
     text.textContent = 'GitHub 연결됨'; text.style.color = '#44aa66';
-    syncBtn.className = 'btn gh-sync-connected';
-    syncBtn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:8px 13px;background:#0f1a0f;color:#44aa66;border-radius:9px;font-size:12px;border:1px solid #2a4a2a;cursor:pointer;font-family:inherit';
   } else {
     icon.textContent = '◌'; icon.style.color = '#4a4a6a';
     text.textContent = 'GitHub 미연결'; text.style.color = '#4a4a6a';
-    syncBtn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:8px 13px;background:#131318;color:#5a5a7a;border-radius:9px;font-size:12px;border:1px solid #2a2a3a;cursor:pointer;font-family:inherit';
   }
 }
 
@@ -849,7 +948,7 @@ document.getElementById('file-input').addEventListener('change', async (e) => {
     const dataUrl = ev.target.result;
     // Apply locally immediately
     characters = characters.map(c => c.id===charId ? {...c, img:dataUrl} : c);
-    save();
+    markDirty();
     renderGrid();
     renderRightPanel();
 
@@ -983,43 +1082,115 @@ function saveNewChar() {
   };
   characters = [nc, ...characters];
   selectedId = nc.id;
-  save();
+  markDirty();
   showAddStep('done');
   document.getElementById('add-modal-sub').textContent = '✦ 저장 완료!';
   setTimeout(() => { closeAddModal(); renderAll(); }, 1100);
 }
 
 /* ════════════════════════════════════════
-   GITHUB SYNC
+   SYNC TOAST
 ════════════════════════════════════════ */
-async function doSync() {
+let logLines = [];
+
+function showToast() {
+  document.getElementById('sync-toast').style.display = 'block';
+}
+function hideToast() {
+  document.getElementById('sync-toast').style.display = 'none';
+}
+
+function toastLog(id, text, status='pending') {
+  const log = document.getElementById('sync-log');
+  const existing = document.getElementById('log-'+id);
+  if (existing) {
+    existing.querySelector('.log-dot').className = 'log-dot ' + status;
+    existing.querySelector('.log-txt').textContent = text;
+    return;
+  }
+  const line = document.createElement('div');
+  line.className = 'log-line'; line.id = 'log-'+id;
+  line.innerHTML = `<div class="log-dot ${status}"></div><span class="log-txt">${text}</span>`;
+  log.appendChild(line);
+}
+
+function clearToastLog() {
+  document.getElementById('sync-log').innerHTML = '';
+}
+
+/* ════════════════════════════════════════
+   GITHUB SYNC / COMMIT
+════════════════════════════════════════ */
+async function doCommit() {
   if (!ghToken) { openSettings(); return; }
-  const btn = document.getElementById('gh-sync-btn');
-  btn.innerHTML = '<span class="spin-sm"></span> 동기화 중…';
+
+  const btn = document.getElementById('commit-btn');
   btn.disabled = true;
-  setGhMsg('GitHub 동기화 중…', 0);
+  btn.classList.add('syncing');
+  btn.querySelector('#commit-btn-label').textContent = '배포 중…';
+  btn.querySelector('#commit-btn-icon').innerHTML = '<span class="spin-sm" style="border-top-color:#aaaaff"></span>';
+
+  clearToastLog();
+  document.getElementById('sync-toast-title-text').textContent = 'GitHub 커밋 & 배포';
+  document.getElementById('sync-toast-icon').textContent = '⬆';
+  showToast();
+
+  let hasError = false;
 
   try {
-    // Upload any base64 images first
-    for (let i=0; i<characters.length; i++) {
-      const c = characters[i];
-      if (c.img && c.img.startsWith('data:')) {
+    // Step 1: Upload pending base64 images
+    const pending = characters.filter(c => c.img && c.img.startsWith('data:'));
+    if (pending.length > 0) {
+      toastLog('imgs', `이미지 업로드 중… (${pending.length}개)`, 'running');
+      for (let i=0; i<pending.length; i++) {
+        const c = pending[i];
         try {
+          toastLog('imgs', `이미지 업로드 중… (${i+1}/${pending.length}: ${c.name})`, 'running');
           const url = await uploadImage(c.id, c.img);
-          characters[i] = {...c, img:url};
-        } catch {}
+          characters = characters.map(ch => ch.id===c.id ? {...ch, img:url} : ch);
+        } catch(err) {
+          toastLog('imgs', `⚠ 이미지 실패 (${c.name}): ${err.message}`, 'error');
+          hasError = true;
+        }
       }
+      if (!hasError) toastLog('imgs', `✓ 이미지 ${pending.length}개 업로드 완료`, 'done');
+    } else {
+      toastLog('imgs', '✓ 업로드할 이미지 없음', 'done');
     }
-    save();
+
+    // Step 2: Commit characters.json (contains all prompts + image URLs)
+    toastLog('json', 'characters.json 커밋 중…', 'running');
     await syncCharacters();
-    setGhMsg('✓ GitHub 동기화 완료');
-  } catch(err) {
-    setGhMsg('동기화 실패: ' + err.message);
-  } finally {
-    btn.innerHTML = '⬆ GitHub 동기화';
-    btn.disabled = false;
+    toastLog('json', '✓ characters.json 커밋 완료', 'done');
+
+    // Step 3: Done
+    toastLog('push', '✓ GitHub Pages에 배포 완료', 'done');
+
+    save();
+    markClean();
+
+    document.getElementById('sync-toast-title-text').textContent = '배포 완료 ✓';
+    document.getElementById('sync-toast-icon').textContent = '🚀';
+    btn.classList.remove('syncing');
+    btn.classList.add('success');
+    btn.querySelector('#commit-btn-label').textContent = '배포 완료 ✓';
+    btn.querySelector('#commit-btn-icon').textContent = '🚀';
+    setTimeout(() => {
+      btn.querySelector('#commit-btn-label').textContent = '커밋 & 배포';
+      btn.querySelector('#commit-btn-icon').textContent = '⬆';
+      btn.classList.remove('success');
+    }, 3000);
+
     renderGrid();
     renderRightPanel();
+
+  } catch(err) {
+    toastLog('error', '❌ 오류: ' + err.message, 'error');
+    document.getElementById('sync-toast-title-text').textContent = '오류 발생';
+    btn.classList.remove('syncing');
+    btn.querySelector('#commit-btn-label').textContent = '커밋 & 배포';
+    btn.querySelector('#commit-btn-icon').textContent = '⬆';
+    btn.disabled = false;
   }
 }
 
@@ -1040,6 +1211,7 @@ function saveSettings() {
   localStorage.setItem('cp_aikey', anthropicKey);
   closeSettings();
   renderGhStatus();
+  updateCommitBtn();
 }
 async function testConn() {
   const tok = document.getElementById('token-input').value.trim();
@@ -1067,8 +1239,8 @@ document.getElementById('search-input').addEventListener('input', e => {
 document.getElementById('art-edit-btn').addEventListener('click', () => {
   if (artEditing) {
     artStyle = document.getElementById('art-textarea').value;
-    localStorage.setItem('cp_art', artStyle);
     artEditing = false;
+    markDirty();
   } else {
     artEditing = true;
   }
@@ -1106,8 +1278,9 @@ document.getElementById('preview-back-btn').addEventListener('click', () => {
 document.getElementById('save-char-btn').addEventListener('click', saveNewChar);
 document.getElementById('add-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeAddModal(); });
 
-// GitHub
-document.getElementById('gh-sync-btn').addEventListener('click', doSync);
+// Commit & Deploy
+document.getElementById('commit-btn').addEventListener('click', doCommit);
+document.getElementById('sync-toast-close').addEventListener('click', hideToast);
 
 // Settings
 document.getElementById('settings-btn').addEventListener('click', openSettings);
@@ -1136,9 +1309,11 @@ if (ghToken) {
         }
       }
     } catch {}
+    updateCommitBtn();
     renderAll();
   })();
 } else {
+  updateCommitBtn();
   renderAll();
 }
 </script>
