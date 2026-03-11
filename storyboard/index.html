@@ -1,29 +1,1324 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>웹툰 스토리보드 뷰어</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>body { background-color: #121212; color: #f3f4f6; }</style>
-</head>
-<body class="p-4 md:p-8 max-w-4xl mx-auto">
-<h1 class="text-3xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">웹툰 스토리보드</h1>
-<div class="mb-12 bg-[#1a1a1a] rounded-xl p-6 border border-gray-800 shadow-xl">
-<h2 class="text-2xl font-bold mb-6 pb-2 border-b border-gray-700">1화 스토리보드</h2>
-<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg> 등장 캐릭터</h3>
-<div class="flex gap-4 overflow-x-auto pb-4 mb-8"><div class="shrink-0 w-32"><div class="w-32 h-32 bg-gray-800 rounded-lg overflow-hidden mb-2 border border-gray-700"><div class="w-full h-full flex items-center justify-center text-gray-500 text-xs">No Image</div></div><p class="text-sm font-bold text-center text-gray-200">주인공</p></div>
-</div>
-<div class="space-y-8">
-<div class="bg-[#2a2a2a] rounded-lg overflow-hidden border border-gray-700 flex flex-col md:flex-row">
-<div class="w-full md:w-1/2 aspect-[4/3] bg-black relative flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-700"><img src="images/p0_cut0.png" class="w-full h-full object-contain"></div>
-<div class="w-full md:w-1/2 p-5 flex flex-col justify-center">
-<h4 class="font-bold text-xl mb-4 text-purple-300">컷 1</h4>
-<div class="mb-4"><span class="text-blue-400 font-bold text-xs uppercase tracking-wider block mb-1">🏃‍♂️ 동작 및 표정</span><p class="text-sm text-gray-300 leading-relaxed">running, holding toast in mouth, panicked expression</p></div>
-<div><span class="text-purple-400 font-bold text-xs uppercase tracking-wider block mb-1">🎥 앵글 및 구도</span><p class="text-sm text-gray-300 leading-relaxed">dynamic angle, full body, looking back</p></div>
-</div>
-</div>
-</div>
-</div>
-</body>
-</html>
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Plus, 
+  Trash2, 
+  Copy, 
+  Image as ImageIcon, 
+  Edit2, 
+  Check,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Loader2,
+  AlertCircle,
+  X,
+  PanelLeftClose,
+  PanelLeftOpen,
+  FileText,
+  SendToBack,
+  AlignLeft,
+  RefreshCw,
+  Settings,
+  Key,
+  List,
+  Minus,
+  FileEdit,
+  Bookmark,
+  UserCircle,
+  ShieldAlert,
+  CloudUpload,
+  Upload,
+  Github
+} from 'lucide-react';
+
+// --- 전역 설정 ---
+const defaultApiKey = ""; // 캔버스 환경 자동 주입 (Gemini용)
+
+// 10가지 추천 웹툰 콘티 양식
+const RECOMMENDED_TEMPLATES = [
+  { id: 'r1', title: '기본형 (균형잡힌 연출)', content: '[1컷] (미디엄샷) 인물의 일상적인 행동 묘사\n[2컷] (바스트샷) 대화하며 표정 변화\n전체적으로 대사와 지문의 비율을 1:1로 맞추고, 컷 전환을 자연스럽게 해주세요.' },
+  { id: 'r2', title: '액션 중심 (빠른 호흡)', content: '[1컷] (클로즈업) 땀방울이 흐르는 긴장된 눈빛\n[2컷] (풀샷/로우앵글) 위협적인 적의 등장\n[3컷] (효과음 묘사 컷) 타격감 있는 스피드라인\n컷을 잘게 쪼개고, 극적인 투시와 동적인 구도를 강조해주세요.' },
+  { id: 'r3', title: '로맨스 중심 (감정선 강조)', content: '[1컷] (클로즈업) 흔들리는 눈동자와 발그레한 뺨\n[2컷] (투샷) 서로의 거리가 가까워지는 묘사\n배경은 따뜻한 톤이나 반짝이는 효과로 처리하고, 대사 사이에 미묘한 침묵(여백)을 길게 넣어주세요.' },
+  { id: 'r4', title: '스릴러/공포 (긴장감)', content: '[1컷] (하이앵글) 좁은 공간에 갇힌 주인공\n[2컷] (익스트림 클로즈업) 커지는 동공과 떨리는 입술\n어두운 조명(역광 등)을 지문에 명시하고, 서서히 조여오는 듯한 느린 호흡으로 쪼개주세요.' },
+  { id: 'r5', title: '코믹/개그 (과장된 묘사)', content: '[1컷] (바스트샷) 평범한 상황\n[2컷] (SD캐릭터 전환) 충격받거나 황당해하는 과장된 리액션\n배경에 코믹한 효과음과 스피드라인을 넣고, 컷의 템포를 아주 경쾌하고 짧게 분할해주세요.' },
+  { id: 'r6', title: '판타지 (세계관/배경 강조)', content: '[1컷] (와이드 풀샷) 웅장한 판타지 배경과 건축물 전경\n[2컷] (오버더숄더) 그 광경을 바라보는 주인공의 뒷모습\n상황 설명 지문과 배경 묘사에 디테일을 듬뿍 담고, 대사는 최소화해주세요.' },
+  { id: 'r7', title: '사일런트 (대사 없는 연출)', content: '[1컷] (클로즈업) 손 끝의 미세한 떨림\n[2컷] (바스트샷) 시선이 머무는 방향\n[3컷] (인서트컷) 빗방울이 떨어지는 바닥\n모든 대사를 없애고 오직 몽타주 기법과 행동, 표정 지문만으로 상황을 분할해주세요.' },
+  { id: 'r8', title: '과거 회상 (플래시백)', content: '[1컷] (풀샷) 뿌옇고 흐릿한 테두리의 과거 풍경\n[2컷] (미디엄샷) 어린 시절의 주인공\n색감은 세피아나 흑백 톤으로 지정하고, 대사는 독백(나레이션) 박스 형태로 처리해주세요.' },
+  { id: 'r9', title: '일상물 (잔잔한 호흡)', content: '[1컷] (미디엄샷) 편안한 자세로 커피를 마시는 모습\n[2컷] (투샷) 서로 마주보며 소소한 대화\n극적인 구도보다는 안정적인 수평 앵글 위주로, 여유롭고 따뜻한 호흡으로 분할해주세요.' },
+  { id: 'r10', title: '대형 컷 (하이라이트 씬)', content: '[1컷] 세로로 길게 내려오는 초대형 와이드 컷\n인물의 전신과 화려한 이펙트(마법, 빛 등)가 화면 전체를 채우는 묘사.\n이 장면 전후로 긴장감을 빌드업하는 컷을 2개 정도 추가해주세요.' }
+];
+
+// --- NovelAI ZIP 해독 (PNG 추출 로직) ---
+const extractPngFromZip = (arrayBuffer) => {
+  const bytes = new Uint8Array(arrayBuffer);
+  const magic = [137, 80, 78, 71, 13, 10, 26, 10]; // PNG 헤더
+  let start = -1;
+  for (let i = 0; i < bytes.length - magic.length; i++) {
+    let match = true;
+    for (let j = 0; j < magic.length; j++) {
+      if (bytes[i + j] !== magic[j]) { match = false; break; }
+    }
+    if (match) { start = i; break; }
+  }
+  if (start === -1) return null;
+
+  const iend = [73, 69, 78, 68]; // IEND 청크
+  let end = bytes.length;
+  for (let i = start; i < bytes.length - iend.length; i++) {
+    let match = true;
+    for (let j = 0; j < iend.length; j++) {
+      if (bytes[i + j] !== iend[j]) { match = false; break; }
+    }
+    if (match) {
+      end = i + 4 + 4; // IEND 끝 지점
+      break;
+    }
+  }
+
+  const pngBytes = bytes.slice(start, end);
+  let binary = '';
+  // 안정적인 바이너리 처리를 위해 청크 단위 변환
+  const chunkSize = 8192;
+  for (let i = 0; i < pngBytes.length; i += chunkSize) {
+    const chunk = pngBytes.slice(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return 'data:image/png;base64,' + btoa(binary);
+};
+
+// 지수 백오프 및 에러 핸들링 (Gemini용)
+const fetchWithRetry = async (url, options, retries = 5) => {
+  let delay = 1000;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = `HTTP ${response.status}`;
+        if (response.status === 401) {
+          errorMessage = "인증 에러: API 키가 유효하지 않습니다.";
+        } else {
+          try {
+            const errData = JSON.parse(errorText);
+            errorMessage = `[${response.status}] ${errData.error?.message || errData.message || errorText}`;
+          } catch(e) {
+            errorMessage = `[${response.status}] ${errorText.substring(0, 150)}...`;
+          }
+        }
+        throw new Error(errorMessage);
+      }
+      return await response.json();
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise(res => setTimeout(res, delay));
+      delay *= 2;
+    }
+  }
+};
+
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
+const initialData = [
+  {
+    id: generateId(),
+    title: '1화 스토리보드',
+    isEditing: false,
+    characters: [
+      {
+        id: generateId(),
+        name: '주인공',
+        appearancePrompt: '1boy, black hair, school uniform, blue eyes',
+        image: null,
+        isGenerating: false,
+        isEditing: false
+      }
+    ],
+    cuts: [
+      { 
+        id: generateId(), 
+        title: '컷 1', 
+        actionPrompt: 'running, holding toast in mouth, panicked expression', 
+        anglePrompt: 'dynamic angle, full body, looking back',
+        promptHeight: 120, 
+        images: [], 
+        currentImageIndex: 0,
+        genCount: 1, 
+        isEditing: false, 
+        isGenerating: false, 
+        isEnhancing: false 
+      }
+    ]
+  }
+];
+
+export default function App() {
+  const [pages, setPages] = useState(initialData);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  // 모달 상태 관리
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: '', onConfirm: null });
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  
+  // 상태 관리: API Key 및 고급 설정
+  const [customGeminiKey, setCustomGeminiKey] = useState("");
+  const [tempGeminiKeyInput, setTempGeminiKeyInput] = useState("");
+  
+  const [customNovelAiKey, setCustomNovelAiKey] = useState("");
+  const [tempNovelAiKeyInput, setTempNovelAiKeyInput] = useState("");
+  
+  const [customCorsProxy, setCustomCorsProxy] = useState("");
+  const [tempCorsProxyInput, setTempCorsProxyInput] = useState("");
+
+  // 상태 관리: GitHub 동기화 설정
+  const [customGithubToken, setCustomGithubToken] = useState("");
+  const [tempGithubToken, setTempGithubToken] = useState("");
+  const [githubOwner, setGithubOwner] = useState("brhoyoung2");
+  const [tempGithubOwner, setTempGithubOwner] = useState("brhoyoung2");
+  const [githubRepo, setGithubRepo] = useState("L");
+  const [tempGithubRepo, setTempGithubRepo] = useState("L");
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // 상태 관리: 템플릿(양식) 및 히스토리
+  const [scriptTemplate, setScriptTemplate] = useState("");
+  const [tempTemplateInput, setTempTemplateInput] = useState("");
+  const [historyTemplates, setHistoryTemplates] = useState([]);
+
+  // UI 상태
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
+  const [scriptText, setScriptText] = useState("주인공 '지훈'은 늦잠을 자서 식빵을 입에 물고 학교를 향해 전력 질주한다. 벚꽃이 흩날리는 아침 거리를 뛰어가다가 코너에서 전학생 '수아'와 강하게 부딪힌다.");
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  const [isOptimizingScript, setIsOptimizingScript] = useState(false);
+  const [isConvertingToStoryboard, setIsConvertingToStoryboard] = useState(false);
+
+  // 글 콘티 패널 높이 조절
+  const [scriptHeight, setScriptHeight] = useState(250);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef({ startY: 0, startHeight: 0 });
+
+  const startResize = (e) => {
+    e.preventDefault();
+    resizeRef.current = { startY: e.clientY, startHeight: scriptHeight };
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+      const deltaY = e.clientY - resizeRef.current.startY;
+      setScriptHeight(Math.max(120, Math.min(resizeRef.current.startHeight + deltaY, window.innerHeight * 0.7)));
+    };
+    const handleMouseUp = () => setIsResizing(false);
+
+    if (isResizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // 메인 스토리보드 가로 스크롤
+  const scrollRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef({ startX: 0, scrollLeft: 0 });
+
+  const onDragStart = (e) => {
+    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('textarea') || e.target.closest('.cut-ignore-drag')) return;
+    setIsDragging(true);
+    dragRef.current = { startX: e.pageX - scrollRef.current.offsetLeft, scrollLeft: scrollRef.current.scrollLeft };
+  };
+  const onDragEnd = () => setIsDragging(false);
+  const onDragMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - dragRef.current.startX) * 1.5;
+    scrollRef.current.scrollLeft = dragRef.current.scrollLeft - walk;
+  };
+
+  // --- 유틸리티 함수 ---
+  const showToast = (message) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 5000);
+  };
+
+  const copyToClipboard = (text) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast("📋 텍스트가 복사되었습니다!");
+    } catch (err) {
+      showToast("복사 실패");
+    }
+    document.body.removeChild(textarea);
+  };
+
+  const openConfirm = (message, onConfirmCallback) => setConfirmModal({ isOpen: true, message, onConfirm: onConfirmCallback });
+  const closeConfirm = () => setConfirmModal({ isOpen: false, message: '', onConfirm: null });
+
+  const getGeminiKey = () => customGeminiKey.trim() || defaultApiKey;
+  const checkGeminiKey = () => {
+    if (!getGeminiKey()) {
+      setTempGeminiKeyInput(customGeminiKey);
+      setTempNovelAiKeyInput(customNovelAiKey);
+      setTempCorsProxyInput(customCorsProxy);
+      setTempGithubToken(customGithubToken);
+      setTempGithubOwner(githubOwner);
+      setTempGithubRepo(githubRepo);
+      setIsApiKeyModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleSaveTemplate = () => {
+    setScriptTemplate(tempTemplateInput);
+    if (tempTemplateInput.trim()) {
+      const isExist = historyTemplates.some(t => t.content === tempTemplateInput);
+      if (!isExist) {
+        setHistoryTemplates(prev => [{
+          id: generateId(),
+          title: `저장된 양식 (${new Date().toLocaleTimeString().slice(0, 8)})`,
+          content: tempTemplateInput
+        }, ...prev]);
+      }
+    }
+    setIsTemplateModalOpen(false);
+    showToast("✅ 본 양식을 참고해 적당한 길이와 호흡으로 생성하겠습니다.");
+  };
+
+  const deleteHistoryTemplate = (e, id) => {
+    e.stopPropagation();
+    setHistoryTemplates(prev => prev.filter(t => t.id !== id));
+  };
+
+  // --- 페이지 & 캐릭터 & 컷 제어 ---
+  const addPage = (title = null, initialCharacters = null, initialCuts = null) => {
+    const newPage = {
+      id: generateId(), 
+      title: title || `${pages.length + 1}화`, 
+      isEditing: false,
+      characters: initialCharacters || [],
+      cuts: initialCuts || [{ id: generateId(), title: '컷 1', actionPrompt: '', anglePrompt: '', promptHeight: 120, images: [], currentImageIndex: 0, genCount: 1, isEditing: true, isGenerating: false, isEnhancing: false }]
+    };
+    setPages(prev => [...prev, newPage]);
+    return newPage.id;
+  };
+
+  const deletePage = (pageId) => openConfirm('이 페이지를 정말 삭제하시겠습니까?', () => { setPages(pages.filter(p => p.id !== pageId)); closeConfirm(); });
+  const movePage = (index, direction) => {
+    const newPages = [...pages];
+    if (direction === 'left' && index > 0) [newPages[index - 1], newPages[index]] = [newPages[index], newPages[index - 1]];
+    else if (direction === 'right' && index < newPages.length - 1) [newPages[index + 1], newPages[index]] = [newPages[index], newPages[index + 1]];
+    setPages(newPages);
+  };
+  const togglePageEdit = (pageId, forceState = null) => setPages(pages.map(p => p.id === pageId ? { ...p, isEditing: forceState !== null ? forceState : !p.isEditing } : p));
+  const updatePageTitle = (pageId, newTitle) => setPages(pages.map(p => p.id === pageId ? { ...p, title: newTitle } : p));
+
+  const addCharacter = (pageId) => {
+    setPages(pages.map(p => p.id === pageId ? { ...p, characters: [...p.characters, { id: generateId(), name: `캐릭터 ${p.characters.length + 1}`, appearancePrompt: '', image: null, isGenerating: false, isEditing: true }] } : p));
+  };
+  const updateCharacter = (pageId, charId, field, value) => {
+    setPages(pages.map(p => p.id === pageId ? { ...p, characters: p.characters.map(c => c.id === charId ? { ...c, [field]: value } : c) } : p));
+  };
+  const deleteCharacter = (pageId, charId) => {
+    setPages(pages.map(p => p.id === pageId ? { ...p, characters: p.characters.filter(c => c.id !== charId) } : p));
+  };
+
+  const addCut = (pageId) => setPages(pages.map(p => p.id === pageId ? { ...p, cuts: [...p.cuts, { id: generateId(), title: `컷 ${p.cuts.length + 1}`, actionPrompt: '', anglePrompt: '', promptHeight: 120, images: [], currentImageIndex: 0, genCount: 1, isEditing: true, isGenerating: false, isEnhancing: false }] } : p));
+  const deleteCut = (pageId, cutId) => setPages(pages.map(p => p.id === pageId ? { ...p, cuts: p.cuts.filter(c => c.id !== cutId) } : p));
+  const copyCut = (pageId, cut) => setPages(pages.map(p => {
+    if (p.id === pageId) {
+      const index = p.cuts.findIndex(c => c.id === cut.id);
+      const newCuts = [...p.cuts];
+      newCuts.splice(index + 1, 0, { ...cut, id: generateId(), title: `${cut.title} (복사본)` });
+      return { ...p, cuts: newCuts };
+    }
+    return p;
+  }));
+  const moveCut = (pageId, index, direction) => setPages(pages.map(p => {
+    if (p.id === pageId) {
+      const newCuts = [...p.cuts];
+      if (direction === 'up' && index > 0) [newCuts[index - 1], newCuts[index]] = [newCuts[index], newCuts[index - 1]];
+      else if (direction === 'down' && index < newCuts.length - 1) [newCuts[index + 1], newCuts[index]] = [newCuts[index], newCuts[index + 1]];
+      return { ...p, cuts: newCuts };
+    }
+    return p;
+  }));
+  const updateCut = (pageId, cutId, field, value) => setPages(pages.map(p => p.id === pageId ? { ...p, cuts: p.cuts.map(c => c.id === cutId ? { ...c, [field]: value } : c) } : p));
+  const toggleCutEdit = (pageId, cutId, forceState = null) => setPages(pages.map(p => p.id === pageId ? { ...p, cuts: p.cuts.map(c => c.id === cutId ? { ...c, isEditing: forceState !== null ? forceState : !c.isEditing } : c) } : p));
+
+  // --- PC 이미지 직접 업로드 로직 ---
+  const handleLocalUploadClick = (pageId, itemId, type) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target.result;
+        if (type === 'character') {
+          updateCharacter(pageId, itemId, 'image', base64);
+          showToast("PC에서 캐릭터 이미지가 업로드되었습니다.");
+        } else if (type === 'cut') {
+          const page = pages.find(p => p.id === pageId);
+          const cut = page.cuts.find(c => c.id === itemId);
+          const newImages = [...(cut.images || []), base64];
+          updateCut(pageId, itemId, 'images', newImages);
+          updateCut(pageId, itemId, 'currentImageIndex', newImages.length - 1);
+          showToast("PC에서 컷 이미지가 업로드되었습니다.");
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  // --- 🚀 GitHub 동기화 로직 (REST API 기반) ---
+  const syncToGitHub = async () => {
+    if (!customGithubToken) {
+      showToast("설정에서 GitHub Personal Access Token을 먼저 입력해주세요.");
+      setTempGeminiKeyInput(customGeminiKey);
+      setTempNovelAiKeyInput(customNovelAiKey);
+      setTempCorsProxyInput(customCorsProxy);
+      setTempGithubToken(customGithubToken);
+      setTempGithubOwner(githubOwner);
+      setTempGithubRepo(githubRepo);
+      setIsApiKeyModalOpen(true);
+      return;
+    }
+
+    setIsSyncing(true);
+    showToast("☁️ GitHub 동기화를 시작합니다... (HTML 및 이미지 생성 중)");
+
+    try {
+      const owner = githubOwner || "brhoyoung2";
+      const repo = githubRepo || "L";
+      const branch = "main";
+      const basePath = "storyboard"; // 지정된 경로
+
+      const filesToUpload = [];
+      
+      // 1. 정적 HTML 뷰어 생성
+      let htmlContent = `<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>웹툰 스토리보드 뷰어</title>\n<script src="https://cdn.tailwindcss.com"></script>\n<style>body { background-color: #121212; color: #f3f4f6; }</style>\n</head>\n<body class="p-4 md:p-8 max-w-4xl mx-auto">\n<h1 class="text-3xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">웹툰 스토리보드</h1>\n`;
+
+      pages.forEach((page, pIdx) => {
+        htmlContent += `<div class="mb-12 bg-[#1a1a1a] rounded-xl p-6 border border-gray-800 shadow-xl">\n<h2 class="text-2xl font-bold mb-6 pb-2 border-b border-gray-700">${page.title}</h2>\n`;
+
+        // 캐릭터 데이터 파싱
+        if (page.characters && page.characters.length > 0) {
+            htmlContent += `<h3 class="text-lg font-semibold text-blue-400 mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg> 등장 캐릭터</h3>\n<div class="flex gap-4 overflow-x-auto pb-4 mb-8">`;
+            page.characters.forEach((char, cIdx) => {
+                let imgPath = '';
+                if (char.image) {
+                    const ext = char.image.substring(char.image.indexOf('/') + 1, char.image.indexOf(';base64'));
+                    const fileName = `images/p${pIdx}_char${cIdx}.${ext}`;
+                    const base64Data = char.image.split(',')[1];
+                    filesToUpload.push({ path: fileName, content: base64Data, encoding: "base64" });
+                    imgPath = fileName;
+                }
+                htmlContent += `<div class="shrink-0 w-32"><div class="w-32 h-32 bg-gray-800 rounded-lg overflow-hidden mb-2 border border-gray-700">${imgPath ? `<img src="${imgPath}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-500 text-xs">No Image</div>'}</div><p class="text-sm font-bold text-center text-gray-200">${char.name}</p></div>\n`;
+            });
+            htmlContent += `</div>\n`;
+        }
+
+        // 컷 데이터 파싱
+        if (page.cuts && page.cuts.length > 0) {
+            htmlContent += `<div class="space-y-8">\n`;
+            page.cuts.forEach((cut, cIdx) => {
+                let imgPath = '';
+                if (cut.images && cut.images.length > 0) {
+                    const currentImg = cut.images[cut.currentImageIndex];
+                    const ext = currentImg.substring(currentImg.indexOf('/') + 1, currentImg.indexOf(';base64'));
+                    const fileName = `images/p${pIdx}_cut${cIdx}.${ext}`;
+                    const base64Data = currentImg.split(',')[1];
+                    filesToUpload.push({ path: fileName, content: base64Data, encoding: "base64" });
+                    imgPath = fileName;
+                }
+                htmlContent += `<div class="bg-[#2a2a2a] rounded-lg overflow-hidden border border-gray-700 flex flex-col md:flex-row">\n`;
+                htmlContent += `<div class="w-full md:w-1/2 aspect-[4/3] bg-black relative flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-700">${imgPath ? `<img src="${imgPath}" class="w-full h-full object-contain">` : '<span class="text-gray-600">이미지 없음</span>'}</div>\n`;
+                htmlContent += `<div class="w-full md:w-1/2 p-5 flex flex-col justify-center">\n<h4 class="font-bold text-xl mb-4 text-purple-300">${cut.title}</h4>\n<div class="mb-4"><span class="text-blue-400 font-bold text-xs uppercase tracking-wider block mb-1">🏃‍♂️ 동작 및 표정</span><p class="text-sm text-gray-300 leading-relaxed">${cut.actionPrompt || '-'}</p></div>\n<div><span class="text-purple-400 font-bold text-xs uppercase tracking-wider block mb-1">🎥 앵글 및 구도</span><p class="text-sm text-gray-300 leading-relaxed">${cut.anglePrompt || '-'}</p></div>\n</div>\n`;
+                htmlContent += `</div>\n`;
+            });
+            htmlContent += `</div>\n`;
+        }
+        htmlContent += `</div>\n`;
+      });
+
+      htmlContent += `</body>\n</html>`;
+      filesToUpload.push({ path: 'index.html', content: htmlContent, encoding: "utf-8" });
+
+      // 2. GitHub REST API 통신 (Blob -> Tree -> Commit -> Update Ref)
+      const getHeaders = { 
+        Authorization: `token ${customGithubToken}`, 
+        Accept: "application/vnd.github.v3+json" 
+      };
+      
+      // Step A: 최신 커밋 SHA 가져오기
+      const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${branch}`, { headers: getHeaders });
+      if (!refRes.ok) throw new Error("저장소 브랜치를 찾을 수 없거나 토큰 권한이 없습니다.");
+      const refData = await refRes.json();
+      const commitSha = refData.object.sha;
+
+      // Step B: Base Tree SHA 가져오기
+      const commitRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/commits/${commitSha}`, { headers: getHeaders });
+      const commitData = await commitRes.json();
+      const baseTreeSha = commitData.tree.sha;
+
+      // Step C: 파일들을 Blob으로 업로드하고 새로운 Tree 배열 생성
+      const tree = [];
+      for (let i = 0; i < filesToUpload.length; i++) {
+          const file = filesToUpload[i];
+          const blobRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/blobs`, {
+              method: 'POST',
+              headers: { ...getHeaders, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ content: file.content, encoding: file.encoding })
+          });
+          if (!blobRes.ok) throw new Error(`Blob 생성 실패: ${file.path}`);
+          const blobData = await blobRes.json();
+          tree.push({ path: `${basePath}/${file.path}`, mode: '100644', type: 'blob', sha: blobData.sha });
+      }
+
+      // Step D: Base Tree를 기반으로 새로운 Tree 객체 생성
+      const treeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees`, {
+          method: 'POST',
+          headers: { ...getHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base_tree: baseTreeSha, tree: tree })
+      });
+      if (!treeRes.ok) throw new Error("Tree 객체 갱신 실패");
+      const treeData = await treeRes.json();
+
+      // Step E: 새로운 커밋 생성
+      const newCommitRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/commits`, {
+          method: 'POST',
+          headers: { ...getHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: `웹툰 스토리보드 에디터 자동 동기화 (${new Date().toLocaleString()})`, tree: treeData.sha, parents: [commitSha] })
+      });
+      if (!newCommitRes.ok) throw new Error("Commit 생성 실패");
+      const newCommitData = await newCommitRes.json();
+
+      // Step F: 브랜치 HEAD 업데이트 (Push 역할)
+      const updateRefRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`, {
+          method: 'PATCH',
+          headers: { ...getHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sha: newCommitData.sha })
+      });
+      if (!updateRefRes.ok) throw new Error("저장소 브랜치 업데이트(Push) 실패");
+
+      showToast(`✅ GitHub 동기화가 완료되었습니다!`);
+      
+      // 3. 완료 후 GitHub Pages 새 창 열기 안내
+      const pagesUrl = `https://${owner}.github.io/${repo}/${basePath}/index.html`;
+      setTimeout(() => {
+          openConfirm(`동기화가 성공적으로 완료되었습니다.\n지금 바로 GitHub Pages 접속 링크를 여시겠습니까?\n\n${pagesUrl}`, () => {
+            window.open(pagesUrl, '_blank');
+            closeConfirm();
+          });
+      }, 1000);
+
+    } catch (err) {
+      showToast(`동기화 에러: ${err.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // --- 🚀 LLM API 연동 로직 (Gemini) ---
+  const getTextModelUrl = () => {
+    const modelName = customGeminiKey.trim() ? "gemini-2.5-flash" : "gemini-2.5-flash-preview-09-2025";
+    return `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${getGeminiKey()}`;
+  };
+
+  const generateScriptDraft = async () => {
+    if (!checkGeminiKey()) return;
+    if (!scriptText.trim()) { showToast("내용을 먼저 입력해주세요."); return; }
+    setIsGeneratingScript(true);
+    try {
+      const payload = {
+        contents: [{ parts: [{ text: `다음 스토리를 대사와 지문이 포함된 구체적인 웹툰 스크립트로 길게 확장해줘:\n\n${scriptText}` }] }],
+        systemInstruction: { parts: [{ text: "당신은 웹툰 스토리 작가입니다." }] }
+      };
+      const response = await fetchWithRetry(getTextModelUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      setScriptText(response.candidates?.[0]?.content?.parts?.[0]?.text);
+      showToast("✨ 스토리가 성공적으로 확장되었습니다.");
+    } catch (err) { showToast(`에러: ${err.message}`); } finally { setIsGeneratingScript(false); }
+  };
+
+  const optimizeScriptToCuts = async () => {
+    if (!checkGeminiKey()) return;
+    if (!scriptText.trim()) { showToast("내용을 먼저 입력해주세요."); return; }
+    setIsOptimizingScript(true);
+    try {
+      const payload = {
+        contents: [{ parts: [{ text: `다음 줄글 스토리를 분석해서 [1컷], [2컷] 처럼 컷 단위로 잘게 쪼개어 웹툰 글 콘티 형식으로 정리해줘:\n\n${scriptText}` }] }],
+        systemInstruction: { parts: [{ 
+          text: `당신은 웹툰 콘티 전문가입니다.${scriptTemplate ? `\n\n[필수 적용: 글 콘티 양식/연출 가이드]\n${scriptTemplate}\n\n위 양식(길이, 호흡, 앵글, 연출 스타일 등)을 기반으로 스크립트를 철저하게 재구성하세요.` : ''}` 
+        }] }
+      };
+      const response = await fetchWithRetry(getTextModelUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      setScriptText(response.candidates?.[0]?.content?.parts?.[0]?.text);
+      showToast("✨ 줄글이 컷 단위 글 콘티로 최적화되었습니다.");
+    } catch (err) { showToast(`에러: ${err.message}`); } finally { setIsOptimizingScript(false); }
+  };
+
+  const sendToStoryboard = async () => {
+    if (!checkGeminiKey()) return;
+    if (!scriptText.trim()) { showToast("변환할 내용이 없습니다."); return; }
+    setIsConvertingToStoryboard(true);
+    try {
+      let promptText = `
+        다음 스크립트를 분석해서 등장하는 주요 '캐릭터'들의 외형 묘사 프롬프트와, 여러 개의 웹툰 '컷(장면)'으로 분할해줘.
+        응답은 오직 아래의 JSON 객체 형식으로만 줘. (마크다운 기호 없이 순수 JSON만 반환해)
+        
+        {
+          "characters": [
+            { "name": "이름", "appearancePrompt": "외형 단보루 태그 콤마 구분 (예: 1girl, red hair, school uniform)" }
+          ],
+          "cuts": [
+            { 
+              "title": "상황 요약", 
+              "actionPrompt": "동작 및 표정 단보루 태그 콤마 구분 (예: running, crying, holding hands)",
+              "anglePrompt": "카메라 앵글 및 구도 단보루 태그 (예: from below, close-up, dynamic angle)"
+            }
+          ]
+        }
+        
+        스크립트: ${scriptText}
+      `;
+      if (scriptTemplate) {
+        promptText += `\n\n[필수 적용: 연출 가이드라인]\n${scriptTemplate}\n이 양식과 호흡, 앵글 의도를 분석하여 컷 분할 시 'title' 및 'anglePrompt'에 철저히 반영해주세요.`;
+      }
+
+      const payload = { contents: [{ parts: [{ text: promptText }] }], systemInstruction: { parts: [{ text: "오직 JSON 객체만 출력할 것." }] } };
+      const response = await fetchWithRetry(getTextModelUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const responseText = response.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      let parsedData;
+      try {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        parsedData = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+      } catch (e) { throw new Error("AI 응답을 JSON으로 파싱할 수 없습니다."); }
+
+      const charsData = parsedData.characters || [];
+      const cutsData = parsedData.cuts || [];
+
+      if (cutsData.length === 0) throw new Error("컷 데이터가 비어있습니다.");
+
+      const newCharacters = charsData.map(c => ({
+        id: generateId(), name: c.name || '캐릭터', appearancePrompt: c.appearancePrompt || '', image: null, isGenerating: false, isEditing: false
+      }));
+
+      const newCuts = cutsData.map((data, index) => ({
+        id: generateId(), 
+        title: data.title || `컷 ${index + 1}`, 
+        actionPrompt: data.actionPrompt || '', 
+        anglePrompt: data.anglePrompt || '', 
+        promptHeight: 120, 
+        images: [], 
+        currentImageIndex: 0, 
+        genCount: 1, 
+        isEditing: false, 
+        isGenerating: false, 
+        isEnhancing: false
+      }));
+      
+      addPage(`스크립트 변환 (${pages.length + 1}화)`, newCharacters, newCuts);
+      showToast(`✨ 성공! 캐릭터 ${newCharacters.length}명과 컷 ${newCuts.length}개가 분할 생성되었습니다.`);
+    } catch (err) { showToast(`에러: ${err.message}`); } finally { setIsConvertingToStoryboard(false); }
+  };
+
+  // --- 🚀 이미지 생성 연동 (Gemini 엔진 최신 규격 반영) ---
+  const generateGeminiCharacter = async (pageId, charId) => {
+    if (!checkGeminiKey()) return;
+    const page = pages.find(p => p.id === pageId);
+    const char = page.characters.find(c => c.id === charId);
+    if (!char.appearancePrompt.trim()) { showToast("외형 프롬프트를 입력해주세요."); return; }
+
+    updateCharacter(pageId, charId, 'isGenerating', true);
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${getGeminiKey()}`;
+      
+      const payload = {
+        instances: [{ prompt: `A highly detailed anime illustration, character concept art, solid background. ${char.appearancePrompt}` }],
+        parameters: { sampleCount: 1 }
+      };
+
+      const response = await fetchWithRetry(url, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
+      
+      const base64Image = response.predictions?.[0]?.bytesBase64Encoded;
+      
+      if (base64Image) {
+        updateCharacter(pageId, charId, 'image', `data:image/png;base64,${base64Image}`);
+        showToast("✨ 캐릭터 외형이 Gemini로 생성되었습니다!");
+      } else {
+        throw new Error("이미지 데이터를 받지 못했습니다.");
+      }
+    } catch (error) {
+      showToast(`Gemini 생성 실패: ${error.message}`);
+    } finally {
+      updateCharacter(pageId, charId, 'isGenerating', false);
+    }
+  };
+
+  const generateGeminiCutImages = async (pageId, cut) => {
+    if (!checkGeminiKey()) return;
+    const page = pages.find(p => p.id === pageId);
+    const allCharactersAppearance = page.characters.map(c => c.appearancePrompt).filter(Boolean).join(', ');
+    const combinedPrompt = [allCharactersAppearance, cut.anglePrompt, cut.actionPrompt].filter(Boolean).join(', ');
+    
+    if (!combinedPrompt.trim()) { showToast("프롬프트를 입력해주세요."); return; }
+
+    updateCut(pageId, cut.id, 'isGenerating', true);
+    const count = cut.genCount || 1;
+    let newImages = [...(cut.images || [])]; 
+
+    try {
+      for (let i = 0; i < count; i++) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${getGeminiKey()}`;
+        
+        const payload = {
+          instances: [{ prompt: `A highly detailed webtoon anime illustration. ${combinedPrompt}` }],
+          parameters: { sampleCount: 1 }
+        };
+
+        const response = await fetchWithRetry(url, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(payload) 
+        });
+        
+        const base64Image = response.predictions?.[0]?.bytesBase64Encoded;
+        
+        if (base64Image) {
+          newImages.push(`data:image/png;base64,${base64Image}`);
+          setPages(prevPages => prevPages.map(p => p.id === pageId ? { 
+            ...p, cuts: p.cuts.map(c => c.id === cut.id ? { ...c, images: newImages, currentImageIndex: newImages.length - 1 } : c) 
+          } : p));
+        } else {
+          throw new Error("이미지 데이터를 추출할 수 없습니다.");
+        }
+      }
+      showToast(`✨ ${count}장의 이미지가 Gemini로 생성되었습니다!`);
+    } catch (error) {
+      showToast(`Gemini 생성 실패: ${error.message}`);
+    } finally {
+      setPages(prevPages => prevPages.map(p => p.id === pageId ? { 
+        ...p, cuts: p.cuts.map(c => c.id === cut.id ? { ...c, isGenerating: false } : c) 
+      } : p));
+    }
+  };
+
+  // --- 🚀 NovelAI 연동 (500 에러 최종 해결: NAIS2와 100% 동일한 Payload 구성 적용) ---
+  const callNovelAI = async (prompt) => {
+    const naiKey = customNovelAiKey.trim();
+    if (!naiKey) {
+      setTempGeminiKeyInput(customGeminiKey);
+      setTempNovelAiKeyInput(customNovelAiKey);
+      setTempCorsProxyInput(customCorsProxy);
+      setIsApiKeyModalOpen(true);
+      throw new Error("NovelAI API 키가 필요합니다.");
+    }
+    
+    // 줄바꿈 문자 완벽 제거 (Payload JSON 파손 방지)
+    const safePrompt = prompt.replace(/[\r\n]+/g, ' ').replace(/,\s*,/g, ',').replace(/,$/, '').trim();
+    const finalPrompt = `masterpiece, best quality, very aesthetic, absurdres, ${safePrompt}`;
+
+    const corsProxy = "https://corsproxy.io/?";
+    const targetUrl = "https://api.novelai.net/ai/generate-image";
+    
+    const requestBody = {
+      input: finalPrompt,
+      model: "nai-diffusion-3",
+      action: "generate",
+      parameters: {
+        params_version: 1,
+        width: 832,
+        height: 1216,
+        scale: 5.0,
+        sampler: "k_euler",
+        steps: 28,
+        n_samples: 1,
+        ucPreset: 0,
+        qualityToggle: true,
+        sm: false,
+        sm_dyn: false,
+        dynamic_thresholding: false,
+        controlnet_strength: 1,
+        legacy: false,
+        add_original_image: true,
+        uncond_scale: 1.0,
+        cfg_rescale: 0,
+        noise_schedule: "native",
+        legacy_v3_extend: false,
+        seed: Math.floor(Math.random() * 999999999), 
+        negative_prompt: "nsfw, lowres, {bad}, error, fewer, extra, missing, worst quality, jpeg artifacts, bad quality, watermark, unfinished, displeasing, chromatic aberration, signature, extra digits, exacting, vocal, realistic, real, weed, blurry, poorly drawn",
+        reference_image_multiple: [],
+        reference_information_extracted_multiple: [],
+        reference_strength_multiple: []
+      }
+    };
+
+    const response = await fetch(corsProxy + targetUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${naiKey}`,
+        "Content-Type": "application/json",
+        "Accept": "application/x-zip-compressed" 
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+       const errText = await response.text();
+       let parsedErr = errText;
+       try { parsedErr = JSON.parse(errText).message || errText; } catch(e) {}
+       throw new Error(`[${response.status}] ${parsedErr.substring(0, 100)}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const base64Png = extractPngFromZip(arrayBuffer);
+    if (!base64Png) throw new Error("이미지 데이터 추출 실패 (ZIP 파싱 에러)");
+    
+    return base64Png;
+  };
+
+  const generateNovelAICharacter = async (pageId, charId) => {
+    const page = pages.find(p => p.id === pageId);
+    const char = page.characters.find(c => c.id === charId);
+    if (!char.appearancePrompt.trim()) { showToast("외형 프롬프트를 입력해주세요."); return; }
+
+    updateCharacter(pageId, charId, 'isGenerating', true);
+    try {
+      const base64Png = await callNovelAI(char.appearancePrompt);
+      updateCharacter(pageId, charId, 'image', base64Png);
+      showToast("✨ 캐릭터 외형이 생성되었습니다!");
+    } catch (error) {
+      if(error.message !== "NovelAI API 키가 필요합니다.") showToast(`생성 실패: ${error.message}`);
+    } finally {
+      updateCharacter(pageId, charId, 'isGenerating', false);
+    }
+  };
+
+  const generateNovelAICutImages = async (pageId, cut) => {
+    const page = pages.find(p => p.id === pageId);
+    const allCharactersAppearance = page.characters.map(c => c.appearancePrompt).filter(Boolean).join(', ');
+    const combinedPrompt = [allCharactersAppearance, cut.anglePrompt, cut.actionPrompt].filter(Boolean).join(', ');
+
+    if (!combinedPrompt.trim()) { showToast("동작이나 앵글 프롬프트를 입력해주세요."); return; }
+    
+    updateCut(pageId, cut.id, 'isGenerating', true);
+    const count = cut.genCount || 1;
+    let newImages = [...(cut.images || [])]; 
+
+    try {
+      for (let i = 0; i < count; i++) {
+        const base64Png = await callNovelAI(combinedPrompt);
+        newImages.push(base64Png);
+        setPages(prevPages => prevPages.map(p => p.id === pageId ? { 
+          ...p, cuts: p.cuts.map(c => c.id === cut.id ? { ...c, images: newImages, currentImageIndex: newImages.length - 1 } : c) 
+        } : p));
+      }
+      showToast(`✨ ${count}장의 이미지가 순차 생성 완료되었습니다!`);
+    } catch (error) {
+      if(error.message !== "NovelAI API 키가 필요합니다.") showToast(`생성 실패: ${error.message}`);
+    } finally {
+      setPages(prevPages => prevPages.map(p => p.id === pageId ? { 
+        ...p, cuts: p.cuts.map(c => c.id === cut.id ? { ...c, isGenerating: false } : c) 
+      } : p));
+    }
+  };
+
+  // --- 컴포넌트: 편집/읽기 모드에서도 사용자가 설정한 높이가 고정 유지되는 듀얼 프롬프트 창 ---
+  const ResizablePrompt = ({ cut, pageId }) => {
+    const [height, setHeight] = useState(cut.promptHeight || 120);
+    const [isPromptResizing, setIsPromptResizing] = useState(false);
+    const pRef = useRef({ startY: 0, startHeight: 0 });
+
+    useEffect(() => {
+      if (!isPromptResizing && cut.promptHeight && cut.promptHeight !== height) {
+        setHeight(cut.promptHeight);
+      }
+    }, [cut.promptHeight, isPromptResizing, height]);
+
+    const startPResize = (e) => {
+      e.preventDefault();
+      pRef.current = { startY: e.clientY, startHeight: height };
+      setIsPromptResizing(true);
+    };
+
+    useEffect(() => {
+      const handlePMouseMove = (e) => {
+        if (!isPromptResizing) return;
+        setHeight(Math.max(80, Math.min(pRef.current.startHeight + (e.clientY - pRef.current.startY), 600)));
+      };
+      const handlePMouseUp = () => {
+        if (isPromptResizing) {
+          setIsPromptResizing(false);
+          updateCut(pageId, cut.id, 'promptHeight', height);
+        }
+      };
+      
+      if (isPromptResizing) {
+        window.addEventListener('mousemove', handlePMouseMove);
+        window.addEventListener('mouseup', handlePMouseUp);
+      }
+      return () => {
+        window.removeEventListener('mousemove', handlePMouseMove);
+        window.removeEventListener('mouseup', handlePMouseUp);
+      };
+    }, [isPromptResizing, height, pageId, cut.id]);
+
+    return (
+      <div className="bg-[#1e1e1e] rounded-md border border-gray-700 focus-within:border-blue-500 transition-colors relative flex flex-col overflow-hidden" style={{ height: `${height}px` }}>
+        {cut.isEditing ? (
+          <div className="flex flex-col h-full pb-4">
+            <div className="flex-1 flex flex-col border-b border-gray-700 p-2">
+              <label className="text-[10px] text-blue-400 font-bold mb-1">🏃‍♂️ 동작 및 표정 (Action/Pose)</label>
+              <textarea value={cut.actionPrompt} onChange={(e) => updateCut(pageId, cut.id, 'actionPrompt', e.target.value)} placeholder="running, looking back, smiling..." className="w-full h-full bg-transparent text-gray-300 text-xs resize-none outline-none custom-scrollbar" />
+            </div>
+            <div className="flex-1 flex flex-col p-2 relative">
+              <label className="text-[10px] text-purple-400 font-bold mb-1">🎥 앵글 및 구도 (Angle/Camera)</label>
+              <textarea value={cut.anglePrompt} onChange={(e) => updateCut(pageId, cut.id, 'anglePrompt', e.target.value)} placeholder="dynamic angle, from below, full body..." className="w-full h-full bg-transparent text-gray-300 text-xs resize-none outline-none custom-scrollbar" />
+              <button onClick={() => copyToClipboard(`${cut.actionPrompt}, ${cut.anglePrompt}`)} className="absolute top-1 right-2 text-gray-400 hover:text-white bg-black/40 hover:bg-black/60 p-1.5 rounded-md transition-all z-10" title="전체 복사"><Copy size={12} /></button>
+            </div>
+            <div onMouseDown={startPResize} className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize flex items-center justify-center bg-gradient-to-t from-[#2a2a35] to-transparent rounded-b-md">
+              <div className={`w-8 h-1 rounded-full ${isPromptResizing ? 'bg-blue-500' : 'bg-gray-600'}`} />
+            </div>
+          </div>
+        ) : (
+          <div className="h-full flex flex-col pb-2 relative group overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col border-b border-gray-700/50 p-2.5">
+              <span className="text-[10px] text-blue-400 font-bold mb-1">🏃‍♂️ 동작/표정</span>
+              <p className="text-xs text-gray-300 whitespace-pre-wrap font-mono break-all">{cut.actionPrompt || <span className="text-gray-600 italic font-sans">비어있음</span>}</p>
+            </div>
+            <div className="flex flex-col p-2.5">
+              <span className="text-[10px] text-purple-400 font-bold mb-1">🎥 앵글/구도</span>
+              <p className="text-xs text-gray-300 whitespace-pre-wrap font-mono break-all">{cut.anglePrompt || <span className="text-gray-600 italic font-sans">비어있음</span>}</p>
+            </div>
+            <button onClick={() => copyToClipboard(`${cut.actionPrompt}, ${cut.anglePrompt}`)} className="absolute top-2 right-2 text-gray-400 hover:text-white bg-black/40 hover:bg-black/60 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all z-10" title="전체 복사"><Copy size={12} /></button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className={`h-screen w-full flex flex-col bg-[#121212] text-gray-100 font-sans relative overflow-hidden ${isDragging ? 'cursor-grabbing' : ''}`}>
+      
+      {/* 팝업 모달: 외부 API 연동 설정 */}
+      {isApiKeyModalOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onMouseDown={() => setIsApiKeyModalOpen(false)}>
+          <div className="bg-[#1e1e24] border border-gray-700 p-6 rounded-xl shadow-2xl max-w-md w-full animate-in zoom-in-95" onMouseDown={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Settings size={20} className="text-blue-400" /> API 및 동기화 설정
+            </h3>
+            
+            <div className="mb-4">
+              <label className="text-xs text-gray-400 flex items-center gap-1.5 mb-1"><Key size={12}/> Gemini API (스토리/이미지 생성용)</label>
+              <input type="password" value={tempGeminiKeyInput} onChange={e => setTempGeminiKeyInput(e.target.value)} placeholder="Gemini API Key 입력 (선택)" className="w-full bg-[#121212] border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 outline-none focus:border-blue-500 transition-colors" />
+            </div>
+
+            <div className="mb-4">
+              <label className="text-xs text-purple-400 flex items-center gap-1.5 mb-1"><Key size={12}/> NovelAI API (이미지 전용)</label>
+              <input type="password" value={tempNovelAiKeyInput} onChange={e => setTempNovelAiKeyInput(e.target.value)} placeholder="NovelAI Access Token 입력" className="w-full bg-[#121212] border border-purple-900/50 rounded-lg p-2.5 text-sm text-gray-200 outline-none focus:border-purple-500 transition-colors" />
+            </div>
+
+            <div className="mb-6 pt-4 border-t border-gray-700">
+              <label className="text-xs text-green-400 flex items-center gap-1.5 mb-2 font-bold"><Github size={12}/> GitHub 동기화 설정</label>
+              <input type="password" value={tempGithubToken} onChange={e => setTempGithubToken(e.target.value)} placeholder="GitHub Personal Access Token (repo 권한)" className="w-full bg-[#121212] border border-green-900/50 rounded-lg p-2 text-xs text-gray-200 outline-none focus:border-green-500 transition-colors mb-2" />
+              <div className="flex gap-2">
+                 <input type="text" value={tempGithubOwner} onChange={e => setTempGithubOwner(e.target.value)} placeholder="Owner (ex: brhoyoung2)" className="w-1/2 bg-[#121212] border border-gray-600 rounded p-2 text-xs text-gray-300 outline-none focus:border-gray-500 transition-colors" />
+                 <input type="text" value={tempGithubRepo} onChange={e => setTempGithubRepo(e.target.value)} placeholder="Repo (ex: L)" className="w-1/2 bg-[#121212] border border-gray-600 rounded p-2 text-xs text-gray-300 outline-none focus:border-gray-500 transition-colors" />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setIsApiKeyModalOpen(false)} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors text-sm font-medium">취소</button>
+              <button onClick={() => { 
+                setCustomGeminiKey(tempGeminiKeyInput); 
+                setCustomNovelAiKey(tempNovelAiKeyInput); 
+                setCustomCorsProxy(tempCorsProxyInput); 
+                setCustomGithubToken(tempGithubToken);
+                setGithubOwner(tempGithubOwner);
+                setGithubRepo(tempGithubRepo);
+                setIsApiKeyModalOpen(false); 
+                showToast("✅ 설정이 저장되었습니다."); 
+              }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors text-sm">저장하기</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 팝업 모달: 대규모 샘플/양식 템플릿 허브 */}
+      {isTemplateModalOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6" onMouseDown={() => setIsTemplateModalOpen(false)}>
+          <div className="bg-[#1e1e24] border border-gray-700 p-6 rounded-xl shadow-2xl max-w-5xl w-full h-full max-h-[85vh] flex flex-col animate-in zoom-in-95" onMouseDown={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4 shrink-0">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2"><FileEdit size={22} className="text-yellow-400" /> 글 콘티 템플릿 허브</h3>
+              <button onClick={() => setIsTemplateModalOpen(false)} className="text-gray-400 hover:text-white p-1"><X size={24}/></button>
+            </div>
+            <div className="shrink-0 mb-4 flex flex-col gap-2">
+              <div className="flex justify-between items-end">
+                <p className="text-gray-400 text-sm">원하는 템플릿을 선택하거나 직접 양식을 작성해주세요. 분할 생성 시 엄격하게 반영됩니다.</p>
+                <button onClick={() => setTempTemplateInput('')} className="text-xs text-gray-500 hover:text-red-400">초기화</button>
+              </div>
+              <textarea value={tempTemplateInput} onChange={e => setTempTemplateInput(e.target.value)} placeholder="[1컷] (앵글/구도) 인물 상황 묘사... 형식으로 작성" className="w-full h-32 bg-[#121212] border border-gray-600 focus:border-yellow-500 rounded-lg p-3 text-sm text-gray-200 outline-none transition-colors resize-none custom-scrollbar shrink-0" />
+            </div>
+            <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
+              <div className="flex-1 flex flex-col bg-[#16161a] border border-gray-800 rounded-lg overflow-hidden">
+                <div className="p-3 bg-[#1a1a1f] border-b border-gray-800 font-bold text-sm text-yellow-300 flex items-center gap-2 shrink-0"><Sparkles size={14}/> 추천 템플릿 10선</div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                  {RECOMMENDED_TEMPLATES.map(t => (
+                    <div key={t.id} onClick={() => setTempTemplateInput(t.content)} className="p-3 bg-[#232329] hover:bg-[#2a2a35] border border-gray-700 hover:border-yellow-600/50 rounded-md cursor-pointer transition-all group">
+                      <h4 className="font-bold text-gray-200 text-sm mb-1 group-hover:text-yellow-400 transition-colors">{t.title}</h4>
+                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{t.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col bg-[#16161a] border border-gray-800 rounded-lg overflow-hidden">
+                <div className="p-3 bg-[#1a1a1f] border-b border-gray-800 font-bold text-sm text-blue-300 flex items-center gap-2 shrink-0"><Bookmark size={14}/> 내 히스토리 템플릿</div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                  {historyTemplates.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-600 text-sm"><Bookmark size={32} className="mb-2 opacity-20"/>저장된 템플릿이 없습니다.</div>
+                  ) : (
+                    historyTemplates.map(t => (
+                      <div key={t.id} onClick={() => setTempTemplateInput(t.content)} className="relative p-3 bg-[#232329] hover:bg-[#2a2a35] border border-gray-700 hover:border-blue-600/50 rounded-md cursor-pointer transition-all group">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-bold text-gray-200 text-sm group-hover:text-blue-400 transition-colors">{t.title}</h4>
+                          <button onClick={(e) => deleteHistoryTemplate(e, t.id)} className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"><Trash2 size={14}/></button>
+                        </div>
+                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed pr-6">{t.content}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="shrink-0 mt-4 flex gap-3 justify-end pt-4 border-t border-gray-800">
+              <button onClick={() => setIsTemplateModalOpen(false)} className="px-5 py-2.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors text-sm font-medium">닫기</button>
+              <button onClick={handleSaveTemplate} className="px-5 py-2.5 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white font-bold transition-colors text-sm flex items-center gap-2 shadow-lg"><Check size={16}/> 이 양식으로 적용 및 저장</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm 모달 */}
+      {confirmModal.isOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-[#1e1e24] border border-gray-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95">
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2"><AlertCircle size={20} className="text-red-400" /> 확인</h3>
+            <p className="text-gray-300 mb-6 text-sm">{confirmModal.message}</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={closeConfirm} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors text-sm">취소</button>
+              <button onClick={confirmModal.onConfirm} className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold transition-colors text-sm">확인</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {toastMessage && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#2a2a2a] border border-blue-500/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-5 w-[90%] md:max-w-md pointer-events-none">
+          <AlertCircle size={20} className="text-blue-400 shrink-0 mt-0.5" />
+          <span className="font-medium text-sm break-all leading-relaxed flex-1">{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Top Navigation */}
+      <header className="h-16 bg-[#1e1e1e] border-b border-gray-800 px-4 flex items-center justify-between shadow-sm shrink-0 z-40 relative select-none">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)} className={`p-2 rounded-lg transition-colors ${isLeftPanelOpen ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+            {isLeftPanelOpen ? <PanelLeftClose size={22} /> : <PanelLeftOpen size={22} />}
+          </button>
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <AlignLeft size={18} className="text-white" />
+          </div>
+          <h1 className="text-lg md:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 truncate">
+            LMM 웹툰 스튜디오
+          </h1>
+        </div>
+        <div className="flex items-center gap-4 text-sm text-gray-400">
+          <button 
+            onClick={syncToGitHub} 
+            disabled={isSyncing}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-3 md:px-4 py-2 rounded-md transition-colors font-medium shadow-lg disabled:opacity-50">
+            {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <CloudUpload size={16} />}
+            <span className="hidden md:inline">{isSyncing ? '동기화 중...' : 'GitHub 동기화'}</span>
+          </button>
+          <button onClick={() => addPage()} className="flex items-center gap-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white px-3 md:px-4 py-2 rounded-md transition-colors font-medium border border-gray-700">
+            <Plus size={16} /> <span className="hidden md:inline">빈 페이지 추가</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 min-h-0 relative">
+        
+        {/* Left Script Panel */}
+        <aside className={`absolute md:relative z-30 h-full bg-[#16161a] border-r border-gray-800 flex flex-col transition-all duration-300 ease-in-out ${isLeftPanelOpen ? 'w-[85%] sm:w-[350px] translate-x-0' : 'w-[85%] sm:w-[350px] -translate-x-full md:w-0 md:translate-x-0 md:border-r-0'}`}>
+          <div className="flex flex-col h-full w-full">
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-[#1a1a1f] shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="text-blue-400" />
+                <h2 className="font-bold text-gray-200">글 콘티 작성</h2>
+              </div>
+              <button className="md:hidden text-gray-400 p-1" onClick={() => setIsLeftPanelOpen(false)}><X size={20} /></button>
+            </div>
+            
+            <div className="flex-1 p-4 md:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+              <div className="flex flex-col gap-2 shrink-0">
+                <label className="text-sm font-medium text-gray-400 flex justify-between items-center mb-1">
+                  <span>💡 스토리를 입력하세요</span>
+                  <button onClick={() => setScriptText('')} className="text-gray-500 hover:text-red-400 flex items-center gap-1 text-xs"><Trash2 size={12} /> 지우기</button>
+                </label>
+                
+                <div className="relative flex flex-col w-full bg-[#0f0f13] border border-gray-700 rounded-lg focus-within:border-blue-500 transition-colors" style={{ height: `${scriptHeight}px` }}>
+                  <textarea value={scriptText} onChange={(e) => setScriptText(e.target.value)} placeholder="예: 주인공이 코너에서 수아와 부딪힌다..." className="w-full h-full bg-transparent p-3 pb-6 text-sm text-gray-200 resize-none outline-none custom-scrollbar leading-relaxed" />
+                  <div onMouseDown={startResize} className="absolute bottom-0 left-0 right-0 h-5 cursor-ns-resize flex items-center justify-center bg-gradient-to-t from-[#2a2a35] to-transparent rounded-b-lg group">
+                    <div className={`w-12 h-1.5 rounded-full transition-colors ${isResizing ? 'bg-blue-500' : 'bg-gray-600 group-hover:bg-gray-400'}`} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-4 border-t border-gray-800/50 mt-auto">
+                <button onClick={generateScriptDraft} disabled={isGeneratingScript || !scriptText} className="w-full py-3 bg-[#2d2d3d] hover:bg-[#3d3d5c] border border-blue-900/50 rounded-xl text-blue-300 transition-all flex items-center justify-center gap-2 font-bold text-sm disabled:opacity-50">
+                  {isGeneratingScript ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} 1. AI로 살붙이기 (확장)
+                </button>
+                
+                <div className="flex gap-2">
+                  <button onClick={optimizeScriptToCuts} disabled={isOptimizingScript || !scriptText} className="flex-1 py-3 bg-[#2d3d2d] hover:bg-[#3d5c3d] border border-green-900/50 rounded-xl text-green-300 transition-all flex items-center justify-center gap-1.5 font-bold text-sm disabled:opacity-50 px-2">
+                    {isOptimizingScript ? <Loader2 size={16} className="animate-spin" /> : <List size={16} />} 2. 글 콘티 최적화
+                  </button>
+                  <button onClick={() => { setTempTemplateInput(scriptTemplate); setIsTemplateModalOpen(true); }} className={`w-16 py-3 bg-[#3d3d2d] hover:bg-[#5c5c3d] border ${scriptTemplate ? 'border-yellow-500 text-yellow-400' : 'border-yellow-900/50 text-yellow-300'} rounded-xl flex flex-col items-center justify-center shrink-0 font-bold transition-all`} title="글 콘티 샘플 양식 넣기">
+                    <FileEdit size={16} className="mb-0.5"/> <span className="text-[10px]">샘플/양식</span>
+                  </button>
+                </div>
+
+                <button onClick={sendToStoryboard} disabled={isConvertingToStoryboard || !scriptText} className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl text-white font-bold transition-all flex items-center justify-center gap-2 shadow-lg text-sm disabled:opacity-50">
+                  {isConvertingToStoryboard ? <Loader2 size={16} className="animate-spin" /> : <SendToBack size={16} />} 3. 스토리보드로 분할/보내기
+                </button>
+              </div>
+
+              <div className="mt-2 flex justify-end">
+                <button onClick={() => { 
+                  setTempGeminiKeyInput(customGeminiKey); 
+                  setTempNovelAiKeyInput(customNovelAiKey); 
+                  setTempCorsProxyInput(customCorsProxy); 
+                  setTempGithubToken(customGithubToken);
+                  setTempGithubOwner(githubOwner);
+                  setTempGithubRepo(githubRepo);
+                  setIsApiKeyModalOpen(true); 
+                }} className={`flex items-center gap-1.5 text-xs transition-colors py-1.5 px-3 rounded-md hover:bg-gray-800 ${customNovelAiKey || customGithubToken ? 'text-purple-400' : 'text-gray-500 hover:text-gray-300'}`}>
+                  <Settings size={14} /> 외부 API 연동 설정 {customNovelAiKey ? '(연결됨)' : ''}
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {isLeftPanelOpen && <div className="absolute inset-0 bg-black/50 z-20 md:hidden" onClick={() => setIsLeftPanelOpen(false)}></div>}
+
+        {/* Right Storyboard Area */}
+        <main ref={scrollRef} onMouseDown={onDragStart} onMouseLeave={onDragEnd} onMouseUp={onDragEnd} onMouseMove={onDragMove} className="flex-1 min-w-0 overflow-x-auto overflow-y-hidden bg-[#121212] custom-main-scrollbar select-none">
+          <div className="flex items-start gap-4 md:gap-6 h-full min-w-max p-4 md:p-6 pb-8">
+            {pages.map((page, pageIndex) => (
+              <div key={page.id} className="cut-ignore-drag w-[340px] md:w-[440px] shrink-0 h-full max-h-full flex flex-col bg-[#1a1a1a] border border-gray-800 rounded-xl shadow-xl select-auto overflow-hidden">
+                
+                {/* Page Header */}
+                <div className="p-3 md:p-4 border-b border-gray-800 flex items-center justify-between bg-[#232323] shrink-0" onDoubleClick={() => togglePageEdit(page.id, true)}>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex flex-col gap-1 mr-1 text-gray-600 shrink-0">
+                      <button onClick={(e) => { e.stopPropagation(); movePage(pageIndex, 'left'); }} disabled={pageIndex === 0} className="hover:text-white disabled:opacity-30"><ChevronLeft size={14} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); movePage(pageIndex, 'right'); }} disabled={pageIndex === pages.length - 1} className="hover:text-white disabled:opacity-30"><ChevronRight size={14} /></button>
+                    </div>
+                    {page.isEditing ? (
+                      <input type="text" value={page.title} onChange={(e) => updatePageTitle(page.id, e.target.value)} onBlur={() => togglePageEdit(page.id, false)} onKeyDown={(e) => e.key === 'Enter' && togglePageEdit(page.id, false)} autoFocus className="bg-[#121212] border border-blue-500 text-white px-2 py-1 rounded outline-none w-full font-bold text-sm md:text-base focus:ring-2 focus:ring-blue-500/50" />
+                    ) : (
+                      <h2 className="text-base md:text-lg font-bold text-gray-100 truncate cursor-pointer" title={page.title}>{page.title}</h2>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); togglePageEdit(page.id); }} className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 rounded"><Edit2 size={14} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); deletePage(page.id); }} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded"><Trash2 size={14} /></button>
+                  </div>
+                </div>
+
+                {/* 1. 상단: 캐릭터 외형 설정 카드 영역 */}
+                <div className="bg-[#1a1a24] border-b border-gray-800 p-3 shrink-0 flex flex-col gap-3 max-h-[40%] overflow-y-auto custom-scrollbar">
+                  <div className="flex items-center justify-between text-xs font-bold text-blue-300">
+                    <div className="flex items-center gap-1.5"><UserCircle size={14}/> 등장 캐릭터 설정</div>
+                    <button onClick={() => addCharacter(page.id)} className="flex items-center gap-1 hover:text-blue-200 bg-blue-900/30 px-2 py-1 rounded transition-colors"><Plus size={12}/> 추가</button>
+                  </div>
+                  
+                  <div className="flex flex-col gap-3">
+                    {page.characters?.map((char) => (
+                      <div key={char.id} className="bg-[#23232c] border border-blue-900/30 rounded-lg flex overflow-hidden">
+                        {/* 좌측: 캐릭터 이미지 프리뷰 */}
+                        <div className="w-24 h-24 bg-[#121212] border-r border-blue-900/30 shrink-0 relative flex items-center justify-center group/charimg">
+                          {char.image ? (
+                            <img src={char.image} alt={char.name} className="w-full h-full object-cover" />
+                          ) : (
+                            char.isGenerating ? <Loader2 size={16} className="animate-spin text-blue-400"/> : <UserCircle size={24} className="text-gray-600"/>
+                          )}
+                          {!char.isGenerating && (
+                            <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center opacity-0 group-hover/charimg:opacity-100 transition-opacity gap-1 p-1">
+                              <button onClick={() => generateNovelAICharacter(page.id, char.id)} className="w-full bg-purple-600 hover:bg-purple-500 text-white text-[9px] px-1 py-1 rounded-sm font-bold transition-colors">NAI 생성</button>
+                              <button onClick={() => generateGeminiCharacter(page.id, char.id)} className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[9px] px-1 py-1 rounded-sm font-bold transition-colors">Gemini 생성</button>
+                              <button onClick={() => handleLocalUploadClick(page.id, char.id, 'character')} className="w-full bg-gray-700 hover:bg-gray-600 text-white text-[9px] px-1 py-1 rounded-sm font-bold transition-colors mt-0.5">PC 업로드</button>
+                            </div>
+                          )}
+                        </div>
+                        {/* 우측: 정보 입력 */}
+                        <div className="flex-1 p-2 flex flex-col gap-1.5" onDoubleClick={() => updateCharacter(page.id, char.id, 'isEditing', true)}>
+                          <div className="flex items-center justify-between">
+                            {char.isEditing ? (
+                              <input type="text" value={char.name} onChange={(e) => updateCharacter(page.id, char.id, 'name', e.target.value)} className="bg-[#121212] border border-gray-600 text-white px-1.5 py-0.5 rounded outline-none w-2/3 text-[10px] font-bold focus:border-blue-500" placeholder="이름" />
+                            ) : (
+                              <span className="text-[10px] font-bold text-gray-200">{char.name}</span>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => updateCharacter(page.id, char.id, 'isEditing', !char.isEditing)} className="text-gray-500 hover:text-blue-400"><Edit2 size={10}/></button>
+                              <button onClick={() => deleteCharacter(page.id, char.id)} className="text-gray-500 hover:text-red-400"><Trash2 size={10}/></button>
+                            </div>
+                          </div>
+                          {char.isEditing ? (
+                            <textarea value={char.appearancePrompt} onChange={(e) => updateCharacter(page.id, char.id, 'appearancePrompt', e.target.value)} placeholder="외형 태그 (예: 1girl, red hair...)" className="w-full flex-1 bg-[#121212] rounded p-1.5 text-[10px] text-gray-300 resize-none outline-none custom-scrollbar" />
+                          ) : (
+                            <p className="text-[10px] text-gray-400 flex-1 overflow-y-auto custom-scrollbar leading-tight font-mono">{char.appearancePrompt || '외형 묘사가 없습니다.'}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {(!page.characters || page.characters.length === 0) && (
+                      <div className="text-center text-xs text-gray-500 py-4 italic">등록된 캐릭터가 없습니다.</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. 하단: 컷 리스트 영역 (세로 스크롤) */}
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 md:p-4 space-y-4 md:space-y-6 custom-scrollbar bg-[#16161a]">
+                  {page.cuts.map((cut, cutIndex) => (
+                    <div key={cut.id} className={`bg-[#2a2a2a] rounded-lg border-2 ${cut.isEditing ? 'border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'border-gray-700/50'} flex flex-col overflow-hidden relative group transition-all`}>
+                      
+                      {/* 컷 툴바 */}
+                      <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10 bg-[#1a1a1a]/80 backdrop-blur-sm p-1 rounded-md border border-gray-700">
+                        <button onClick={() => moveCut(page.id, cutIndex, 'up')} disabled={cutIndex === 0} className="p-1 text-gray-300 hover:text-white disabled:opacity-30"><ChevronUp size={14} /></button>
+                        <button onClick={() => moveCut(page.id, cutIndex, 'down')} disabled={cutIndex === page.cuts.length - 1} className="p-1 text-gray-300 hover:text-white disabled:opacity-30"><ChevronDown size={14} /></button>
+                        <div className="h-px bg-gray-700 my-1"></div>
+                        <button onClick={() => copyCut(page.id, cut)} className="p-1 text-gray-300 hover:text-blue-400"><Copy size={14} /></button>
+                        <button onClick={() => deleteCut(page.id, cut.id)} className="p-1 text-gray-300 hover:text-red-400"><Trash2 size={14} /></button>
+                      </div>
+
+                      {/* Image Area (다중 생성 뷰어) */}
+                      <div className="w-full aspect-[4/3] bg-[#1e1e1e] relative flex flex-col items-center justify-center overflow-hidden border-b border-gray-700/50 group/image">
+                        {cut.images && cut.images.length > 0 ? (
+                          <>
+                            <img src={cut.images[cut.currentImageIndex]} alt={cut.title} className="w-full h-full object-cover" />
+                            {cut.images.length > 1 && (
+                              <>
+                                <button onClick={() => updateCut(page.id, cut.id, 'currentImageIndex', Math.max(0, cut.currentImageIndex - 1))} disabled={cut.currentImageIndex === 0} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full hover:bg-black disabled:opacity-30"><ChevronLeft size={20}/></button>
+                                <button onClick={() => updateCut(page.id, cut.id, 'currentImageIndex', Math.min(cut.images.length - 1, cut.currentImageIndex + 1))} disabled={cut.currentImageIndex === cut.images.length - 1} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full hover:bg-black disabled:opacity-30"><ChevronRight size={20}/></button>
+                                <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                  {cut.currentImageIndex + 1} / {cut.images.length}
+                                </div>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-gray-600 flex flex-col items-center gap-2">
+                            {cut.isGenerating ? (
+                              <div className="flex flex-col items-center gap-2"><Loader2 size={24} className="animate-spin text-purple-500" /><span className="text-xs font-medium text-purple-400 animate-pulse">✨ 생성 중...</span></div>
+                            ) : (
+                              <><ImageIcon size={24} /><span className="text-xs font-medium">이미지 없음</span></>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* 하단 듀얼 생성 오버레이 (NAI & Gemini & Upload) */}
+                        {!cut.isGenerating && (
+                          <div className={`absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1.5 rounded-lg flex items-center justify-between opacity-100 transition-opacity border border-gray-700/50 ${cut.images?.length > 0 ? 'md:opacity-0 md:group-hover/image:opacity-100' : ''}`}>
+                            <div className="flex items-center gap-1.5">
+                               <div className="flex items-center bg-gray-800 rounded-md overflow-hidden border border-gray-700 mr-1">
+                                 <button onClick={() => updateCut(page.id, cut.id, 'genCount', Math.max(1, cut.genCount - 1))} className="px-1.5 py-1 text-gray-400 hover:text-white hover:bg-gray-700"><Minus size={10}/></button>
+                                 <span className="text-[10px] font-bold text-white px-1.5 min-w-[24px] text-center">{cut.genCount}장</span>
+                                 <button onClick={() => updateCut(page.id, cut.id, 'genCount', Math.min(4, cut.genCount + 1))} className="px-1.5 py-1 text-gray-400 hover:text-white hover:bg-gray-700"><Plus size={10}/></button>
+                               </div>
+                               <button onClick={() => handleLocalUploadClick(page.id, cut.id, 'cut')} className="bg-gray-700 hover:bg-gray-600 text-white text-[10px] md:text-xs px-2 py-1.5 rounded-md shadow-lg flex items-center gap-1 font-bold transition-all" title="PC에서 이미지 업로드">
+                                 <Upload size={12} /> <span className="hidden md:inline">업로드</span>
+                               </button>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => generateNovelAICutImages(page.id, cut)} className="bg-purple-600 hover:bg-purple-500 text-white text-[10px] md:text-xs px-2.5 py-1.5 rounded-md shadow-lg flex items-center gap-1 font-bold transition-all" title="NovelAI로 생성">
+                                <Sparkles size={12} /> NAI
+                              </button>
+                              <button onClick={() => generateGeminiCutImages(page.id, cut)} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] md:text-xs px-2.5 py-1.5 rounded-md shadow-lg flex items-center gap-1 font-bold transition-all" title="Gemini로 생성">
+                                <Sparkles size={12} /> Gemini
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content Area */}
+                      <div className="p-3 md:p-4 flex flex-col gap-2 md:gap-3" onDoubleClick={() => toggleCutEdit(page.id, cut.id, true)}>
+                        <div className="flex items-center justify-between">
+                          {cut.isEditing ? (
+                            <input type="text" value={cut.title} onChange={(e) => updateCut(page.id, cut.id, 'title', e.target.value)} className="bg-[#121212] border border-gray-600 text-white px-2 py-1 rounded outline-none w-2/3 text-xs md:text-sm font-bold focus:border-purple-500" placeholder="상황 요약" />
+                          ) : (
+                            <h3 className="font-bold text-gray-200 text-xs md:text-sm flex-1">{cut.title}</h3>
+                          )}
+                          <button onClick={() => toggleCutEdit(page.id, cut.id)} className="text-gray-500 hover:text-purple-400 transition-colors">
+                            {cut.isEditing ? <Check size={14} /> : <Edit2 size={14} />}
+                          </button>
+                        </div>
+
+                        <ResizablePrompt cut={cut} pageId={page.id} />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 w-full pt-2">
+                    <button onClick={() => addCut(page.id)} className="w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 hover:bg-[#2a2a2a] transition-all flex items-center justify-center gap-2 font-medium text-xs md:text-sm">
+                      <Plus size={14} /> 빈 컷 추가
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button onClick={() => addPage()} className="cut-ignore-drag w-12 md:w-16 shrink-0 h-[98%] max-h-full border-2 border-dashed border-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-500 hover:text-white hover:border-gray-600 hover:bg-[#1a1a1a] transition-all cursor-pointer">
+              <div className="bg-gray-800 p-2 md:p-3 rounded-full mb-2 pointer-events-none"><Plus size={20} /></div>
+              <span className="writing-vertical text-xs md:text-sm font-medium tracking-widest whitespace-nowrap rotate-180 pointer-events-none" style={{ writingMode: 'vertical-rl' }}>새 페이지</span>
+            </button>
+          </div>
+        </main>
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #52525b; }
+        
+        .custom-main-scrollbar::-webkit-scrollbar { width: 16px; height: 16px; }
+        .custom-main-scrollbar::-webkit-scrollbar-track { background: #121212; border-radius: 0px; }
+        .custom-main-scrollbar::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 10px; border: 3px solid #121212; }
+        .custom-main-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #6b7280; }
+      `}} />
+    </div>
+  );
+}
