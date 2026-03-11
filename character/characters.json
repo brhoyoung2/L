@@ -73,7 +73,7 @@
     "name": "유나",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/yuna.jpg",
     "tags": [
       "캐주얼",
       "스트리트",
@@ -96,7 +96,7 @@
     "name": "미래",
     "gender": "female",
     "genre": "fantasy",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/mirae.jpg",
     "tags": [
       "사이버펑크",
       "전사",
