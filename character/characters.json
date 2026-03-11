@@ -50,7 +50,7 @@
     "name": "하나",
     "gender": "female",
     "genre": "historical",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/hana.jpg",
     "tags": [
       "한복",
       "조선시대",
@@ -119,7 +119,7 @@
     "name": "지수",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/jisu.jpg",
     "tags": [
       "교복",
       "학생",
@@ -142,7 +142,7 @@
     "name": "준호",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/junho.jpg",
     "tags": [
       "직장인",
       "정장",
@@ -165,7 +165,7 @@
     "name": "태양",
     "gender": "male",
     "genre": "fantasy",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/taeyang.jpg",
     "tags": [
       "용사",
       "전사",
