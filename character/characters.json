@@ -1062,7 +1062,7 @@
     "name": "한결",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/hangyul.jpg",
     "tags": [
       "선생님",
       "따뜻함",
@@ -1085,7 +1085,7 @@
     "name": "우진",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/woojin.jpg",
     "tags": [
       "군인",
       "엄격",
@@ -1108,7 +1108,7 @@
     "name": "태현",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/taehyun.jpg",
     "tags": [
       "스타일리스트",
       "패션",
@@ -1131,7 +1131,7 @@
     "name": "재혁",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/jaehyuk.jpg",
     "tags": [
       "CEO",
       "리더십",
@@ -1154,7 +1154,7 @@
     "name": "준서",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/junseo.jpg",
     "tags": [
       "경호원",
       "강인",
@@ -1177,7 +1177,7 @@
     "name": "영재",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/youngjae.jpg",
     "tags": [
       "패션디자이너",
       "창의적",
@@ -1660,7 +1660,7 @@
     "name": "김 사장",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/kim_boss.jpg",
     "tags": [
       "식당사장",
       "뚱뚱",
@@ -1683,7 +1683,7 @@
     "name": "할아버지",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/grandfather.jpg",
     "tags": [
       "할아버지",
       "인자함",
@@ -1706,7 +1706,7 @@
     "name": "택배 아저씨",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/delivery_man.jpg",
     "tags": [
       "택배기사",
       "통통",
@@ -1729,7 +1729,7 @@
     "name": "중학생 찐따",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/student_boy.jpg",
     "tags": [
       "중학생",
       "뚱뚱",
@@ -1752,7 +1752,7 @@
     "name": "공사판 인부",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/construction.jpg",
     "tags": [
       "건설노동자",
       "근육질",
@@ -1775,7 +1775,7 @@
     "name": "만수 할배",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/mansoo.jpg",
     "tags": [
       "할아버지",
       "고집쟁이",
@@ -1798,7 +1798,7 @@
     "name": "경비 아저씨",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/security_guard.jpg",
     "tags": [
       "경비원",
       "뚱뚱",
@@ -1821,7 +1821,7 @@
     "name": "꼬마 민찬",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/boy_minchan.jpg",
     "tags": [
       "초등학생",
       "통통",
@@ -1844,7 +1844,7 @@
     "name": "우편 아저씨",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/postman.jpg",
     "tags": [
       "우체부",
       "마른",
@@ -1867,7 +1867,7 @@
     "name": "노가다 반장",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/site_chief.jpg",
     "tags": [
       "현장반장",
       "뚱뚱",
@@ -1890,7 +1890,7 @@
     "name": "PC방 알바",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/pccafe_staff.jpg",
     "tags": [
       "PC방직원",
       "마른",
@@ -1913,7 +1913,7 @@
     "name": "이발사 아저씨",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/barber.jpg",
     "tags": [
       "이발사",
       "중년",
@@ -1936,7 +1936,7 @@
     "name": "꼬마 준혁",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/boy_junhyuk.jpg",
     "tags": [
       "유치원생",
       "마른",
@@ -1959,7 +1959,7 @@
     "name": "버스기사",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/bus_driver.jpg",
     "tags": [
       "버스기사",
       "뚱뚱",
@@ -1982,7 +1982,7 @@
     "name": "목사님",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/pastor.jpg",
     "tags": [
       "목사",
       "온화함",
@@ -2005,7 +2005,7 @@
     "name": "청소 아저씨",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/janitor.jpg",
     "tags": [
       "환경미화원",
       "통통",
@@ -2028,7 +2028,7 @@
     "name": "약사 아저씨",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/pharmacist.jpg",
     "tags": [
       "약사",
       "마른",
@@ -2051,7 +2051,7 @@
     "name": "치킨집 사장",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/chicken_boss.jpg",
     "tags": [
       "치킨집",
       "뚱뚱",
@@ -2074,7 +2074,7 @@
     "name": "동네 아저씨",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/neighbor.jpg",
     "tags": [
       "아저씨",
       "평범함",
@@ -2097,7 +2097,7 @@
     "name": "군고구마 할배",
     "gender": "male",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/sweet_potato.jpg",
     "tags": [
       "노점상",
       "할아버지",
