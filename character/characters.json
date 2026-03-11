@@ -1430,7 +1430,7 @@
     "name": "형광 조끼",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/worker_f.jpg",
     "tags": [
       "공사현장",
       "마른",
@@ -1453,7 +1453,7 @@
     "name": "카페 사장님",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/cafe_boss_f.jpg",
     "tags": [
       "카페사장",
       "뚱뚱",
@@ -1476,7 +1476,7 @@
     "name": "수녀님",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/sister.jpg",
     "tags": [
       "수녀",
       "고요함",
@@ -1499,7 +1499,7 @@
     "name": "은퇴 선생",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/retired_teacher.jpg",
     "tags": [
       "노인",
       "우아한",
@@ -1522,7 +1522,7 @@
     "name": "미용사 언니",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/hairdresser.jpg",
     "tags": [
       "미용사",
       "통통",
@@ -1545,7 +1545,7 @@
     "name": "나리",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/nari.jpg",
     "tags": [
       "노숙인",
       "고달픔",
@@ -1568,7 +1568,7 @@
     "name": "반장 엄마",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/class_mom.jpg",
     "tags": [
       "학부모",
       "뚱뚱",
@@ -1591,7 +1591,7 @@
     "name": "마트 직원",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/mart_staff.jpg",
     "tags": [
       "마트알바",
       "마른",
@@ -1614,7 +1614,7 @@
     "name": "체육 선생",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/pe_teacher.jpg",
     "tags": [
       "체육선생",
       "건강미",
@@ -1637,7 +1637,7 @@
     "name": "이모",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/karaoke_imo.jpg",
     "tags": [
       "노래방이모",
       "화려함",
