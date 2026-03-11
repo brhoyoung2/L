@@ -188,7 +188,7 @@
     "name": "도현",
     "gender": "male",
     "genre": "historical",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/dohyun.jpg",
     "tags": [
       "무사",
       "사극",
@@ -280,7 +280,7 @@
     "name": "나연",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/nayeon.jpg",
     "tags": [
       "발레리나",
       "우아한",
@@ -303,7 +303,7 @@
     "name": "다현",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/dahyun.jpg",
     "tags": [
       "바리스타",
       "카페",
@@ -326,7 +326,7 @@
     "name": "서연",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/seoyeon.jpg",
     "tags": [
       "헬스트레이너",
       "활동적",
@@ -349,7 +349,7 @@
     "name": "수빈",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/subin.jpg",
     "tags": [
       "작가",
       "독서",
@@ -372,7 +372,7 @@
     "name": "채린",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/chaerin.jpg",
     "tags": [
       "DJ",
       "나이트라이프",
@@ -395,7 +395,7 @@
     "name": "혜진",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/hyejin.jpg",
     "tags": [
       "플로리스트",
       "자연",
@@ -418,7 +418,7 @@
     "name": "예린",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/yerin.jpg",
     "tags": [
       "유튜버",
       "밝은",
@@ -441,7 +441,7 @@
     "name": "민아",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/mina.jpg",
     "tags": [
       "경찰",
       "단호한",
@@ -464,7 +464,7 @@
     "name": "가은",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/gaeun.jpg",
     "tags": [
       "사진작가",
       "빈티지",
@@ -487,7 +487,7 @@
     "name": "소윤",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/soyun.jpg",
     "tags": [
       "쉐프",
       "당찬",
@@ -510,7 +510,7 @@
     "name": "이슬",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/iseul.jpg",
     "tags": [
       "간호사",
       "배려",
@@ -533,7 +533,7 @@
     "name": "다은",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/daeun.jpg",
     "tags": [
       "모델",
       "고급",
@@ -556,7 +556,7 @@
     "name": "보영",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/boyoung.jpg",
     "tags": [
       "게이머",
       "귀여운",
@@ -579,7 +579,7 @@
     "name": "지아",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/jia.jpg",
     "tags": [
       "웨딩플래너",
       "화사한",
@@ -602,7 +602,7 @@
     "name": "나현",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/nahyun.jpg",
     "tags": [
       "군인",
       "강인한",
@@ -625,7 +625,7 @@
     "name": "하린",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/harin.jpg",
     "tags": [
       "마케터",
       "스마트",
@@ -648,7 +648,7 @@
     "name": "수아",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/sua.jpg",
     "tags": [
       "화가",
       "몽환적",
@@ -671,7 +671,7 @@
     "name": "채원",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/chaewon.jpg",
     "tags": [
       "비서",
       "단정한",
@@ -694,7 +694,7 @@
     "name": "은지",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/eunji.jpg",
     "tags": [
       "의사",
       "지성",
@@ -717,7 +717,7 @@
     "name": "루나",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/luna.jpg",
     "tags": [
       "스튜어디스",
       "우아",
@@ -1200,7 +1200,7 @@
     "name": "순자 아줌마",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/sonja.jpg",
     "tags": [
       "식당아주머니",
       "통통",
@@ -1223,7 +1223,7 @@
     "name": "복순 할머니",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/boksun.jpg",
     "tags": [
       "할머니",
       "인자함",
@@ -1246,7 +1246,7 @@
     "name": "미소",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/miso.jpg",
     "tags": [
       "편의점알바",
       "마른",
@@ -1269,7 +1269,7 @@
     "name": "주희",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/juhee.jpg",
     "tags": [
       "초등학생",
       "천진난만",
@@ -1292,7 +1292,7 @@
     "name": "하은",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/haeun.jpg",
     "tags": [
       "중학생",
       "반항기",
@@ -1315,7 +1315,7 @@
     "name": "영숙 여사",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/youngsook.jpg",
     "tags": [
       "부동산아줌마",
       "뚱뚱",
@@ -1338,7 +1338,7 @@
     "name": "우체부 언니",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/postwoman.jpg",
     "tags": [
       "우체부",
       "활달",
@@ -1361,7 +1361,7 @@
     "name": "간식 할매",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/halmae.jpg",
     "tags": [
       "포장마차",
       "구부정",
@@ -1384,7 +1384,7 @@
     "name": "박 선생",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/teacher_park.jpg",
     "tags": [
       "학원선생",
       "피곤함",
@@ -1407,7 +1407,7 @@
     "name": "예나",
     "gender": "female",
     "genre": "modern",
-    "img": null,
+    "img": "https://raw.githubusercontent.com/brhoyoung2/L/main/character/images/yena.jpg",
     "tags": [
       "유치원생",
       "통통",
