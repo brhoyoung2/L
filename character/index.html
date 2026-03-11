@@ -65,9 +65,10 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
 .card-overlay span.label{font-size:10px;color:#ccccff;font-weight:500}
 .card-sel-ring{position:absolute;inset:0;border:2px solid #5566ff;pointer-events:none}
 .card-info{padding:10px 12px 12px}
-.card-name{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.card-name{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
 .card-name span:first-child{font-size:13px;font-weight:600}
 .card-genre{font-size:9px;padding:2px 5px;background:#1a1e2a;color:#6688cc;border-radius:4px}
+.card-filename{font-size:9px;color:#3a3a5a;font-family:'DM Mono',monospace;margin-bottom:4px;letter-spacing:.01em}
 .card-meta{font-size:10px;color:#5a5a7a}
 
 /* Avatar */
@@ -424,6 +425,16 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
       <button class="modal-close" id="settings-close">✕</button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:20px">
+      <!-- file:// 환경 경고 -->
+      <div id="file-protocol-warn" style="display:none;background:#1a1000;border:1px solid #5a4000;border-radius:10px;padding:12px 14px;font-size:12px;color:#ddaa44;line-height:1.6">
+        ⚠️ <b>로컬 파일(file://)로 열려 있습니다.</b><br>
+        GitHub API는 CORS 정책으로 <b>file:// 환경에서 완전히 차단</b>됩니다.<br>
+        GitHub에 index.html을 올린 후 아래 URL에서 열어주세요:<br>
+        <a href="https://brhoyoung2.github.io/L/character/" target="_blank"
+           style="color:#88ccff;word-break:break-all">
+          🌐 https://brhoyoung2.github.io/L/character/
+        </a>
+      </div>
       <div class="settings-section">
         <div class="settings-label">🐱 GitHub Personal Access Token</div>
         <div class="settings-desc">
@@ -747,31 +758,107 @@ function b64dec(b64) {
 /* ════════════════════════════════════════
    GITHUB
 ════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   GITHUB API
+════════════════════════════════════════ */
 async function ghGet(path) {
-  const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
-    {headers:{Authorization:`token ${ghToken}`,Accept:'application/vnd.github.v3+json'}});
-  if (!r.ok) return null;
-  return r.json();
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
+      {headers:{Authorization:`token ${ghToken}`,Accept:'application/vnd.github.v3+json'}});
+    if (!r.ok) return null;
+    return r.json();
+  } catch { return null; }
 }
 async function ghPut(path, content_b64, message, sha) {
   const body = {message,content:content_b64,branch:GH.branch};
   if (sha) body.sha = sha;
-  const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
-    {method:'PUT',headers:{Authorization:`token ${ghToken}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message||'GitHub PUT failed'); }
+  let r;
+  try {
+    r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
+      {method:'PUT',headers:{Authorization:`token ${ghToken}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  } catch(e) {
+    throw new Error(`네트워크 오류: ${e.message}. 토큰 확인 또는 HTTPS 환경에서 실행하세요.`);
+  }
+  if (!r.ok) {
+    let msg = `HTTP ${r.status}`;
+    try { const e = await r.json(); msg = e.message || msg; } catch {}
+    if (r.status === 401) msg = '토큰 인증 실패 (⚙️ 설정에서 토큰 재입력)';
+    if (r.status === 403) msg = '토큰 권한 부족 (repo 스코프 필요)';
+    if (r.status === 422) msg = '파일 처리 오류 (이미지가 너무 클 수 있음)';
+    throw new Error(msg);
+  }
   return r.json();
 }
+
+/* 이미지 자동 리사이즈 (최대 1200px, JPEG quality 0.82) */
+async function resizeImage(dataUrl, maxSize=1200) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let {width:w, height:h} = img;
+      if (w <= maxSize && h <= maxSize) { resolve(dataUrl); return; }
+      const ratio = Math.min(maxSize/w, maxSize/h);
+      w = Math.round(w*ratio); h = Math.round(h*ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/* ── 한국어 이름 → 로마자 매핑 ── */
+const NAME_ROMAN = {
+  '아리아':'aria','소라':'sora','하나':'hana','유나':'yuna','미래':'mirae','지수':'jisu',
+  '준호':'junho','태양':'taeyang','도현':'dohyun','서진':'seojin','하늘':'haneul','민준':'minjun',
+  '나연':'nayeon','다현':'dahyun','서연':'seoyeon','수빈':'subin','채린':'chaerin','혜진':'hyejin',
+  '예린':'yerin','민아':'mina','가은':'gaeun','소윤':'soyun','이슬':'iseul','다은':'daeun',
+  '보영':'boyoung','지아':'jia','나현':'nahyun','하린':'harin','수아':'sua','채원':'chaewon',
+  '은지':'eunji','루나':'luna','현우':'hyunwoo','재원':'jaewon','윤성':'yunseong','태민':'taemin',
+  '정민':'jungmin','승현':'seunghyun','기준':'kijun','동준':'dongjun','찬호':'chanho','리준':'lijun',
+  '성준':'sungjun','민혁':'minhyuk','지훈':'jihun','도윤':'doyoon','한결':'hangyul','우진':'woojin',
+  '태현':'taehyun','재혁':'jaehyuk','준서':'junseo','영재':'youngjae',
+  '순자 아줌마':'sonja','복순 할머니':'boksun','미소':'miso','주희':'juhee','하은':'haeun',
+  '영숙 여사':'youngsook','우체부 언니':'postwoman','간식 할매':'halmae','박 선생':'teacher_park',
+  '예나':'yena','형광 조끼':'worker_f','카페 사장님':'cafe_boss_f','수녀님':'sister',
+  '은퇴 선생':'retired_teacher','미용사 언니':'hairdresser','나리':'nari','반장 엄마':'class_mom',
+  '마트 직원':'mart_staff','체육 선생':'pe_teacher','이모':'karaoke_imo',
+  '김 사장':'kim_boss','할아버지':'grandfather','택배 아저씨':'delivery_man','중학생 찐따':'student_boy',
+  '공사판 인부':'construction','만수 할배':'mansoo','경비 아저씨':'security_guard','꼬마 민찬':'boy_minchan',
+  '우편 아저씨':'postman','노가다 반장':'site_chief','PC방 알바':'pccafe_staff','이발사 아저씨':'barber',
+  '꼬마 준혁':'boy_junhyuk','버스기사':'bus_driver','목사님':'pastor','청소 아저씨':'janitor',
+  '약사 아저씨':'pharmacist','치킨집 사장':'chicken_boss','동네 아저씨':'neighbor','군고구마 할배':'sweet_potato',
+};
+
+function toRomanFilename(charName) {
+  const base = NAME_ROMAN[charName] || charName.replace(/\s+/g,'_').replace(/[^\w]/g,'');
+  return base.toLowerCase();
+}
+
 async function uploadImage(charId, dataUrl) {
-  const ext = (dataUrl.match(/data:image\/(\w+)/)||[])[1]||'png';
-  const filename = `char_${charId}_${Date.now()}.${ext}`;
+  const resized = await resizeImage(dataUrl);
+  const ext = resized.startsWith('data:image/jpeg') ? 'jpg' : ((resized.match(/data:image\/(\w+)/)||[])[1]||'png');
+
+  // 캐릭터 이름으로 로마자 파일명 생성
+  const char = characters.find(c => c.id === charId);
+  const baseName = char ? toRomanFilename(char.name) : `char_${charId}`;
+
+  // 기존 같은 이름 파일 확인 (덮어쓰기용 SHA 획득)
+  const filename = `${baseName}.${ext}`;
   const path = `${GH.imgDir}/${filename}`;
-  await ghPut(path, dataUrl.split(',')[1], `Add image: ${filename}`, null);
-  return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
+  const existing = await ghGet(path);
+  const sha = existing?.sha || null;
+
+  await ghPut(path, resized.split(',')[1], `Update image: ${filename}`, sha);
+  // cache-busting을 위해 ?t= 파라미터 추가
+  return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}?t=${Date.now()}`;
 }
 async function syncCharacters() {
   const clean = characters.map(c=>({...c, img: c.img && c.img.startsWith('http') ? c.img : null}));
   const existing = await ghGet(GH.dataFile);
-  await ghPut(GH.dataFile, b64enc(JSON.stringify(clean,null,2)), 'Sync characters.json', existing?.sha||null);
+  await ghPut(GH.dataFile, b64enc(JSON.stringify(clean,null,2)), 'Sync: characters.json', existing?.sha||null);
 }
 
 /* ════════════════════════════════════════
@@ -838,11 +925,16 @@ function renderGrid() {
     // info
     const info = document.createElement('div');
     info.className = 'card-info';
+    const romanName = toRomanFilename(char.name);
+    const ext = char.img
+      ? (char.img.startsWith('data:image/jpeg') || char.img.includes('.jpg') ? 'jpg' : 'png')
+      : 'jpg';
     info.innerHTML = `
       <div class="card-name">
         <span>${char.name}</span>
         <span class="card-genre">${GENRE_LABELS[char.genre]||char.genre}</span>
       </div>
+      <div class="card-filename">${romanName}.${ext}</div>
       <div class="card-meta">${GENDER_LABELS[char.gender]||char.gender} · ${char.tags.slice(0,2).join(' · ')}</div>`;
 
     card.appendChild(thumb);
@@ -1433,6 +1525,18 @@ function clearToastLog() {
 async function doCommit() {
   if (!ghToken) { openSettings(); return; }
 
+  // file:// 환경 감지 → GitHub API CORS 차단됨
+  if (location.protocol === 'file:') {
+    clearToastLog();
+    showToast();
+    document.getElementById('sync-toast-title-text').textContent = '⚠ 로컬 파일에서 불가';
+    document.getElementById('sync-toast-icon').textContent = '⚠';
+    toastLog('cors', '❌ file:// 환경에서는 GitHub API가 차단됩니다', 'error');
+    toastLog('fix', '💡 아래 GitHub Pages URL에서 열어주세요:', 'pending');
+    toastLog('url', `🌐 https://${GH.owner}.github.io/${GH.repo}/character/`, 'pending');
+    return;
+  }
+
   const btn = document.getElementById('commit-btn');
   btn.disabled = true;
   btn.classList.add('syncing');
@@ -1444,58 +1548,62 @@ async function doCommit() {
   document.getElementById('sync-toast-icon').textContent = '⬆';
   showToast();
 
-  let hasError = false;
+  let imgErrors = 0;
 
-  try {
-    // Step 1: Upload pending base64 images
-    const pending = characters.filter(c => c.img && c.img.startsWith('data:'));
-    if (pending.length > 0) {
-      toastLog('imgs', `이미지 업로드 중… (${pending.length}개)`, 'running');
-      for (let i=0; i<pending.length; i++) {
-        const c = pending[i];
-        try {
-          toastLog('imgs', `이미지 업로드 중… (${i+1}/${pending.length}: ${c.name})`, 'running');
-          const url = await uploadImage(c.id, c.img);
-          characters = characters.map(ch => ch.id===c.id ? {...ch, img:url} : ch);
-        } catch(err) {
-          toastLog('imgs', `⚠ 이미지 실패 (${c.name}): ${err.message}`, 'error');
-          hasError = true;
-        }
+  // Step 1: 이미지 업로드 (실패해도 계속)
+  const pending = characters.filter(c => c.img && c.img.startsWith('data:'));
+  if (pending.length > 0) {
+    toastLog('imgs', `이미지 리사이즈 & 업로드 중… (${pending.length}개)`, 'running');
+    for (let i=0; i<pending.length; i++) {
+      const c = pending[i];
+      toastLog('imgs', `이미지 업로드 중… (${i+1}/${pending.length}: ${c.name})`, 'running');
+      try {
+        const url = await uploadImage(c.id, c.img);
+        characters = characters.map(ch => ch.id===c.id ? {...ch, img:url} : ch);
+        toastLog('imgs', `✓ ${i+1}/${pending.length} 업로드 완료`, 'running');
+      } catch(err) {
+        imgErrors++;
+        toastLog(`img-err-${c.id}`, `⚠ ${c.name} 이미지 실패: ${err.message}`, 'error');
       }
-      if (!hasError) toastLog('imgs', `✓ 이미지 ${pending.length}개 업로드 완료`, 'done');
-    } else {
-      toastLog('imgs', '✓ 업로드할 이미지 없음', 'done');
     }
+    if (imgErrors === 0) {
+      toastLog('imgs', `✓ 이미지 ${pending.length}개 업로드 완료`, 'done');
+    } else {
+      toastLog('imgs', `⚠ 이미지 ${pending.length - imgErrors}개 성공 / ${imgErrors}개 실패 (JSON은 계속 저장)`, 'error');
+    }
+  } else {
+    toastLog('imgs', '✓ 업로드할 이미지 없음', 'done');
+  }
 
-    // Step 2: Commit characters.json (contains all prompts + image URLs)
-    toastLog('json', 'characters.json 커밋 중…', 'running');
+  // Step 2: characters.json 커밋 (이미지 실패 여부 무관하게 항상 실행)
+  toastLog('json', 'characters.json 커밋 중…', 'running');
+  try {
     await syncCharacters();
     toastLog('json', '✓ characters.json 커밋 완료', 'done');
-
-    // Step 3: Done
     toastLog('push', '✓ GitHub Pages에 배포 완료', 'done');
 
     save();
     markClean();
+    renderGrid();
+    renderRightPanel();
 
-    document.getElementById('sync-toast-title-text').textContent = '배포 완료 ✓';
-    document.getElementById('sync-toast-icon').textContent = '🚀';
+    document.getElementById('sync-toast-title-text').textContent = imgErrors > 0 ? '부분 완료 ⚠' : '배포 완료 ✓';
+    document.getElementById('sync-toast-icon').textContent = imgErrors > 0 ? '⚠' : '🚀';
     btn.classList.remove('syncing');
     btn.classList.add('success');
-    btn.querySelector('#commit-btn-label').textContent = '배포 완료 ✓';
-    btn.querySelector('#commit-btn-icon').textContent = '🚀';
+    btn.querySelector('#commit-btn-label').textContent = imgErrors > 0 ? '부분 완료 ⚠' : '배포 완료 ✓';
+    btn.querySelector('#commit-btn-icon').textContent = imgErrors > 0 ? '⚠' : '🚀';
     setTimeout(() => {
       btn.querySelector('#commit-btn-label').textContent = '커밋 & 배포';
       btn.querySelector('#commit-btn-icon').textContent = '⬆';
       btn.classList.remove('success');
-    }, 3000);
-
-    renderGrid();
-    renderRightPanel();
+      btn.disabled = false;
+    }, 4000);
 
   } catch(err) {
-    toastLog('error', '❌ 오류: ' + err.message, 'error');
+    toastLog('json-err', `❌ JSON 커밋 실패: ${err.message}`, 'error');
     document.getElementById('sync-toast-title-text').textContent = '오류 발생';
+    toastLog('hint', '💡 ⚙️ 설정에서 GitHub 토큰을 확인하세요 (repo 스코프 필요)', 'pending');
     btn.classList.remove('syncing');
     btn.querySelector('#commit-btn-label').textContent = '커밋 & 배포';
     btn.querySelector('#commit-btn-icon').textContent = '⬆';
@@ -1510,6 +1618,9 @@ function openSettings() {
   document.getElementById('token-input').value = ghToken;
   document.getElementById('aikey-input').value = anthropicKey;
   document.getElementById('conn-result').textContent = '';
+  // file:// 환경 경고
+  const warn = document.getElementById('file-protocol-warn');
+  if (warn) warn.style.display = location.protocol === 'file:' ? 'block' : 'none';
   document.getElementById('settings-modal').style.display = 'flex';
 }
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
@@ -1524,14 +1635,33 @@ function saveSettings() {
 }
 async function testConn() {
   const tok = document.getElementById('token-input').value.trim();
-  if (!tok) { document.getElementById('conn-result').textContent='토큰을 입력하세요'; return; }
+  const res = document.getElementById('conn-result');
+  if (!tok) { res.textContent='토큰을 입력하세요'; res.style.color='#cc5555'; return; }
   const btn = document.getElementById('test-conn-btn');
   btn.textContent = '테스트 중…'; btn.disabled = true;
   try {
-    const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`,{headers:{Authorization:`token ${tok}`}});
-    document.getElementById('conn-result').style.color = r.ok ? '#44aa66' : '#cc5555';
-    document.getElementById('conn-result').textContent = r.ok ? `✓ 연결 성공 · ${GH.owner}/${GH.repo}` : '연결 실패: repo 스코프 확인';
-  } catch { document.getElementById('conn-result').textContent='네트워크 오류'; }
+    const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`,
+      {headers:{Authorization:`token ${tok}`, Accept:'application/vnd.github.v3+json'}});
+    if (r.ok) {
+      res.style.color = '#44aa66';
+      res.textContent = `✓ 연결 성공 · ${GH.owner}/${GH.repo}`;
+    } else if (r.status === 401) {
+      res.style.color = '#cc5555';
+      res.textContent = '❌ 인증 실패 — 토큰이 잘못됐거나 만료됨';
+    } else if (r.status === 403) {
+      res.style.color = '#cc5555';
+      res.textContent = '❌ 권한 없음 — 토큰에 repo 스코프 체크 필요';
+    } else if (r.status === 404) {
+      res.style.color = '#cc5555';
+      res.textContent = `❌ 저장소 없음 (${GH.owner}/${GH.repo})`;
+    } else {
+      res.style.color = '#cc5555';
+      res.textContent = `❌ 오류 HTTP ${r.status}`;
+    }
+  } catch(e) {
+    res.style.color = '#cc5555';
+    res.textContent = `❌ 네트워크 오류 — HTTPS 환경에서 실행하거나 인터넷 확인`;
+  }
   finally { btn.textContent='연결 테스트'; btn.disabled=false; }
 }
 
@@ -1599,9 +1729,15 @@ document.getElementById('settings-save').addEventListener('click', saveSettings)
 document.getElementById('test-conn-btn').addEventListener('click', testConn);
 document.getElementById('settings-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeSettings(); });
 
-/* ════════════════════════════════════════
-   INIT
-════════════════════════════════════════ */
+/* ── file:// 환경 감지 → 상단 바 경고 ── */
+if (location.protocol === 'file:') {
+  const hint = document.createElement('a');
+  hint.href = `https://${GH.owner}.github.io/${GH.repo}/character/`;
+  hint.target = '_blank';
+  hint.style.cssText = 'font-size:11px;color:#ddaa44;text-decoration:none;background:#1a1200;border:1px solid #5a4000;border-radius:7px;padding:5px 11px;white-space:nowrap';
+  hint.textContent = '⚠ 로컬파일 — GitHub Pages에서 열기';
+  document.getElementById('top-bar').insertBefore(hint, document.getElementById('commit-btn'));
+}
 if (characters.length) selectedId = characters[0].id;
 
 // Load from GitHub if token present
