@@ -940,13 +940,29 @@ async function uploadImage(charId, dataUrl) {
   const sha = existing?.sha || null;
 
   await ghPut(path, resized.split(',')[1], `Update image: ${filename}`, sha);
-  // cache-busting을 위해 ?t= 파라미터 추가
-  return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}?t=${Date.now()}`;
+  // ?t= 없는 깔끔한 URL 반환 (characters.json에 저장됨)
+  return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
 }
 async function syncCharacters() {
-  const clean = characters.map(c=>({...c, img: c.img && c.img.startsWith('http') ? c.img : null}));
+  // ?t= 캐시버스팅 파라미터 제거 후 저장 (깔끔한 URL 유지)
+  const clean = characters.map(c => {
+    let img = c.img && c.img.startsWith('http') ? c.img : null;
+    if (img) img = img.split('?')[0]; // ?t= 제거
+    return {...c, img};
+  });
   const existing = await ghGet(GH.dataFile);
-  await ghPut(GH.dataFile, b64enc(JSON.stringify(clean,null,2)), 'Sync: characters.json', existing?.sha||null);
+  await ghPut(GH.dataFile, b64enc(JSON.stringify(clean, null, 2)), 'Sync: characters.json', existing?.sha || null);
+}
+
+/* raw URL 로 characters.json 공개 로드 (토큰 불필요) */
+async function loadCharactersFromRaw() {
+  const rawUrl = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${GH.dataFile}?t=${Date.now()}`;
+  try {
+    const res = await fetch(rawUrl);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) && data.length ? data : null;
+  } catch { return null; }
 }
 
 /* ════════════════════════════════════════
@@ -990,6 +1006,15 @@ function renderGrid() {
     if (char.img) {
       const img = document.createElement('img');
       img.src = char.img; img.alt = char.name;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+      img.onerror = () => {
+        img.remove();
+        const av = document.createElement('div');
+        av.className = 'avatar';
+        av.style.cssText = 'width:72px;height:72px;border-radius:0';
+        setAvatarEl(av, char.name, char.gender, 72);
+        thumb.insertBefore(av, thumb.firstChild);
+      };
       thumb.appendChild(img);
     } else {
       const av = document.createElement('div');
@@ -1171,6 +1196,13 @@ function renderRightPanel() {
   if (char.img) {
     bannerImg.src = char.img;
     bannerImg.style.display = 'block';
+    bannerImg.onerror = () => {
+      // URL 이미지 로드 실패 시 플레이스홀더로 폴백
+      bannerImg.style.display = 'none';
+      bannerHint.style.display = 'flex';
+      bannerPlaceholder.style.display = 'flex';
+      bannerBtns.style.display = 'none';
+    };
     bannerHint.style.display = 'none';
     bannerPlaceholder.style.display = 'none';
     bannerBtns.style.display = 'flex';
@@ -2130,27 +2162,43 @@ if (location.protocol === 'file:') {
 }
 if (characters.length) selectedId = characters[0].id;
 
-// Load from GitHub if token present
-if (ghToken) {
-  (async () => {
+/* ── 앱 초기화: characters.json 로드 ──
+   1순위: raw URL (토큰 불필요, GitHub Pages에서 바로 작동)
+   2순위: GitHub API (토큰 있을 때, 최신 상태 보장)
+   3순위: localStorage 캐시 (오프라인/로컬)
+*/
+(async () => {
+  let loaded = null;
+
+  // 1) raw URL로 공개 로드 시도 (토큰 불필요)
+  if (location.protocol !== 'file:') {
+    loaded = await loadCharactersFromRaw();
+  }
+
+  // 2) raw 실패 + 토큰 있으면 GitHub API로 재시도
+  if (!loaded && ghToken) {
     try {
       const file = await ghGet(GH.dataFile);
       if (file) {
-        const loaded = JSON.parse(b64dec(file.content.replace(/\n/g,'')));
-        if (loaded && loaded.length) {
-          characters = loaded;
-          selectedId = loaded[0].id;
-          save();
-        }
+        const parsed = JSON.parse(b64dec(file.content.replace(/\n/g, '')));
+        if (parsed && parsed.length) loaded = parsed;
       }
     } catch {}
-    updateCommitBtn();
-    renderAll();
-  })();
-} else {
+  }
+
+  // 3) 로드된 데이터 적용 (로컬 이미지는 보존)
+  if (loaded) {
+    // localStorage에 있는 base64 이미지 보존 (아직 커밋 안 된 것)
+    const localImgMap = {};
+    characters.forEach(c => { if (c.img && c.img.startsWith('data:')) localImgMap[c.id] = c.img; });
+    characters = loaded.map(c => localImgMap[c.id] ? {...c, img: localImgMap[c.id]} : c);
+    selectedId = characters[0]?.id || null;
+    save();
+  }
+
   updateCommitBtn();
   renderAll();
-}
+})();
 </script>
 </body>
 </html>
