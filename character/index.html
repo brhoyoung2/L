@@ -4,791 +4,1143 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>CharPrompt</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  html,body,#root{height:100%;margin:0;padding:0;background:#09090f}
-  *{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#09090f;font-family:'DM Sans',sans-serif;color:#e8e8f0;overflow:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2a2a3a;border-radius:2px}
+input,textarea,button{font-family:'DM Sans',sans-serif}
+textarea{resize:none}
+input::placeholder,textarea::placeholder{color:#4a4a6a}
+
+/* Layout */
+#app{display:flex;height:100vh;width:100%;overflow:hidden}
+#left-panel{width:220px;min-width:220px;background:#0d0d16;border-right:1px solid #1a1a28;display:flex;flex-direction:column;padding:20px 16px;gap:18px;overflow-y:auto}
+#center-panel{flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:22px 20px}
+#right-panel{width:380px;min-width:380px;background:#0b0b14;border-left:1px solid #1a1a28;display:flex;flex-direction:column;overflow-y:auto}
+
+/* Cards */
+.char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+.char-card{background:#0f0f1a;border:1px solid #1a1a28;border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s,background .2s}
+.char-card:hover{transform:translateY(-2px)}
+.char-card.selected{background:#141422;border:1.5px solid #5566ff;box-shadow:0 0 22px #5566ff20}
+.card-thumb{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center;background:#0c0c18;overflow:hidden}
+.card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card-overlay{position:absolute;inset:0;background:#00000099;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.card-overlay span.icon{font-size:20px}
+.card-overlay span.label{font-size:10px;color:#ccccff;font-weight:500}
+.card-sel-ring{position:absolute;inset:0;border:2px solid #5566ff;pointer-events:none}
+.card-info{padding:10px 12px 12px}
+.card-name{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.card-name span:first-child{font-size:13px;font-weight:600}
+.card-genre{font-size:9px;padding:2px 5px;background:#1a1e2a;color:#6688cc;border-radius:4px}
+.card-meta{font-size:10px;color:#5a5a7a}
+
+/* Avatar */
+.avatar{display:flex;align-items:center;justify-content:center;font-weight:600;color:#ffffff70;user-select:none;flex-shrink:0}
+
+/* Buttons */
+.btn{cursor:pointer;border:none;font-family:inherit;transition:all .13s}
+.btn:active{transform:scale(.97)}
+.ibtn{padding:2px 8px;font-size:10px;border-radius:4px;cursor:pointer;font-family:inherit;transition:all .13s;border:none;background:#161626;color:#6666aa}
+.ibtn.active{background:#1a2a1a;color:#55bb55}
+.ibtn.danger{background:#1a1010;color:#cc5555}
+.ibtn:hover{opacity:.8}
+
+/* Filter buttons */
+.filter-btn{width:100%;display:block;margin-bottom:4px;padding:8px 12px;border-radius:7px;font-size:12px;text-align:left;background:transparent;color:#9090b0;border:1px solid transparent;cursor:pointer;font-family:inherit;transition:all .15s}
+.filter-btn.active-gender{background:#1e1e3a;color:#8888ff;border-color:#3030ff30}
+.filter-btn.active-genre{background:#1a1e2e;color:#6699ff;border-color:#3355ff30}
+
+/* Tags */
+.tag{font-size:10px;padding:2px 7px;background:#161626;color:#7777aa;border-radius:20px;border:1px solid #2a2a3a}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px}
+.badge.gender{background:#1e1e3a;color:#8888ff;border:1px solid #3030ff30}
+.badge.genre{background:#1a1e2e;color:#6699ff;border:1px solid #3355ff30}
+
+/* Art style section */
+#art-section{padding:14px 18px;border-bottom:2px solid #1a1a28;background:#0b0b14;position:sticky;top:0;z-index:20}
+#art-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+#art-label{font-size:9px;letter-spacing:.12em;color:#7766aa;text-transform:uppercase;font-weight:600}
+#art-display{background:#0a0a12;border:1px solid #1e1e2e;border-radius:8px;padding:9px 11px;min-height:48px;cursor:text}
+#art-display p{font-size:11px;color:#7a7aaa;font-family:'DM Mono',monospace;line-height:1.65;word-break:break-all}
+#art-display .placeholder{font-size:11px;color:#3a3a5a;font-style:italic}
+#art-textarea{width:100%;background:#0f0f1a;border:1px solid #3a3a5a;border-radius:8px;padding:9px 11px;color:#c8d0ff;font-size:11px;font-family:'DM Mono',monospace;line-height:1.65;outline:none;display:none}
+
+/* Right panel header */
+#char-header{padding:16px 18px 13px;border-bottom:1px solid #1a1a28;background:#0b0b14}
+#char-header-inner{display:flex;gap:13px;align-items:center}
+#char-avatar-wrap{width:54px;height:54px;border-radius:50%;overflow:hidden;border:2px solid #2a2a4a;cursor:pointer;position:relative;flex-shrink:0}
+#char-avatar-wrap img{width:100%;height:100%;object-fit:cover}
+#char-avatar-wrap .cam-overlay{position:absolute;inset:0;background:#000000aa;display:none;align-items:center;justify-content:center;font-size:14px}
+#char-avatar-wrap:hover .cam-overlay{display:flex}
+#char-name{font-size:16px;font-weight:600;letter-spacing:-0.02em}
+#char-sub{font-size:11px;color:#6666aa;margin-top:2px}
+#char-gh-status{font-size:9px;color:#44aa66;margin-top:3px;display:none}
+#char-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+#copy-all-btn{width:100%;margin-top:11px;padding:9px;background:#161626;color:#9090c0;border-radius:8px;font-size:12px;font-weight:500;border:1px solid #2a2a3a;cursor:pointer;font-family:inherit;transition:all .13s}
+#copy-all-btn.copied{background:#22223a;color:#88aaff}
+#img-uploading{margin-top:8px;display:none;align-items:center;gap:6px;font-size:11px;color:#8888ff}
+
+/* Prompt fields */
+#prompt-fields{padding:13px 18px;display:flex;flex-direction:column;gap:10px}
+.prompt-row{}
+.prompt-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.prompt-label{font-size:9px;letter-spacing:.1em;color:#5a5a7a;text-transform:uppercase}
+.prompt-btns{display:flex;gap:4px}
+.prompt-textarea{width:100%;background:#0f0f1a;border:1px solid #1a1a28;border-radius:8px;padding:8px 10px;color:#c8c8e0;font-size:12px;font-family:'DM Mono',monospace;line-height:1.6;outline:none}
+.prompt-textarea.edited{border-color:#2a2a5a}
+
+/* Preview box */
+#preview-box{margin-top:4px;padding:13px;background:#0a0a12;border-radius:10px;border:1px solid #1a1a2a}
+#preview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+#preview-label{font-size:9px;letter-spacing:.1em;color:#4a4a6a;text-transform:uppercase}
+#preview-text{font-size:11px;color:#7070a0;font-family:'DM Mono',monospace;line-height:1.9;word-break:break-all}
+
+/* Empty state */
+#char-empty{display:flex;align-items:center;justify-content:center;flex:1;color:#3a3a5a;font-size:13px}
+
+/* GitHub status */
+#gh-status-box{padding:10px 12px;background:#0f0f1a;border-radius:8px;border:1px solid #1a1a28;margin-bottom:10px}
+#gh-status-icon{font-size:11px}
+#gh-status-text{font-size:10px}
+#gh-msg{font-size:10px;color:#8888aa;margin-top:4px;line-height:1.4;display:none}
+#result-count{padding:10px 12px;background:#0f0f1a;border-radius:8px;border:1px solid #1a1a28}
+
+/* Spinners */
+.spinner{width:15px;height:15px;border:2px solid #3a3a5a;border-top-color:#aaaaff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.spin-sm{width:11px;height:11px;border:1.5px solid #3a3a5a;border-top-color:#8888ff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:#000000cc;display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;animation:fadeIn .2s ease}
+.modal-box{width:100%;max-width:560px;background:#0f0f1a;border:1px solid #2a2a3a;border-radius:18px;overflow:hidden;box-shadow:0 24px 80px #00000099;animation:fadeUp .25s ease}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid #1a1a28;display:flex;justify-content:space-between;align-items:flex-start}
+.modal-title{font-size:15px;font-weight:600}
+.modal-sub{font-size:11px;color:#5a5a7a;margin-top:3px}
+.modal-close{background:none;border:none;color:#5a5a7a;font-size:18px;cursor:pointer;line-height:1;padding:2px 4px}
+.modal-body{padding:20px 24px 24px}
+.modal-scroll{padding:18px 24px 24px;max-height:72vh;overflow-y:auto}
+
+/* Settings modal */
+#settings-modal .modal-box{max-width:480px}
+.settings-section{display:flex;flex-direction:column;gap:6px}
+.settings-label{font-size:12px;font-weight:600;color:#8888cc;display:flex;align-items:center;gap:6px}
+.settings-desc{font-size:11px;color:#5a5a7a;line-height:1.6}
+.settings-desc a{color:#6688ff;text-decoration:none}
+.settings-input{width:100%;background:#0a0a12;border:1px solid #1e1e2e;border-radius:8px;padding:10px 12px;color:#d0d0e8;font-size:13px;font-family:'DM Mono',monospace;outline:none}
+.gh-paths{margin-top:10px;padding:10px 12px;background:#0a0a12;border-radius:8px;border:1px solid #1a1a28;font-size:11px;color:#7070a0;font-family:'DM Mono',monospace;line-height:1.8}
+
+/* Preview card in modal */
+.preview-char-card{display:flex;gap:12px;align-items:center;margin-bottom:16px;padding:14px;background:#0a0a12;border-radius:10px;border:1px solid #1a1a28}
+.preview-field{padding:10px 12px;background:#0a0a12;border-radius:8px}
+.preview-field.filled{border:1px solid #1e1e30}
+.preview-field.empty{border:1px dashed #1a1a28}
+.preview-field-label{font-size:9px;color:#4a4a6a;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.preview-field-val{font-size:12px;font-family:'DM Mono',monospace}
+.preview-field-val.filled{color:#c0c0e0}
+.preview-field-val.empty{color:#383850}
+
+/* Analyze modal textarea */
+#analyze-textarea{width:100%;background:#0a0a12;border:1px solid #1e1e2e;border-radius:10px;padding:14px;color:#d0d0e8;font-size:13px;font-family:'DM Sans',sans-serif;line-height:1.7;outline:none;height:180px;resize:none}
+#analyze-error{margin-top:8px;font-size:12px;color:#ff7070;padding:8px 12px;background:#1a0a0a;border-radius:7px;border:1px solid #2a1010;display:none}
+
+.done-center{padding:44px 24px;text-align:center}
+.done-icon{font-size:38px;margin-bottom:10px}
+.done-text{font-size:15px;font-weight:600;color:#aaffcc}
+
+/* Row buttons */
+.row-btns{display:flex;gap:10px;margin-top:14px}
+.row-btn{flex:1;padding:11px;border-radius:9px;font-size:13px;cursor:pointer;border:none;font-family:inherit;transition:all .13s}
+.row-btn:active{transform:scale(.97)}
+.row-btn.secondary{background:#161626;color:#7070a0;border:1px solid #2a2a3a}
+.row-btn.primary-blue{background:linear-gradient(135deg,#3333aa,#5566ff);color:#fff;font-weight:600}
+.row-btn.primary-green{background:linear-gradient(135deg,#1a4a2a,#2a7a4a);color:#aaffcc;font-weight:600}
+.row-btn.primary-purple{background:linear-gradient(135deg,#2a2a6a,#4455aa);color:#ccccff;font-weight:600}
+.row-btn.primary-blue:disabled{background:#161626;color:#4a4a6a;cursor:default}
+
+/* Top bar of center */
+#center-topbar{margin-bottom:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#center-topbar h1{font-size:17px;font-weight:600;letter-spacing:-0.02em;flex:1}
+#gh-sync-btn{display:flex;align-items:center;gap:5px;padding:8px 13px;background:#131318;color:#5a5a7a;border-radius:9px;font-size:12px;border:1px solid #2a2a3a;cursor:pointer;font-family:inherit;transition:all .13s}
+#gh-sync-btn.connected{background:#0f1a0f;color:#44aa66;border-color:#2a4a2a}
+#add-char-btn{display:flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#3333aa,#5566ff);color:#fff;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 0 20px #5566ff22;cursor:pointer;border:none;font-family:inherit;transition:all .13s}
+#add-char-btn:active{transform:scale(.97)}
+#empty-state{text-align:center;color:#3a3a5a;margin-top:80px;font-size:13px}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.pulsing{animation:pulse 1.2s ease infinite}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useMemo, useRef, useEffect, useCallback } = React;
+<div id="app">
+  <div id="left-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:11px;letter-spacing:.15em;color:#4a4a6a;text-transform:uppercase;font-weight:600">CharPrompt</span>
+      <button id="settings-btn" style="background:none;border:none;color:#4a4a6a;font-size:15px;padding:2px 4px;cursor:pointer">⚙️</button>
+    </div>
+    <div style="position:relative">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#4a4a6a;font-size:12px">🔍</span>
+      <input id="search-input" placeholder="이름, 태그 검색..." style="width:100%;background:#13131f;border:1px solid #1e1e2e;border-radius:8px;padding:9px 10px 9px 30px;color:#e8e8f0;font-size:13px;outline:none"/>
+    </div>
+    <div>
+      <div style="font-size:10px;letter-spacing:.12em;color:#4a4a6a;margin-bottom:8px;text-transform:uppercase">성별</div>
+      <div id="gender-filters"></div>
+    </div>
+    <div>
+      <div style="font-size:10px;letter-spacing:.12em;color:#4a4a6a;margin-bottom:8px;text-transform:uppercase">장르</div>
+      <div id="genre-filters"></div>
+    </div>
+    <div style="margin-top:auto">
+      <div id="gh-status-box">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span id="gh-status-icon" style="color:#4a4a6a">◌</span>
+          <span id="gh-status-text" style="font-size:10px;color:#4a4a6a">GitHub 미연결</span>
+        </div>
+        <div id="gh-msg"></div>
+      </div>
+      <div id="result-count">
+        <div style="font-size:11px;color:#5a5a7a">검색 결과</div>
+        <div id="result-num" style="font-size:22px;font-weight:600;color:#8888ff">12</div>
+        <div style="font-size:11px;color:#4a4a6a">캐릭터</div>
+      </div>
+    </div>
+  </div>
 
-/* ══════════════════════════════════════════
-   GITHUB CONFIG  (repo hardcoded)
-══════════════════════════════════════════ */
-const GH = {
-  owner:  'brhoyoung2',
-  repo:   'L',
-  branch: 'main',
-  imgDir: 'character/images',
-  dataFile: 'character/characters.json',
-};
+  <div id="center-panel">
+    <div id="center-topbar">
+      <h1>캐릭터 갤러리</h1>
+      <span id="filter-badge-gender" class="badge gender" style="display:none"></span>
+      <span id="filter-badge-genre" class="badge genre" style="display:none"></span>
+      <button id="gh-sync-btn">⬆ GitHub 동기화</button>
+      <button id="add-char-btn"><span style="font-size:17px;line-height:1">+</span> 캐릭터 추가</button>
+    </div>
+    <div id="char-grid" class="char-grid"></div>
+    <div id="empty-state" style="display:none"><div style="font-size:28px;margin-bottom:10px">◌</div>검색 결과가 없습니다</div>
+  </div>
 
-const GH_RAW = (path) =>
-  `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}?t=${Date.now()}`;
+  <div id="right-panel">
+    <div id="art-section">
+      <div id="art-label-row">
+        <span id="art-label">🎨 화풍 (Art Style)</span>
+        <div style="display:flex;gap:5px">
+          <button id="art-edit-btn" class="ibtn">편집</button>
+          <button id="art-copy-btn" class="ibtn">복사</button>
+          <button id="art-del-btn" class="ibtn danger">삭제</button>
+        </div>
+      </div>
+      <div id="art-display"><p id="art-display-text"></p></div>
+      <textarea id="art-textarea" rows="4" placeholder="화풍 프롬프트를 입력하세요..."></textarea>
+    </div>
+    <div id="char-detail">
+      <div id="char-header">
+        <div id="char-header-inner">
+          <div id="char-avatar-wrap">
+            <div id="char-avatar" class="avatar" style="width:54px;height:54px;border-radius:50%"></div>
+            <img id="char-avatar-img" style="display:none;width:100%;height:100%;object-fit:cover"/>
+            <div class="cam-overlay">📷</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div id="char-name">—</div>
+            <div id="char-sub"></div>
+            <div id="char-gh-status">⬆ GitHub 저장됨</div>
+            <div id="char-tags"></div>
+          </div>
+        </div>
+        <button id="copy-all-btn">📋 화풍 + 외형 전체 복사</button>
+        <div id="img-uploading"><div class="spin-sm"></div> 이미지 GitHub 업로드 중…</div>
+      </div>
+      <div id="prompt-fields"></div>
+    </div>
+    <div id="char-empty" style="display:none">캐릭터를 선택하세요</div>
+  </div>
+</div>
 
-// Safe base64 encode/decode for Unicode (Korean chars)
-const b64enc = (str) =>
-  btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-    (_, p1) => String.fromCharCode(parseInt(p1, 16))));
-const b64dec = (b64) =>
-  decodeURIComponent(atob(b64).split('').map(
-    c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+<!-- Add Character Modal -->
+<div id="add-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">캐릭터 추가</div>
+        <div id="add-modal-sub" class="modal-sub">외형 설명을 자유롭게 입력하세요 (한국어·영어 모두 가능)</div>
+      </div>
+      <button class="modal-close" id="add-modal-close">✕</button>
+    </div>
+    <div id="add-step-input" class="modal-body">
+      <textarea id="analyze-textarea" placeholder="예시:&#10;아리아는 20대 초반의 여성으로, 긴 검은 생머리에 일자 앞머리가 있다.&#10;흰 피부에 날카로운 눈매, 얇은 은테 안경을 착용한다.&#10;흰 터틀넥에 검은 블레이저를 입고, 검은 스타킹에 힐을 신는다."></textarea>
+      <div id="analyze-error"></div>
+      <div class="row-btns">
+        <button class="row-btn secondary" id="add-cancel-btn">취소</button>
+        <button class="row-btn primary-blue" id="analyze-btn">✦ AI로 자동 분류</button>
+      </div>
+    </div>
+    <div id="add-step-preview" style="display:none">
+      <div class="modal-scroll">
+        <div class="preview-char-card">
+          <div id="preview-avatar" class="avatar" style="width:46px;height:46px;border-radius:10px"></div>
+          <div>
+            <div id="preview-name" style="font-size:15px;font-weight:600"></div>
+            <div id="preview-meta" style="font-size:11px;color:#6666aa;margin-top:2px"></div>
+            <div id="preview-tags" style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap"></div>
+          </div>
+        </div>
+        <div id="preview-fields" style="display:flex;flex-direction:column;gap:7px"></div>
+        <div class="row-btns">
+          <button class="row-btn secondary" id="preview-back-btn">← 다시 입력</button>
+          <button class="row-btn primary-green" id="save-char-btn">✓ 갤러리에 저장</button>
+        </div>
+      </div>
+    </div>
+    <div id="add-step-done" class="done-center" style="display:none">
+      <div class="done-icon">✦</div>
+      <div class="done-text">갤러리에 저장되었습니다</div>
+    </div>
+  </div>
+</div>
 
-async function ghGet(path, token) {
-  const r = await fetch(
-    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
-    { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
-  );
-  if (!r.ok) return null;
-  return r.json();
-}
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ 설정</div>
+      <button class="modal-close" id="settings-close">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:20px">
+      <div class="settings-section">
+        <div class="settings-label">🐱 GitHub Personal Access Token</div>
+        <div class="settings-desc">
+          <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens</a>에서 발급 · <b style="color:#8888aa">repo</b> 스코프 체크 필수
+        </div>
+        <input type="password" id="token-input" class="settings-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <button class="row-btn secondary" id="test-conn-btn" style="flex:0;padding:7px 14px;font-size:12px">연결 테스트</button>
+          <span id="conn-result" style="font-size:11px"></span>
+        </div>
+        <div class="gh-paths">
+          <div style="font-size:10px;color:#4a4a6a;margin-bottom:4px">저장 경로</div>
+          📁 brhoyoung2/L/character/images/<br>
+          📄 brhoyoung2/L/character/characters.json
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">✦ Anthropic API Key (AI 분석 기능용)</div>
+        <div class="settings-desc">
+          <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>에서 발급
+        </div>
+        <input type="password" id="aikey-input" class="settings-input" placeholder="sk-ant-xxxxxxxxxxxxxxxxxxxx"/>
+      </div>
+      <div class="row-btns">
+        <button class="row-btn secondary" id="settings-cancel">취소</button>
+        <button class="row-btn primary-purple" id="settings-save">✓ 저장</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-async function ghPut(path, content_b64, message, sha, token) {
-  const body = { message, content: content_b64, branch: GH.branch };
-  if (sha) body.sha = sha;
-  const r = await fetch(
-    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
-    { method: 'PUT', headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-  );
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message || 'GitHub PUT failed'); }
-  return r.json();
-}
+<input type="file" id="file-input" accept="image/*" style="display:none"/>
 
-async function uploadImage(charId, dataUrl, token) {
-  const ext = (dataUrl.match(/data:image\/(\w+)/) || [])[1] || 'png';
-  const filename = `char_${charId}_${Date.now()}.${ext}`;
-  const path = `${GH.imgDir}/${filename}`;
-  const b64 = dataUrl.split(',')[1];
-  await ghPut(path, b64, `Add image: ${filename}`, null, token);
-  return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
-}
-
-async function syncCharacters(chars, token) {
-  // Strip large base64 blobs before saving (keep only URLs)
-  const clean = chars.map(c => ({
-    ...c,
-    img: c.img && c.img.startsWith('http') ? c.img : null
-  }));
-  const existing = await ghGet(GH.dataFile, token);
-  const sha = existing?.sha || null;
-  await ghPut(GH.dataFile, b64enc(JSON.stringify(clean, null, 2)), 'Sync characters.json', sha, token);
-}
-
-async function loadCharacters(token) {
-  const file = await ghGet(GH.dataFile, token);
-  if (!file) return null;
-  try { return JSON.parse(b64dec(file.content.replace(/\n/g, ''))); }
-  catch { return null; }
-}
-
-/* ══════════════════════════════════════════
-   INITIAL DATA
-══════════════════════════════════════════ */
-const INIT_CHARS = [
-  { id:1,  name:"아리아", gender:"female", genre:"modern",    img:null, tags:["오피스룩","세련된","도시적"],    prompts:{base:"1girl, solo",hair:"long straight black hair, blunt bangs",skin:"fair skin, smooth complexion",eyes:"dark brown eyes, sharp gaze",accessories:"thin silver rimmed glasses, small gold earrings",top:"white fitted turtleneck, tailored black blazer",bottom:"high-waisted black pencil skirt",legwear:"sheer black stockings",shoes:"black pointed-toe heels"}},
-  { id:2,  name:"소라",  gender:"female", genre:"fantasy",   img:null, tags:["마법사","신비로운","엘프"],        prompts:{base:"1girl, solo",hair:"long silver white hair, flowing, elf ears visible",skin:"pale porcelain skin, slight shimmer",eyes:"glowing violet eyes, slit pupils",accessories:"ethereal crystal crown, delicate chain necklace with gem pendant",top:"deep indigo mage robe with gold embroidery, off-shoulder",bottom:"layered gossamer skirt, translucent fabric",legwear:"barefoot, ankle anklets with small bells",shoes:"barefoot"}},
-  { id:3,  name:"하나",  gender:"female", genre:"historical",img:null, tags:["한복","조선시대","귀족"],         prompts:{base:"1girl, solo",hair:"jet black hair, traditional Korean hairstyle, binyeo hair pin",skin:"warm ivory skin",eyes:"almond shaped dark eyes, gentle expression",accessories:"jade hairpin, silk ribbon in hair, small gold earcuff",top:"pale pink jeogori with floral embroidery, red goreum ties",bottom:"full red chima skirt, layered silk",legwear:"white cotton socks, beoseon",shoes:"traditional Korean boat shoes, black silk"}},
-  { id:4,  name:"유나",  gender:"female", genre:"modern",    img:null, tags:["캐주얼","스트리트","10대"],        prompts:{base:"1girl, solo",hair:"shoulder-length dyed auburn hair, messy bun with loose strands",skin:"light tan skin, natural freckles",eyes:"warm brown eyes, no makeup",accessories:"wireless earbuds around neck, simple stud earrings",top:"oversized white graphic hoodie, slightly off shoulder",bottom:"light wash denim shorts with cuffed hem",legwear:"white ankle socks with small logo",shoes:"classic white canvas sneakers"}},
-  { id:5,  name:"미래",  gender:"female", genre:"fantasy",   img:null, tags:["사이버펑크","전사","미래"],        prompts:{base:"1girl, solo",hair:"neon blue short hair, undercut, shaved sides",skin:"light skin with circuit tattoo on neck",eyes:"cybernetic red eyes, glowing iris",accessories:"tactical visor headset, multiple ear piercings",top:"black tactical bodysuit with neon trim, armored shoulder pads",bottom:"form-fitting cargo pants with LED strip detailing",legwear:"black thigh-high tech boots with magnetic clasps",shoes:"integrated into thigh-high boots"}},
-  { id:6,  name:"지수",  gender:"female", genre:"modern",    img:null, tags:["교복","학생","청순"],             prompts:{base:"1girl, solo",hair:"long black hair, twin braids, white ribbon ties",skin:"fair skin, rosy cheeks",eyes:"large dark eyes, innocent expression",accessories:"small backpack, thin book in hand",top:"white dress shirt, navy sailor collar, red ribbon bow",bottom:"navy pleated school skirt, mid-thigh length",legwear:"white knee-high socks",shoes:"black leather loafers"}},
-  { id:7,  name:"준호",  gender:"male",   genre:"modern",    img:null, tags:["직장인","정장","세련된"],         prompts:{base:"1boy, solo",hair:"neat dark black hair, side part, slightly undercut",skin:"light tan skin, clean shaven",eyes:"dark eyes, focused confident expression",accessories:"silver wristwatch, no glasses",top:"crisp white dress shirt, slate grey fitted suit jacket",bottom:"matching slate grey suit trousers, slim cut",legwear:"dark navy dress socks",shoes:"polished black oxford shoes"}},
-  { id:8,  name:"태양",  gender:"male",   genre:"fantasy",   img:null, tags:["용사","전사","판타지"],           prompts:{base:"1boy, solo",hair:"wild golden blonde hair, medium length, windswept",skin:"bronze tan skin, battle scars on cheek",eyes:"fierce amber eyes, determined gaze",accessories:"leather eyepatch over left eye, iron pauldron on shoulder",top:"torn red cape, chainmail undershirt, leather chest armor",bottom:"dark brown leather pants, reinforced knees",legwear:"leather greaves with iron buckles",shoes:"heavy iron-toed combat boots"}},
-  { id:9,  name:"도현",  gender:"male",   genre:"historical",img:null, tags:["무사","사극","조선"],            prompts:{base:"1boy, solo",hair:"black topknot hair, gat hat, clean pulled back",skin:"olive skin, chiseled jaw",eyes:"dark piercing eyes, stern expression",accessories:"traditional gat hat, jade ring, sword hilt visible",top:"white jeogori undershirt, dark navy durumagi overcoat",bottom:"wide baggy baji trousers, navy",legwear:"white beoseon socks",shoes:"black goma shoes, traditional Korean"}},
-  { id:10, name:"서진",  gender:"male",   genre:"modern",    img:null, tags:["아이돌","K-POP","퍼포먼스"],     prompts:{base:"1boy, solo",hair:"bleached platinum blonde hair, textured layers, eye-covering fringe",skin:"fair skin, subtle highlighter glow",eyes:"sharp double-lidded eyes, smoky eye makeup",accessories:"multiple ear cuffs, chain necklace layered, ring on index finger",top:"sheer black mesh shirt under oversized leather jacket with pins",bottom:"ripped black skinny jeans",legwear:"black no-show socks",shoes:"chunky platform boots, black and silver"}},
-  { id:11, name:"하늘",  gender:"male",   genre:"fantasy",   img:null, tags:["흡혈귀","귀족","다크"],           prompts:{base:"1boy, solo",hair:"long dark crimson hair, half up half down, flowing",skin:"deathly pale white skin, blue veins faintly visible",eyes:"blood red eyes, glowing faintly",accessories:"ornate black lace cravat, signet ring, cape clasp with ruby",top:"Victorian black tailcoat with crimson lining, high collar",bottom:"perfectly tailored black trousers, thin stripe",legwear:"black silk stockings visible above boot",shoes:"knee-high black leather boots with gold buckles"}},
-  { id:12, name:"민준",  gender:"male",   genre:"modern",    img:null, tags:["힙합","스트리트","래퍼"],         prompts:{base:"1boy, solo",hair:"short buzz cut with fade, dark brown with subtle highlight",skin:"warm medium tan skin",eyes:"deep set dark eyes, relaxed expression",accessories:"gold chain necklace, snapback cap worn backwards",top:"oversized printed basketball jersey, layered white tee underneath",bottom:"baggy dark cargo pants, multiple pockets",legwear:"white athletic crew socks visible",shoes:"limited edition high top sneakers, white and gold"}},
+<script>
+/* ════════════════════════════════════════
+   DATA
+════════════════════════════════════════ */
+const DEFAULT_CHARS = [
+  {id:1,  name:"아리아",gender:"female",genre:"modern",   img:null,tags:["오피스룩","세련된","도시적"],   prompts:{base:"1girl, solo",hair:"long straight black hair, blunt bangs",skin:"fair skin, smooth complexion",eyes:"dark brown eyes, sharp gaze",accessories:"thin silver rimmed glasses, small gold earrings",top:"white fitted turtleneck, tailored black blazer",bottom:"high-waisted black pencil skirt",legwear:"sheer black stockings",shoes:"black pointed-toe heels"}},
+  {id:2,  name:"소라", gender:"female",genre:"fantasy",  img:null,tags:["마법사","신비로운","엘프"],       prompts:{base:"1girl, solo",hair:"long silver white hair, flowing, elf ears visible",skin:"pale porcelain skin, slight shimmer",eyes:"glowing violet eyes, slit pupils",accessories:"ethereal crystal crown, delicate chain necklace with gem pendant",top:"deep indigo mage robe with gold embroidery, off-shoulder",bottom:"layered gossamer skirt, translucent fabric",legwear:"barefoot, ankle anklets with small bells",shoes:"barefoot"}},
+  {id:3,  name:"하나", gender:"female",genre:"historical",img:null,tags:["한복","조선시대","귀족"],        prompts:{base:"1girl, solo",hair:"jet black hair, traditional Korean hairstyle, binyeo hair pin",skin:"warm ivory skin",eyes:"almond shaped dark eyes, gentle expression",accessories:"jade hairpin, silk ribbon in hair, small gold earcuff",top:"pale pink jeogori with floral embroidery, red goreum ties",bottom:"full red chima skirt, layered silk",legwear:"white cotton socks, beoseon",shoes:"traditional Korean boat shoes, black silk"}},
+  {id:4,  name:"유나", gender:"female",genre:"modern",   img:null,tags:["캐주얼","스트리트","10대"],       prompts:{base:"1girl, solo",hair:"shoulder-length dyed auburn hair, messy bun with loose strands",skin:"light tan skin, natural freckles",eyes:"warm brown eyes, no makeup",accessories:"wireless earbuds around neck, simple stud earrings",top:"oversized white graphic hoodie, slightly off shoulder",bottom:"light wash denim shorts with cuffed hem",legwear:"white ankle socks with small logo",shoes:"classic white canvas sneakers"}},
+  {id:5,  name:"미래", gender:"female",genre:"fantasy",  img:null,tags:["사이버펑크","전사","미래"],       prompts:{base:"1girl, solo",hair:"neon blue short hair, undercut, shaved sides",skin:"light skin with circuit tattoo on neck",eyes:"cybernetic red eyes, glowing iris",accessories:"tactical visor headset, multiple ear piercings",top:"black tactical bodysuit with neon trim, armored shoulder pads",bottom:"form-fitting cargo pants with LED strip detailing",legwear:"black thigh-high tech boots with magnetic clasps",shoes:"integrated into thigh-high boots"}},
+  {id:6,  name:"지수", gender:"female",genre:"modern",   img:null,tags:["교복","학생","청순"],            prompts:{base:"1girl, solo",hair:"long black hair, twin braids, white ribbon ties",skin:"fair skin, rosy cheeks",eyes:"large dark eyes, innocent expression",accessories:"small backpack, thin book in hand",top:"white dress shirt, navy sailor collar, red ribbon bow",bottom:"navy pleated school skirt, mid-thigh length",legwear:"white knee-high socks",shoes:"black leather loafers"}},
+  {id:7,  name:"준호", gender:"male",  genre:"modern",   img:null,tags:["직장인","정장","세련된"],        prompts:{base:"1boy, solo",hair:"neat dark black hair, side part, slightly undercut",skin:"light tan skin, clean shaven",eyes:"dark eyes, focused confident expression",accessories:"silver wristwatch, no glasses",top:"crisp white dress shirt, slate grey fitted suit jacket",bottom:"matching slate grey suit trousers, slim cut",legwear:"dark navy dress socks",shoes:"polished black oxford shoes"}},
+  {id:8,  name:"태양", gender:"male",  genre:"fantasy",  img:null,tags:["용사","전사","판타지"],          prompts:{base:"1boy, solo",hair:"wild golden blonde hair, medium length, windswept",skin:"bronze tan skin, battle scars on cheek",eyes:"fierce amber eyes, determined gaze",accessories:"leather eyepatch over left eye, iron pauldron on shoulder",top:"torn red cape, chainmail undershirt, leather chest armor",bottom:"dark brown leather pants, reinforced knees",legwear:"leather greaves with iron buckles",shoes:"heavy iron-toed combat boots"}},
+  {id:9,  name:"도현", gender:"male",  genre:"historical",img:null,tags:["무사","사극","조선"],           prompts:{base:"1boy, solo",hair:"black topknot hair, gat hat, clean pulled back",skin:"olive skin, chiseled jaw",eyes:"dark piercing eyes, stern expression",accessories:"traditional gat hat, jade ring, sword hilt visible",top:"white jeogori undershirt, dark navy durumagi overcoat",bottom:"wide baggy baji trousers, navy",legwear:"white beoseon socks",shoes:"black goma shoes, traditional Korean"}},
+  {id:10, name:"서진", gender:"male",  genre:"modern",   img:null,tags:["아이돌","K-POP","퍼포먼스"],    prompts:{base:"1boy, solo",hair:"bleached platinum blonde hair, textured layers, eye-covering fringe",skin:"fair skin, subtle highlighter glow",eyes:"sharp double-lidded eyes, smoky eye makeup",accessories:"multiple ear cuffs, chain necklace layered, ring on index finger",top:"sheer black mesh shirt under oversized leather jacket with pins",bottom:"ripped black skinny jeans",legwear:"black no-show socks",shoes:"chunky platform boots, black and silver"}},
+  {id:11, name:"하늘", gender:"male",  genre:"fantasy",  img:null,tags:["흡혈귀","귀족","다크"],          prompts:{base:"1boy, solo",hair:"long dark crimson hair, half up half down, flowing",skin:"deathly pale white skin, blue veins faintly visible",eyes:"blood red eyes, glowing faintly",accessories:"ornate black lace cravat, signet ring, cape clasp with ruby",top:"Victorian black tailcoat with crimson lining, high collar",bottom:"perfectly tailored black trousers, thin stripe",legwear:"black silk stockings visible above boot",shoes:"knee-high black leather boots with gold buckles"}},
+  {id:12, name:"민준", gender:"male",  genre:"modern",   img:null,tags:["힙합","스트리트","래퍼"],        prompts:{base:"1boy, solo",hair:"short buzz cut with fade, dark brown with subtle highlight",skin:"warm medium tan skin",eyes:"deep set dark eyes, relaxed expression",accessories:"gold chain necklace, snapback cap worn backwards",top:"oversized printed basketball jersey, layered white tee underneath",bottom:"baggy dark cargo pants, multiple pockets",legwear:"white athletic crew socks visible",shoes:"limited edition high top sneakers, white and gold"}},
 ];
 
 const DEFAULT_ART = `0.3::artist:lunch (shin new) ::, 0.4::artist:gogalking ::, 0.6::artist:qiandaiyiyu ::, 0.8::artist:michiking ::, 0.9::artist:kim eb ::, 1.5::artist:xing_(gloryxing) ::, 1.7::artist:nyte tyde ::, 1.8::artist:wanke ::, year 2025, year 2024, 1.4::beautiful gunbari::, 2::rough sketch, ink outline, masterpiece, best quality, very aesthetic, -3::simple illustration::, -1::censored::, -3::artist collaboration::, -3::monochrome:: {{white background:1.3}}`;
 
-const GENRE_LABELS  = { modern:"현대", fantasy:"판타지", historical:"사극·고대" };
-const GENDER_LABELS = { female:"여성", male:"남성" };
+const GENRE_LABELS  = {modern:"현대",fantasy:"판타지",historical:"사극·고대"};
+const GENDER_LABELS = {female:"여성",male:"남성"};
 const PROMPT_FIELDS = [
-  { key:"base",        label:"기본 (인원수)" },
-  { key:"hair",        label:"헤어 스타일·색상" },
-  { key:"skin",        label:"피부색" },
-  { key:"eyes",        label:"눈동자·눈 묘사" },
-  { key:"accessories", label:"악세서리" },
-  { key:"top",         label:"상의" },
-  { key:"bottom",      label:"하의" },
-  { key:"legwear",     label:"레그웨어 (양말·스타킹)" },
-  { key:"shoes",       label:"신발" },
+  {key:"base",        label:"기본 (인원수)"},
+  {key:"hair",        label:"헤어 스타일·색상"},
+  {key:"skin",        label:"피부색"},
+  {key:"eyes",        label:"눈동자·눈 묘사"},
+  {key:"accessories", label:"악세서리"},
+  {key:"top",         label:"상의"},
+  {key:"bottom",      label:"하의"},
+  {key:"legwear",     label:"레그웨어 (양말·스타킹)"},
+  {key:"shoes",       label:"신발"},
 ];
 
-const AI_SYSTEM = `You are a character prompt analyzer for AI image generation.
-The user gives a character description in Korean or English (free-form text).
-Extract appearance details and output ONLY a valid JSON object with these exact keys:
-- name: string
-- gender: "female" or "male"
-- genre: "modern", "fantasy", or "historical"
-- tags: array of exactly 3 short Korean strings (2-5 chars each)
-- prompts: object with keys: base, hair, skin, eyes, accessories, top, bottom, legwear, shoes
-  - base must be "1girl, solo" or "1boy, solo"
-  - all values must be English comma-separated descriptors
-  - if unknown, use ""
-Output ONLY valid JSON. No markdown. No explanation.`;
+const GH = {owner:'brhoyoung2',repo:'L',branch:'main',imgDir:'character/images',dataFile:'character/characters.json'};
 
-/* ── Components ── */
-function Avatar({ name, gender, size=80, radius }) {
-  const colors = gender==="female" ? ["#2a1a3a","#4a2a6a"] : ["#0f1a2a","#1a3a4a"];
-  const r = radius !== undefined ? radius : (size < 60 ? "50%" : "10px");
-  return (
-    <div style={{ width:size, height:size, borderRadius:r,
-      background:`linear-gradient(135deg,${colors[0]},${colors[1]})`,
-      display:"flex", alignItems:"center", justifyContent:"center",
-      fontSize:size*0.38, fontWeight:600, color:"#ffffff70", userSelect:"none", flexShrink:0 }}>
-      {name?.[0] ?? "?"}
-    </div>
-  );
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let characters = [];
+let selectedId = null;
+let editedPrompts = {};
+let filterGender = null;
+let filterGenre  = null;
+let searchQuery  = '';
+let artStyle     = '';
+let artEditing   = false;
+let ghToken      = '';
+let anthropicKey = '';
+let analyzedData = null;
+let addStep      = 'input'; // input | preview | done
+let uploadTargetId = null;
+
+/* ── load persisted ── */
+try { characters = JSON.parse(localStorage.getItem('cp_chars')) || DEFAULT_CHARS; } catch { characters = DEFAULT_CHARS; }
+try { artStyle = localStorage.getItem('cp_art') || DEFAULT_ART; } catch { artStyle = DEFAULT_ART; }
+try { ghToken = localStorage.getItem('cp_ghtoken') || ''; } catch {}
+try { anthropicKey = localStorage.getItem('cp_aikey') || ''; } catch {}
+
+function save() {
+  try { localStorage.setItem('cp_chars', JSON.stringify(characters)); } catch {}
+  try { localStorage.setItem('cp_art', artStyle); } catch {}
 }
 
-function IBtn({ onClick, active, danger, warn, children, title, disabled }) {
-  return (
-    <button title={title} onClick={onClick} disabled={disabled}
-      style={{ padding:"2px 8px", fontSize:"10px", borderRadius:"4px", cursor: disabled ? "default" : "pointer",
-        fontFamily:"inherit", transition:"all .13s", border:"none", opacity: disabled ? 0.5 : 1,
-        background: active ? "#1a2a1a" : danger ? "#1a1010" : warn ? "#1a1a0a" : "#161626",
-        color: active ? "#55bb55" : danger ? "#cc5555" : warn ? "#aaaa44" : "#6666aa" }}>
-      {children}
-    </button>
-  );
+/* ════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════ */
+function getSelected() { return characters.find(c => c.id === selectedId) || null; }
+
+function getPrompts(char) {
+  if (!char) return {};
+  const edited = editedPrompts[char.id] || {};
+  return { ...char.prompts, ...edited };
 }
 
-/* ══════════════════════════════════════════
-   MAIN APP
-══════════════════════════════════════════ */
-function App() {
-  // ── persisted state ──
-  const [characters,    setCharacters]    = useState(() => {
-    try { const s = localStorage.getItem('cp_chars'); return s ? JSON.parse(s) : INIT_CHARS; }
-    catch { return INIT_CHARS; }
-  });
-  const [artStyle,      setArtStyle]      = useState(() => localStorage.getItem('cp_art') || DEFAULT_ART);
-  const [ghToken,       setGhToken]       = useState(() => localStorage.getItem('cp_ghtoken') || "");
-  const [anthropicKey,  setAnthropicKey]  = useState(() => localStorage.getItem('cp_aikey') || "");
+function avatarGradient(gender) {
+  return gender === 'female'
+    ? 'linear-gradient(135deg,#2a1a3a,#4a2a6a)'
+    : 'linear-gradient(135deg,#0f1a2a,#1a3a4a)';
+}
 
-  // ── ui state ──
-  const [selected,      setSelected]      = useState(characters[0]);
-  const [searchQuery,   setSearchQuery]   = useState("");
-  const [filterGender,  setFilterGender]  = useState(null);
-  const [filterGenre,   setFilterGenre]   = useState(null);
-  const [editedPrompts, setEditedPrompts] = useState({});
-  const [copiedKey,     setCopiedKey]     = useState(null);
-  const [artEditing,    setArtEditing]    = useState(false);
-  const [artCopied,     setArtCopied]     = useState(false);
+function setAvatarEl(el, name, gender, size) {
+  el.style.background = avatarGradient(gender);
+  el.style.fontSize = (size * 0.38) + 'px';
+  el.style.color = '#ffffff70';
+  el.style.fontWeight = '600';
+  el.style.userSelect = 'none';
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.style.justifyContent = 'center';
+  el.style.flexShrink = '0';
+  el.textContent = name ? name[0] : '?';
+}
 
-  // ── modal state ──
-  const [showAdd,       setShowAdd]       = useState(false);
-  const [showSettings,  setShowSettings]  = useState(false);
-  const [inputText,     setInputText]     = useState("");
-  const [analyzing,     setAnalyzing]     = useState(false);
-  const [analyzed,      setAnalyzed]      = useState(null);
-  const [analyzeErr,    setAnalyzeErr]    = useState("");
-  const [saveStep,      setSaveStep]      = useState("input");
+function b64enc(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,(_,p1)=>String.fromCharCode(parseInt(p1,16))));
+}
+function b64dec(b64) {
+  return decodeURIComponent(atob(b64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
 
-  // ── github state ──
-  const [ghStatus,      setGhStatus]      = useState("idle"); // idle|syncing|ok|error
-  const [ghMsg,         setGhMsg]         = useState("");
-  const [imgUploading,  setImgUploading]  = useState(false);
+/* ════════════════════════════════════════
+   GITHUB
+════════════════════════════════════════ */
+async function ghGet(path) {
+  const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
+    {headers:{Authorization:`token ${ghToken}`,Accept:'application/vnd.github.v3+json'}});
+  if (!r.ok) return null;
+  return r.json();
+}
+async function ghPut(path, content_b64, message, sha) {
+  const body = {message,content:content_b64,branch:GH.branch};
+  if (sha) body.sha = sha;
+  const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
+    {method:'PUT',headers:{Authorization:`token ${ghToken}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message||'GitHub PUT failed'); }
+  return r.json();
+}
+async function uploadImage(charId, dataUrl) {
+  const ext = (dataUrl.match(/data:image\/(\w+)/)||[])[1]||'png';
+  const filename = `char_${charId}_${Date.now()}.${ext}`;
+  const path = `${GH.imgDir}/${filename}`;
+  await ghPut(path, dataUrl.split(',')[1], `Add image: ${filename}`, null);
+  return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
+}
+async function syncCharacters() {
+  const clean = characters.map(c=>({...c, img: c.img && c.img.startsWith('http') ? c.img : null}));
+  const existing = await ghGet(GH.dataFile);
+  await ghPut(GH.dataFile, b64enc(JSON.stringify(clean,null,2)), 'Sync characters.json', existing?.sha||null);
+}
 
-  // ── settings draft ──
-  const [draftToken,    setDraftToken]    = useState(ghToken);
-  const [draftAiKey,    setDraftAiKey]    = useState(anthropicKey);
-  const [testingConn,   setTestingConn]   = useState(false);
-  const [connResult,    setConnResult]    = useState(null);
-
-  const fileRef       = useRef(null);
-  const uploadTarget  = useRef(null);
-
-  /* ── persist to localStorage ── */
-  useEffect(() => {
-    try { localStorage.setItem('cp_chars', JSON.stringify(characters)); } catch {}
-  }, [characters]);
-  useEffect(() => { localStorage.setItem('cp_art', artStyle); }, [artStyle]);
-
-  /* ── keep selected in sync ── */
-  useEffect(() => {
-    if (selected) {
-      const fresh = characters.find(c => c.id === selected.id);
-      if (fresh) setSelected(fresh);
-    }
-  }, [characters]);
-
-  /* ── load from GitHub on mount (if token present) ── */
-  useEffect(() => {
-    if (!ghToken) return;
-    (async () => {
-      try {
-        const loaded = await loadCharacters(ghToken);
-        if (loaded && loaded.length) {
-          setCharacters(loaded);
-          setSelected(loaded[0]);
-          setGhMsg("GitHub에서 불러옴");
-        }
-      } catch {}
-    })();
-  }, []);
-
-  /* ─── derived ─── */
-  const currentPrompts = useMemo(() => {
-    if (!selected) return {};
-    return { ...selected.prompts, ...(editedPrompts[selected.id] || {}) };
-  }, [selected, editedPrompts]);
-
-  const filtered = useMemo(() => characters.filter(c => {
+/* ════════════════════════════════════════
+   RENDER
+════════════════════════════════════════ */
+function filteredChars() {
+  return characters.filter(c => {
     if (filterGender && c.gender !== filterGender) return false;
     if (filterGenre  && c.genre  !== filterGenre)  return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      return c.name.includes(q) || c.tags.some(t => t.includes(q))
-        || (GENRE_LABELS[c.genre]||"").includes(q) || (GENDER_LABELS[c.gender]||"").includes(q);
+      return c.name.includes(q) || c.tags.some(t=>t.includes(q))
+        || (GENRE_LABELS[c.genre]||'').includes(q) || (GENDER_LABELS[c.gender]||'').includes(q);
     }
     return true;
-  }), [characters, filterGender, filterGenre, searchQuery]);
-
-  /* ─── prompt helpers ─── */
-  const updatePrompt = (key, val) =>
-    setEditedPrompts(p => ({ ...p, [selected.id]: { ...(p[selected.id]||{}), [key]: val } }));
-
-  const copyField = async (key) => {
-    await navigator.clipboard.writeText(currentPrompts[key] || "").catch(()=>{});
-    setCopiedKey(key); setTimeout(() => setCopiedKey(null), 1500);
-  };
-
-  const copyAll = async () => {
-    const body = PROMPT_FIELDS.map(f => currentPrompts[f.key]).filter(Boolean).join(", ");
-    const full  = artStyle ? `${artStyle}, ${body}` : body;
-    await navigator.clipboard.writeText(full).catch(()=>{});
-    setCopiedKey("__all__"); setTimeout(() => setCopiedKey(null), 1500);
-  };
-
-  const resetPrompt = (key) =>
-    setEditedPrompts(p => { const u={...(p[selected.id]||{})}; delete u[key]; return {...p,[selected.id]:u}; });
-
-  const copyArtStyle = async () => {
-    await navigator.clipboard.writeText(artStyle).catch(()=>{});
-    setArtCopied(true); setTimeout(() => setArtCopied(false), 1500);
-  };
-
-  /* ─── image upload ─── */
-  const applyCharImage = (charId, url) => {
-    setCharacters(p => p.map(c => c.id === charId ? {...c, img: url} : c));
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    e.target.value = "";
-    const charId = uploadTarget.current;
-
-    // Show preview immediately (base64)
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target.result;
-      applyCharImage(charId, dataUrl); // instant local preview
-
-      // If GitHub token → upload to repo
-      if (ghToken) {
-        setImgUploading(true);
-        setGhMsg("이미지 업로드 중…");
-        try {
-          const ghUrl = await uploadImage(charId, dataUrl, ghToken);
-          applyCharImage(charId, ghUrl);
-          setGhMsg("✓ 이미지 GitHub에 저장됨");
-          setGhStatus("ok");
-        } catch (err) {
-          setGhMsg("이미지 업로드 실패: " + err.message);
-          setGhStatus("error");
-        } finally {
-          setImgUploading(false);
-          setTimeout(() => setGhMsg(""), 3000);
-        }
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const triggerUpload = (charId) => {
-    uploadTarget.current = charId;
-    fileRef.current?.click();
-  };
-
-  /* ─── GitHub sync ─── */
-  const handleSync = async () => {
-    if (!ghToken) { setShowSettings(true); return; }
-    setGhStatus("syncing"); setGhMsg("GitHub 동기화 중…");
-    try {
-      // First upload any pending base64 images
-      let updatedChars = [...characters];
-      for (let i = 0; i < updatedChars.length; i++) {
-        const c = updatedChars[i];
-        if (c.img && c.img.startsWith('data:')) {
-          try {
-            const url = await uploadImage(c.id, c.img, ghToken);
-            updatedChars[i] = { ...c, img: url };
-          } catch {}
-        }
-      }
-      setCharacters(updatedChars);
-      await syncCharacters(updatedChars, ghToken);
-      setGhStatus("ok"); setGhMsg("✓ GitHub 동기화 완료");
-    } catch (err) {
-      setGhStatus("error"); setGhMsg("동기화 실패: " + err.message);
-    } finally {
-      setTimeout(() => { setGhMsg(""); setGhStatus("idle"); }, 3000);
-    }
-  };
-
-  /* ─── analyze ─── */
-  const analyzePrompt = async () => {
-    if (!inputText.trim()) return;
-    const key = anthropicKey || "";
-    if (!key) { setAnalyzeErr("Anthropic API 키가 없습니다. ⚙️ 설정에서 입력해주세요."); return; }
-    setAnalyzing(true); setAnalyzeErr("");
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "x-api-key": key, "anthropic-version":"2023-06-01" },
-        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, system:AI_SYSTEM, messages:[{role:"user",content:inputText}] })
-      });
-      const data = await res.json();
-      const text = data.content?.find(b=>b.type==="text")?.text || "";
-      setAnalyzed(JSON.parse(text.replace(/```json|```/g,"").trim()));
-      setSaveStep("preview");
-    } catch(err) {
-      setAnalyzeErr("분석 실패: " + err.message);
-    } finally { setAnalyzing(false); }
-  };
-
-  const saveCharacter = () => {
-    if (!analyzed) return;
-    const nc = { id:Date.now(), name:analyzed.name||"새 캐릭터", gender:analyzed.gender||"female", genre:analyzed.genre||"modern", img:null, tags:analyzed.tags||[], prompts:{base:"",hair:"",skin:"",eyes:"",accessories:"",top:"",bottom:"",legwear:"",shoes:"",...analyzed.prompts} };
-    setCharacters(p => [nc,...p]);
-    setSelected(nc);
-    setSaveStep("done");
-    setTimeout(() => { setShowAdd(false); setInputText(""); setAnalyzed(null); setSaveStep("input"); }, 1100);
-  };
-
-  const closeAdd = () => { setShowAdd(false); setInputText(""); setAnalyzed(null); setSaveStep("input"); setAnalyzeErr(""); };
-
-  /* ─── settings ─── */
-  const testConnection = async () => {
-    if (!draftToken) { setConnResult({ ok:false, msg:"토큰을 입력하세요" }); return; }
-    setTestingConn(true); setConnResult(null);
-    try {
-      const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`, { headers:{ Authorization:`token ${draftToken}` } });
-      if (r.ok) setConnResult({ ok:true, msg:`✓ 연결 성공 · ${GH.owner}/${GH.repo}` });
-      else setConnResult({ ok:false, msg:"연결 실패: 토큰을 확인하세요 (repo scope 필요)" });
-    } catch { setConnResult({ ok:false, msg:"네트워크 오류" }); }
-    finally { setTestingConn(false); }
-  };
-
-  const saveSettings = () => {
-    setGhToken(draftToken); localStorage.setItem('cp_ghtoken', draftToken);
-    setAnthropicKey(draftAiKey); localStorage.setItem('cp_aikey', draftAiKey);
-    setShowSettings(false);
-  };
-
-  /* ─── style util ─── */
-  const fBtnS = (active, color="#8888ff", bg="#1e1e3a", bdr="#3030ff30") => ({
-    width:"100%", display:"block", marginBottom:"4px", padding:"8px 12px", borderRadius:"7px",
-    fontSize:"12px", textAlign:"left", background: active ? bg : "transparent",
-    color: active ? color : "#9090b0", border:`1px solid ${active ? bdr : "transparent"}`,
-    transition:"all .15s", cursor:"pointer", fontFamily:"inherit",
   });
-
-  const ghStatusColor = { idle:"#4a4a6a", syncing:"#8888ff", ok:"#44aa66", error:"#cc5555" }[ghStatus];
-  const ghStatusIcon  = { idle:"◌", syncing:"⟳", ok:"✓", error:"⚠" }[ghStatus];
-
-  /* ════════════ RENDER ════════════ */
-  return (
-    <div style={{ display:"flex", height:"100vh", width:"100%", background:"#09090f", fontFamily:"'DM Sans','Pretendard',sans-serif", color:"#e8e8f0", overflow:"hidden" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-        *{box-sizing:border-box;margin:0;padding:0}
-        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2a2a3a;border-radius:2px}
-        input::placeholder,textarea::placeholder{color:#4a4a6a}
-        textarea{resize:none}
-        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
-        .card{transition:all .2s ease;cursor:pointer}.card:hover{transform:translateY(-2px)}
-        .hdrimg:hover .covr{opacity:1!important}
-        .field-row{animation:fadeIn .3s ease forwards}
-        .btn{transition:all .13s;cursor:pointer;border:none;font-family:inherit}.btn:active{transform:scale(.97)}
-        .modal-bg{animation:fadeIn .2s ease}.modal-box{animation:fadeUp .25s ease}
-        .spinner{width:15px;height:15px;border:2px solid #3a3a5a;border-top-color:#aaaaff;border-radius:50%;animation:spin .7s linear infinite}
-        .spin-sm{width:11px;height:11px;border:1.5px solid #3a3a5a;border-top-color:#8888ff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-        .pulsing{animation:pulse 1.2s ease infinite}
-      `}</style>
-
-      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleFileChange}/>
-
-      {/* ══ LEFT PANEL ══ */}
-      <div style={{ width:"220px", minWidth:"220px", background:"#0d0d16", borderRight:"1px solid #1a1a28", display:"flex", flexDirection:"column", padding:"20px 16px", gap:"18px", overflowY:"auto" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <span style={{ fontSize:"11px", letterSpacing:".15em", color:"#4a4a6a", textTransform:"uppercase", fontWeight:600 }}>CharPrompt</span>
-          <button className="btn" onClick={() => { setDraftToken(ghToken); setDraftAiKey(anthropicKey); setConnResult(null); setShowSettings(true); }}
-            title="설정" style={{ background:"none", border:"none", color:"#4a4a6a", fontSize:"15px", padding:"2px 4px", cursor:"pointer" }}>⚙️</button>
-        </div>
-
-        <div style={{ position:"relative" }}>
-          <span style={{ position:"absolute", left:"10px", top:"50%", transform:"translateY(-50%)", color:"#4a4a6a", fontSize:"12px" }}>🔍</span>
-          <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="이름, 태그 검색..."
-            style={{ width:"100%", background:"#13131f", border:"1px solid #1e1e2e", borderRadius:"8px", padding:"9px 10px 9px 30px", color:"#e8e8f0", fontSize:"13px", outline:"none" }}/>
-        </div>
-
-        <div>
-          <div style={{ fontSize:"10px", letterSpacing:".12em", color:"#4a4a6a", marginBottom:"8px", textTransform:"uppercase" }}>성별</div>
-          {[null,"female","male"].map(g => (
-            <button key={g??"all"} className="btn" onClick={()=>setFilterGender(g)} style={fBtnS(filterGender===g)}>
-              {g===null?"전체":GENDER_LABELS[g]}
-            </button>
-          ))}
-        </div>
-
-        <div>
-          <div style={{ fontSize:"10px", letterSpacing:".12em", color:"#4a4a6a", marginBottom:"8px", textTransform:"uppercase" }}>장르</div>
-          {[null,"modern","fantasy","historical"].map(g => (
-            <button key={g??"all"} className="btn" onClick={()=>setFilterGenre(g)} style={fBtnS(filterGenre===g,"#6699ff","#1a1e2e","#3355ff30")}>
-              {g===null?"전체":GENRE_LABELS[g]}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ marginTop:"auto" }}>
-          {/* GitHub status */}
-          <div style={{ padding:"10px 12px", background:"#0f0f1a", borderRadius:"8px", border:"1px solid #1a1a28", marginBottom:"10px" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
-              <span style={{ color: ghStatusColor, fontSize:"11px" }} className={ghStatus==="syncing"?"pulsing":""}>{ghStatusIcon}</span>
-              <span style={{ fontSize:"10px", color: ghStatusColor }}>
-                {ghStatus==="idle" && (ghToken ? "GitHub 연결됨" : "GitHub 미연결")}
-                {ghStatus==="syncing" && "동기화 중…"}
-                {ghStatus==="ok" && "동기화 완료"}
-                {ghStatus==="error" && "오류 발생"}
-              </span>
-            </div>
-            {ghMsg && <div style={{ fontSize:"10px", color:"#8888aa", marginTop:"4px", lineHeight:"1.4" }}>{ghMsg}</div>}
-          </div>
-
-          <div style={{ padding:"10px 12px", background:"#0f0f1a", borderRadius:"8px", border:"1px solid #1a1a28" }}>
-            <div style={{ fontSize:"11px", color:"#5a5a7a" }}>검색 결과</div>
-            <div style={{ fontSize:"22px", fontWeight:600, color:"#8888ff" }}>{filtered.length}</div>
-            <div style={{ fontSize:"11px", color:"#4a4a6a" }}>캐릭터</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ══ CENTER PANEL ══ */}
-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflowY:"auto", padding:"22px 20px" }}>
-        <div style={{ marginBottom:"18px", display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
-          <h1 style={{ fontSize:"17px", fontWeight:600, letterSpacing:"-0.02em", flex:1 }}>캐릭터 갤러리</h1>
-          {filterGender && <span style={{ fontSize:"11px", padding:"3px 9px", background:"#1e1e3a", color:"#8888ff", borderRadius:"20px", border:"1px solid #3030ff30" }}>{GENDER_LABELS[filterGender]}</span>}
-          {filterGenre  && <span style={{ fontSize:"11px", padding:"3px 9px", background:"#1a1e2e", color:"#6699ff", borderRadius:"20px", border:"1px solid #3355ff30" }}>{GENRE_LABELS[filterGenre]}</span>}
-          {/* Sync button */}
-          <button className="btn" onClick={handleSync} title="GitHub에 동기화"
-            style={{ display:"flex", alignItems:"center", gap:"5px", padding:"8px 13px",
-              background: ghToken ? "#0f1a0f" : "#131318",
-              color: ghToken ? "#44aa66" : "#5a5a7a",
-              borderRadius:"9px", fontSize:"12px", border:`1px solid ${ghToken?"#2a4a2a":"#2a2a3a"}` }}>
-            {ghStatus==="syncing" ? <><div className="spin-sm"/> 동기화 중</> : <><span>⬆</span> GitHub 동기화</>}
-          </button>
-          <button className="btn" onClick={()=>setShowAdd(true)}
-            style={{ display:"flex", alignItems:"center", gap:"6px", padding:"9px 16px", background:"linear-gradient(135deg,#3333aa,#5566ff)", color:"#fff", borderRadius:"10px", fontSize:"12px", fontWeight:600, boxShadow:"0 0 20px #5566ff22" }}>
-            <span style={{ fontSize:"17px", lineHeight:1, marginTop:"-1px" }}>+</span> 캐릭터 추가
-          </button>
-        </div>
-
-        {filtered.length===0
-          ? <div style={{ textAlign:"center", color:"#3a3a5a", marginTop:"80px", fontSize:"13px" }}><div style={{ fontSize:"28px", marginBottom:"10px" }}>◌</div>검색 결과가 없습니다</div>
-          : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))", gap:"12px" }}>
-              {filtered.map(char => {
-                const isSelected = selected?.id === char.id;
-                return (
-                  <div key={char.id} className="card"
-                    onClick={() => { if (!isSelected) setSelected(char); else triggerUpload(char.id); }}
-                    style={{ background: isSelected?"#141422":"#0f0f1a", border: isSelected?"1.5px solid #5566ff":"1px solid #1a1a28", borderRadius:"14px", overflow:"hidden", boxShadow: isSelected?"0 0 22px #5566ff20":"none" }}>
-                    <div style={{ aspectRatio:"1", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", background:"#0c0c18", overflow:"hidden" }}>
-                      {char.img
-                        ? <img src={char.img} alt={char.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-                        : <Avatar name={char.name} gender={char.gender} size={72} radius="0"/>
-                      }
-                      {isSelected && (
-                        <div style={{ position:"absolute", inset:0, background:"#00000099", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"4px", cursor:"pointer" }}>
-                          <span style={{ fontSize:"20px" }}>📷</span>
-                          <span style={{ fontSize:"10px", color:"#ccccff", fontWeight:500 }}>{char.img?"이미지 변경":"이미지 추가"}</span>
-                        </div>
-                      )}
-                      {isSelected && <div style={{ position:"absolute", inset:0, border:"2px solid #5566ff", pointerEvents:"none" }}/>}
-                    </div>
-                    <div style={{ padding:"10px 12px 12px" }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"5px" }}>
-                        <span style={{ fontSize:"13px", fontWeight:600 }}>{char.name}</span>
-                        <span style={{ fontSize:"9px", padding:"2px 5px", background:"#1a1e2a", color:"#6688cc", borderRadius:"4px" }}>{GENRE_LABELS[char.genre]}</span>
-                      </div>
-                      <div style={{ fontSize:"10px", color:"#5a5a7a" }}>{GENDER_LABELS[char.gender]} · {char.tags.slice(0,2).join(" · ")}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-        }
-      </div>
-
-      {/* ══ RIGHT PANEL ══ */}
-      <div style={{ width:"380px", minWidth:"380px", background:"#0b0b14", borderLeft:"1px solid #1a1a28", display:"flex", flexDirection:"column", overflowY:"auto" }}>
-
-        {/* Art Style */}
-        <div style={{ padding:"14px 18px", borderBottom:"2px solid #1a1a28", background:"#0b0b14", position:"sticky", top:0, zIndex:20 }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"8px" }}>
-            <span style={{ fontSize:"9px", letterSpacing:".12em", color:"#7766aa", textTransform:"uppercase", fontWeight:600 }}>🎨 화풍 (Art Style)</span>
-            <div style={{ display:"flex", gap:"5px" }}>
-              <IBtn onClick={()=>setArtEditing(p=>!p)} active={artEditing}>{artEditing?"✓ 완료":"편집"}</IBtn>
-              <IBtn onClick={copyArtStyle} active={artCopied}>{artCopied?"✓ 복사됨":"복사"}</IBtn>
-              <IBtn onClick={()=>{ setArtStyle(""); setArtEditing(true); }} danger>삭제</IBtn>
-            </div>
-          </div>
-          {artEditing
-            ? <textarea value={artStyle} onChange={e=>setArtStyle(e.target.value)} rows={4} placeholder="화풍 프롬프트를 입력하세요..."
-                style={{ width:"100%", background:"#0f0f1a", border:"1px solid #3a3a5a", borderRadius:"8px", padding:"9px 11px", color:"#c8d0ff", fontSize:"11px", fontFamily:"'DM Mono',monospace", lineHeight:"1.65", outline:"none" }}/>
-            : <div onClick={()=>setArtEditing(true)} style={{ background:"#0a0a12", border:"1px solid #1e1e2e", borderRadius:"8px", padding:"9px 11px", minHeight:"48px", cursor:"text" }}>
-                {artStyle
-                  ? <p style={{ fontSize:"11px", color:"#7a7aaa", fontFamily:"'DM Mono',monospace", lineHeight:"1.65", wordBreak:"break-all" }}>{artStyle}</p>
-                  : <p style={{ fontSize:"11px", color:"#3a3a5a", fontStyle:"italic" }}>클릭해서 화풍 입력</p>
-                }
-              </div>
-          }
-        </div>
-
-        {/* Character detail */}
-        {selected ? <>
-          <div style={{ padding:"16px 18px 13px", borderBottom:"1px solid #1a1a28", background:"#0b0b14" }}>
-            <div style={{ display:"flex", gap:"13px", alignItems:"center" }}>
-              <div className="hdrimg" onClick={()=>triggerUpload(selected.id)}
-                style={{ width:"54px", height:"54px", borderRadius:"50%", overflow:"hidden", border:"2px solid #2a2a4a", cursor:"pointer", position:"relative", flexShrink:0 }}>
-                {selected.img
-                  ? <img src={selected.img} alt={selected.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-                  : <Avatar name={selected.name} gender={selected.gender} size={54}/>
-                }
-                <div className="covr" style={{ position:"absolute", inset:0, background:"#000000aa", display:"flex", alignItems:"center", justifyContent:"center", opacity:0, transition:"opacity .15s" }}>
-                  <span style={{ fontSize:"14px" }}>📷</span>
-                </div>
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:"16px", fontWeight:600, letterSpacing:"-0.02em" }}>{selected.name}</div>
-                <div style={{ fontSize:"11px", color:"#6666aa", marginTop:"2px" }}>{GENDER_LABELS[selected.gender]} · {GENRE_LABELS[selected.genre]}</div>
-                {selected.img && selected.img.startsWith('http') && (
-                  <div style={{ fontSize:"9px", color:"#44aa66", marginTop:"3px", display:"flex", alignItems:"center", gap:"4px" }}>
-                    <span>⬆</span> GitHub 저장됨
-                  </div>
-                )}
-                <div style={{ display:"flex", gap:"4px", marginTop:"5px", flexWrap:"wrap" }}>
-                  {selected.tags.map(t=><span key={t} style={{ fontSize:"10px", padding:"2px 6px", background:"#161626", color:"#7777aa", borderRadius:"20px", border:"1px solid #2a2a3a" }}>#{t}</span>)}
-                </div>
-              </div>
-            </div>
-            <button className="btn" onClick={copyAll}
-              style={{ width:"100%", marginTop:"11px", padding:"9px", background: copiedKey==="__all__"?"#22223a":"#161626", color: copiedKey==="__all__"?"#88aaff":"#9090c0", borderRadius:"8px", fontSize:"12px", fontWeight:500, border:"1px solid #2a2a3a" }}>
-              {copiedKey==="__all__"?"✓ 전체 복사됨!":"📋 화풍 + 외형 전체 복사"}
-            </button>
-            {imgUploading && (
-              <div style={{ marginTop:"8px", display:"flex", alignItems:"center", gap:"6px", fontSize:"11px", color:"#8888ff" }}>
-                <div className="spinner" style={{ width:"11px", height:"11px" }}/> 이미지 GitHub 업로드 중…
-              </div>
-            )}
-          </div>
-
-          <div style={{ padding:"13px 18px", display:"flex", flexDirection:"column", gap:"10px" }}>
-            {PROMPT_FIELDS.map((field,i)=>(
-              <div key={field.key} className="field-row" style={{ animationDelay:`${i*.04}s` }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"4px" }}>
-                  <label style={{ fontSize:"9px", letterSpacing:".1em", color:"#5a5a7a", textTransform:"uppercase" }}>{field.label}</label>
-                  <div style={{ display:"flex", gap:"4px" }}>
-                    {editedPrompts[selected.id]?.[field.key] !== undefined && (
-                      <IBtn onClick={()=>resetPrompt(field.key)} danger>원복</IBtn>
-                    )}
-                    <IBtn onClick={()=>copyField(field.key)} active={copiedKey===field.key}>
-                      {copiedKey===field.key?"✓ 복사됨":"복사"}
-                    </IBtn>
-                  </div>
-                </div>
-                <textarea rows={2} value={currentPrompts[field.key]||""} onChange={e=>updatePrompt(field.key,e.target.value)}
-                  placeholder={`${field.label}...`}
-                  style={{ width:"100%", background:"#0f0f1a", border: editedPrompts[selected.id]?.[field.key]!==undefined?"1px solid #2a2a5a":"1px solid #1a1a28", borderRadius:"8px", padding:"8px 10px", color:"#c8c8e0", fontSize:"12px", fontFamily:"'DM Mono',monospace", lineHeight:"1.6", outline:"none" }}/>
-              </div>
-            ))}
-
-            <div style={{ marginTop:"4px", padding:"13px", background:"#0a0a12", borderRadius:"10px", border:"1px solid #1a1a2a" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"7px" }}>
-                <div style={{ fontSize:"9px", letterSpacing:".1em", color:"#4a4a6a", textTransform:"uppercase" }}>외형 프롬프트 미리보기</div>
-                <IBtn onClick={copyAll} active={copiedKey==="__all__"}>
-                  {copiedKey==="__all__" ? "✓ 복사됨" : "📋 전체 복사"}
-                </IBtn>
-              </div>
-              <p style={{ fontSize:"11px", color:"#7070a0", fontFamily:"'DM Mono',monospace", lineHeight:"1.8", wordBreak:"break-word", overflowWrap:"break-word", whiteSpace:"pre-wrap", overflow:"hidden" }}>
-                {PROMPT_FIELDS.map(f=>currentPrompts[f.key]).filter(Boolean).join(", ")||"—"}
-              </p>
-            </div>
-          </div>
-        </> : (
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", flex:1, color:"#3a3a5a", fontSize:"13px" }}>캐릭터를 선택하세요</div>
-        )}
-      </div>
-
-      {/* ══ ADD CHARACTER MODAL ══ */}
-      {showAdd && (
-        <div className="modal-bg" onClick={closeAdd}
-          style={{ position:"fixed", inset:0, background:"#000000cc", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:"20px" }}>
-          <div className="modal-box" onClick={e=>e.stopPropagation()}
-            style={{ width:"100%", maxWidth:"560px", background:"#0f0f1a", border:"1px solid #2a2a3a", borderRadius:"18px", overflow:"hidden", boxShadow:"0 24px 80px #00000099" }}>
-            <div style={{ padding:"20px 24px 16px", borderBottom:"1px solid #1a1a28", display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-              <div>
-                <div style={{ fontSize:"15px", fontWeight:600 }}>캐릭터 추가</div>
-                <div style={{ fontSize:"11px", color:"#5a5a7a", marginTop:"3px" }}>
-                  {saveStep==="input"   && "외형 설명을 자유롭게 입력하세요 (한국어·영어 모두 가능)"}
-                  {saveStep==="preview" && "AI 분석 결과를 확인하고 저장하세요"}
-                  {saveStep==="done"    && "✦ 저장 완료!"}
-                </div>
-              </div>
-              <button onClick={closeAdd} style={{ background:"none", border:"none", color:"#5a5a7a", fontSize:"18px", cursor:"pointer", lineHeight:1, padding:"2px 4px" }}>✕</button>
-            </div>
-
-            {saveStep==="input" && (
-              <div style={{ padding:"20px 24px 24px" }}>
-                <textarea value={inputText} onChange={e=>setInputText(e.target.value)} rows={8}
-                  placeholder={"예시:\n아리아는 20대 초반의 여성으로, 긴 검은 생머리에 일자 앞머리가 있다.\n흰 피부에 날카로운 눈매, 얇은 은테 안경을 착용한다.\n흰 터틀넥에 검은 블레이저를 입고, 검은 스타킹에 힐을 신는다."}
-                  style={{ width:"100%", background:"#0a0a12", border:"1px solid #1e1e2e", borderRadius:"10px", padding:"14px", color:"#d0d0e8", fontSize:"13px", fontFamily:"'DM Sans',sans-serif", lineHeight:"1.7", outline:"none" }}/>
-                {analyzeErr && <div style={{ marginTop:"8px", fontSize:"12px", color:"#ff7070", padding:"8px 12px", background:"#1a0a0a", borderRadius:"7px", border:"1px solid #2a1010" }}>{analyzeErr}</div>}
-                <div style={{ display:"flex", gap:"10px", marginTop:"14px" }}>
-                  <button onClick={closeAdd} className="btn" style={{ flex:1, padding:"11px", background:"#161626", color:"#7070a0", borderRadius:"9px", fontSize:"13px", border:"1px solid #2a2a3a" }}>취소</button>
-                  <button onClick={analyzePrompt} disabled={analyzing||!inputText.trim()} className="btn"
-                    style={{ flex:2, padding:"11px", background: inputText.trim()?"linear-gradient(135deg,#3333aa,#5566ff)":"#161626", color: inputText.trim()?"#fff":"#4a4a6a", borderRadius:"9px", fontSize:"13px", fontWeight:600, display:"flex", alignItems:"center", justifyContent:"center", gap:"8px", opacity: analyzing?.8:1 }}>
-                    {analyzing?<><div className="spinner"/><span>AI 분석 중…</span></>:"✦ AI로 자동 분류"}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {saveStep==="preview" && analyzed && (
-              <div style={{ padding:"18px 24px 24px", maxHeight:"72vh", overflowY:"auto" }}>
-                <div style={{ display:"flex", gap:"12px", alignItems:"center", marginBottom:"16px", padding:"14px", background:"#0a0a12", borderRadius:"10px", border:"1px solid #1a1a28" }}>
-                  <Avatar name={analyzed.name} gender={analyzed.gender} size={46}/>
-                  <div>
-                    <div style={{ fontSize:"15px", fontWeight:600 }}>{analyzed.name||"이름 없음"}</div>
-                    <div style={{ fontSize:"11px", color:"#6666aa", marginTop:"2px" }}>{GENDER_LABELS[analyzed.gender]||"—"} · {GENRE_LABELS[analyzed.genre]||"—"}</div>
-                    <div style={{ display:"flex", gap:"4px", marginTop:"6px", flexWrap:"wrap" }}>
-                      {(analyzed.tags||[]).map(t=><span key={t} style={{ fontSize:"10px", padding:"2px 6px", background:"#161626", color:"#7777aa", borderRadius:"20px", border:"1px solid #2a2a3a" }}>#{t}</span>)}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display:"flex", flexDirection:"column", gap:"7px" }}>
-                  {PROMPT_FIELDS.map(field=>{
-                    const val = analyzed.prompts?.[field.key];
-                    return (
-                      <div key={field.key} style={{ padding:"10px 12px", background:"#0a0a12", borderRadius:"8px", border: val?"1px solid #1e1e30":"1px dashed #1a1a28" }}>
-                        <div style={{ fontSize:"9px", color:"#4a4a6a", letterSpacing:".1em", textTransform:"uppercase", marginBottom:"3px" }}>{field.label}</div>
-                        <div style={{ fontSize:"12px", color: val?"#c0c0e0":"#383850", fontFamily:"'DM Mono',monospace" }}>{val||"— 감지되지 않음"}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ display:"flex", gap:"10px", marginTop:"16px" }}>
-                  <button onClick={()=>setSaveStep("input")} className="btn" style={{ flex:1, padding:"11px", background:"#161626", color:"#7070a0", borderRadius:"9px", fontSize:"13px", border:"1px solid #2a2a3a" }}>← 다시 입력</button>
-                  <button onClick={saveCharacter} className="btn" style={{ flex:2, padding:"11px", background:"linear-gradient(135deg,#1a4a2a,#2a7a4a)", color:"#aaffcc", borderRadius:"9px", fontSize:"13px", fontWeight:600 }}>✓ 갤러리에 저장</button>
-                </div>
-              </div>
-            )}
-
-            {saveStep==="done" && (
-              <div style={{ padding:"44px 24px", textAlign:"center" }}>
-                <div style={{ fontSize:"38px", marginBottom:"10px" }}>✦</div>
-                <div style={{ fontSize:"15px", fontWeight:600, color:"#aaffcc" }}>갤러리에 저장되었습니다</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ══ SETTINGS MODAL ══ */}
-      {showSettings && (
-        <div className="modal-bg" onClick={()=>setShowSettings(false)}
-          style={{ position:"fixed", inset:0, background:"#000000cc", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:"20px" }}>
-          <div className="modal-box" onClick={e=>e.stopPropagation()}
-            style={{ width:"100%", maxWidth:"480px", background:"#0f0f1a", border:"1px solid #2a2a3a", borderRadius:"18px", overflow:"hidden", boxShadow:"0 24px 80px #00000099" }}>
-            <div style={{ padding:"20px 24px 16px", borderBottom:"1px solid #1a1a28", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <div style={{ fontSize:"15px", fontWeight:600 }}>⚙️ 설정</div>
-              <button onClick={()=>setShowSettings(false)} style={{ background:"none", border:"none", color:"#5a5a7a", fontSize:"18px", cursor:"pointer" }}>✕</button>
-            </div>
-            <div style={{ padding:"20px 24px 24px", display:"flex", flexDirection:"column", gap:"20px" }}>
-
-              {/* GitHub */}
-              <div>
-                <div style={{ fontSize:"12px", fontWeight:600, color:"#8888cc", marginBottom:"6px", display:"flex", alignItems:"center", gap:"6px" }}>
-                  <span>🐱</span> GitHub Personal Access Token
-                </div>
-                <div style={{ fontSize:"11px", color:"#5a5a7a", marginBottom:"10px", lineHeight:"1.6" }}>
-                  <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener"
-                    style={{ color:"#6688ff", textDecoration:"none" }}>github.com/settings/tokens</a>에서 발급 · <b style={{ color:"#8888aa" }}>repo</b> 스코프 체크 필수
-                </div>
-                <input type="password" value={draftToken} onChange={e=>setDraftToken(e.target.value)}
-                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                  style={{ width:"100%", background:"#0a0a12", border:"1px solid #1e1e2e", borderRadius:"8px", padding:"10px 12px", color:"#d0d0e8", fontSize:"13px", fontFamily:"'DM Mono',monospace", outline:"none", marginBottom:"8px" }}/>
-                <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
-                  <button onClick={testConnection} disabled={testingConn} className="btn"
-                    style={{ padding:"7px 14px", background:"#161626", color:"#8888cc", borderRadius:"7px", fontSize:"12px", border:"1px solid #2a2a3a" }}>
-                    {testingConn?<><div className="spin-sm"/> 테스트 중</>:"연결 테스트"}
-                  </button>
-                  {connResult && (
-                    <span style={{ fontSize:"11px", color: connResult.ok?"#44aa66":"#cc5555" }}>{connResult.msg}</span>
-                  )}
-                </div>
-                <div style={{ marginTop:"10px", padding:"10px 12px", background:"#0a0a12", borderRadius:"8px", border:"1px solid #1a1a28" }}>
-                  <div style={{ fontSize:"10px", color:"#4a4a6a", marginBottom:"4px" }}>저장 경로</div>
-                  <div style={{ fontSize:"11px", color:"#7070a0", fontFamily:"'DM Mono',monospace" }}>
-                    📁 {GH.owner}/{GH.repo}/{GH.imgDir}/</div>
-                  <div style={{ fontSize:"11px", color:"#7070a0", fontFamily:"'DM Mono',monospace", marginTop:"2px" }}>
-                    📄 {GH.owner}/{GH.repo}/{GH.dataFile}</div>
-                </div>
-              </div>
-
-              {/* Anthropic */}
-              <div>
-                <div style={{ fontSize:"12px", fontWeight:600, color:"#8888cc", marginBottom:"6px", display:"flex", alignItems:"center", gap:"6px" }}>
-                  <span>✦</span> Anthropic API Key (AI 분석 기능용)
-                </div>
-                <div style={{ fontSize:"11px", color:"#5a5a7a", marginBottom:"10px" }}>
-                  <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener"
-                    style={{ color:"#6688ff", textDecoration:"none" }}>console.anthropic.com</a>에서 발급
-                </div>
-                <input type="password" value={draftAiKey} onChange={e=>setDraftAiKey(e.target.value)}
-                  placeholder="sk-ant-xxxxxxxxxxxxxxxxxxxx"
-                  style={{ width:"100%", background:"#0a0a12", border:"1px solid #1e1e2e", borderRadius:"8px", padding:"10px 12px", color:"#d0d0e8", fontSize:"13px", fontFamily:"'DM Mono',monospace", outline:"none" }}/>
-              </div>
-
-              <div style={{ display:"flex", gap:"10px" }}>
-                <button onClick={()=>setShowSettings(false)} className="btn"
-                  style={{ flex:1, padding:"11px", background:"#161626", color:"#7070a0", borderRadius:"9px", fontSize:"13px", border:"1px solid #2a2a3a" }}>취소</button>
-                <button onClick={saveSettings} className="btn"
-                  style={{ flex:2, padding:"11px", background:"linear-gradient(135deg,#2a2a6a,#4455aa)", color:"#ccccff", borderRadius:"9px", fontSize:"13px", fontWeight:600 }}>
-                  ✓ 저장
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App/>);
+function renderGrid() {
+  const grid = document.getElementById('char-grid');
+  const empty = document.getElementById('empty-state');
+  const fc = filteredChars();
+  document.getElementById('result-num').textContent = fc.length;
+  
+  if (fc.length === 0) { grid.style.display='none'; empty.style.display='block'; return; }
+  grid.style.display='grid'; empty.style.display='none';
+  grid.innerHTML = '';
+
+  fc.forEach(char => {
+    const isSelected = char.id === selectedId;
+    const card = document.createElement('div');
+    card.className = 'char-card' + (isSelected ? ' selected' : '');
+    card.dataset.id = char.id;
+
+    // thumb
+    const thumb = document.createElement('div');
+    thumb.className = 'card-thumb';
+
+    if (char.img) {
+      const img = document.createElement('img');
+      img.src = char.img; img.alt = char.name;
+      thumb.appendChild(img);
+    } else {
+      const av = document.createElement('div');
+      av.className = 'avatar';
+      av.style.cssText = `width:72px;height:72px;border-radius:0`;
+      setAvatarEl(av, char.name, char.gender, 72);
+      thumb.appendChild(av);
+    }
+
+    // overlay only on selected
+    if (isSelected) {
+      const ovr = document.createElement('div');
+      ovr.className = 'card-overlay';
+      ovr.innerHTML = `<span class="icon">📷</span><span class="label">${char.img?'이미지 변경':'이미지 추가'}</span>`;
+      thumb.appendChild(ovr);
+      const ring = document.createElement('div');
+      ring.className = 'card-sel-ring';
+      thumb.appendChild(ring);
+    }
+
+    // info
+    const info = document.createElement('div');
+    info.className = 'card-info';
+    info.innerHTML = `
+      <div class="card-name">
+        <span>${char.name}</span>
+        <span class="card-genre">${GENRE_LABELS[char.genre]||char.genre}</span>
+      </div>
+      <div class="card-meta">${GENDER_LABELS[char.gender]||char.gender} · ${char.tags.slice(0,2).join(' · ')}</div>`;
+
+    card.appendChild(thumb);
+    card.appendChild(info);
+
+    card.addEventListener('click', () => {
+      if (char.id !== selectedId) {
+        selectedId = char.id;
+        renderGrid();
+        renderRightPanel();
+      } else {
+        // second click → upload
+        uploadTargetId = char.id;
+        document.getElementById('file-input').click();
+      }
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function renderFilters() {
+  const genderDiv = document.getElementById('gender-filters');
+  const genreDiv  = document.getElementById('genre-filters');
+
+  genderDiv.innerHTML = '';
+  [null,'female','male'].forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (filterGender===g?' active-gender':'');
+    btn.textContent = g===null?'전체':GENDER_LABELS[g];
+    btn.addEventListener('click', () => { filterGender=g; renderAll(); });
+    genderDiv.appendChild(btn);
+  });
+
+  genreDiv.innerHTML = '';
+  [null,'modern','fantasy','historical'].forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (filterGenre===g?' active-genre':'');
+    btn.textContent = g===null?'전체':(GENRE_LABELS[g]||g);
+    btn.addEventListener('click', () => { filterGenre=g; renderAll(); });
+    genreDiv.appendChild(btn);
+  });
+
+  // badges
+  const bGender = document.getElementById('filter-badge-gender');
+  const bGenre  = document.getElementById('filter-badge-genre');
+  bGender.style.display = filterGender ? 'inline' : 'none';
+  bGender.textContent = filterGender ? GENDER_LABELS[filterGender] : '';
+  bGenre.style.display = filterGenre ? 'inline' : 'none';
+  bGenre.textContent = filterGenre ? GENRE_LABELS[filterGenre] : '';
+}
+
+function renderArtStyle() {
+  const display   = document.getElementById('art-display');
+  const textarea  = document.getElementById('art-textarea');
+  const editBtn   = document.getElementById('art-edit-btn');
+  const displayTxt = document.getElementById('art-display-text');
+
+  if (artEditing) {
+    display.style.display = 'none';
+    textarea.style.display = 'block';
+    textarea.value = artStyle;
+    editBtn.textContent = '✓ 완료';
+    editBtn.classList.add('active');
+  } else {
+    display.style.display = 'block';
+    textarea.style.display = 'none';
+    editBtn.textContent = '편집';
+    editBtn.classList.remove('active');
+    if (artStyle) {
+      displayTxt.textContent = artStyle;
+      displayTxt.style.display = 'block';
+      display.querySelector('.placeholder') && (display.querySelector('.placeholder').style.display='none');
+    } else {
+      displayTxt.textContent = '';
+      // show placeholder
+      let ph = display.querySelector('.placeholder');
+      if (!ph) { ph=document.createElement('p'); ph.className='placeholder'; ph.textContent='클릭해서 화풍 입력'; display.appendChild(ph); }
+      ph.style.display = 'block';
+    }
+  }
+}
+
+function renderRightPanel() {
+  const char = getSelected();
+  const detail = document.getElementById('char-detail');
+  const empty  = document.getElementById('char-empty');
+
+  if (!char) {
+    detail.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  detail.style.display = 'block';
+  empty.style.display  = 'none';
+
+  // avatar
+  const avatarWrap = document.getElementById('char-avatar-wrap');
+  const avatarDiv  = document.getElementById('char-avatar');
+  const avatarImg  = document.getElementById('char-avatar-img');
+  if (char.img) {
+    avatarDiv.style.display = 'none';
+    avatarImg.style.display = 'block';
+    avatarImg.src = char.img;
+  } else {
+    avatarDiv.style.display = 'flex';
+    avatarImg.style.display = 'none';
+    avatarDiv.style.width = '54px';
+    avatarDiv.style.height = '54px';
+    avatarDiv.style.borderRadius = '50%';
+    setAvatarEl(avatarDiv, char.name, char.gender, 54);
+  }
+
+  avatarWrap.onclick = () => { uploadTargetId = char.id; document.getElementById('file-input').click(); };
+
+  document.getElementById('char-name').textContent = char.name;
+  document.getElementById('char-sub').textContent = `${GENDER_LABELS[char.gender]||char.gender} · ${GENRE_LABELS[char.genre]||char.genre}`;
+  
+  const ghSt = document.getElementById('char-gh-status');
+  ghSt.style.display = (char.img && char.img.startsWith('http')) ? 'block' : 'none';
+
+  const tagsEl = document.getElementById('char-tags');
+  tagsEl.innerHTML = '';
+  (char.tags||[]).forEach(t => {
+    const sp = document.createElement('span');
+    sp.className = 'tag'; sp.textContent = '#'+t;
+    tagsEl.appendChild(sp);
+  });
+
+  renderPromptFields(char);
+}
+
+function renderPromptFields(char) {
+  const container = document.getElementById('prompt-fields');
+  const prompts = getPrompts(char);
+  const edited = editedPrompts[char.id] || {};
+  container.innerHTML = '';
+
+  PROMPT_FIELDS.forEach(field => {
+    const row = document.createElement('div');
+    row.className = 'prompt-row';
+
+    const header = document.createElement('div');
+    header.className = 'prompt-row-header';
+
+    const label = document.createElement('span');
+    label.className = 'prompt-label';
+    label.textContent = field.label;
+
+    const btns = document.createElement('div');
+    btns.className = 'prompt-btns';
+
+    if (edited[field.key] !== undefined) {
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'ibtn danger';
+      resetBtn.textContent = '원복';
+      resetBtn.onclick = () => {
+        const e = editedPrompts[char.id] || {};
+        delete e[field.key];
+        editedPrompts[char.id] = e;
+        renderPromptFields(char);
+        updatePreviewBox(char);
+      };
+      btns.appendChild(resetBtn);
+    }
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'ibtn';
+    copyBtn.textContent = '복사';
+    copyBtn.onclick = async () => {
+      await navigator.clipboard.writeText(prompts[field.key]||'').catch(()=>{});
+      copyBtn.textContent = '✓ 복사됨';
+      copyBtn.classList.add('active');
+      setTimeout(() => { copyBtn.textContent='복사'; copyBtn.classList.remove('active'); }, 1500);
+    };
+    btns.appendChild(copyBtn);
+
+    header.appendChild(label);
+    header.appendChild(btns);
+
+    const ta = document.createElement('textarea');
+    ta.className = 'prompt-textarea' + (edited[field.key] !== undefined ? ' edited' : '');
+    ta.rows = 2;
+    ta.value = prompts[field.key] || '';
+    ta.placeholder = field.label + '...';
+    ta.oninput = () => {
+      if (!editedPrompts[char.id]) editedPrompts[char.id] = {};
+      editedPrompts[char.id][field.key] = ta.value;
+      ta.classList.add('edited');
+      updatePreviewBox(char);
+    };
+
+    row.appendChild(header);
+    row.appendChild(ta);
+    container.appendChild(row);
+  });
+
+  // preview box
+  const previewBox = document.createElement('div');
+  previewBox.id = 'preview-box-inner';
+  previewBox.style.cssText = 'margin-top:4px;padding:13px;background:#0a0a12;border-radius:10px;border:1px solid #1a1a2a';
+
+  const previewHeader = document.createElement('div');
+  previewHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:7px';
+
+  const previewLabel = document.createElement('div');
+  previewLabel.style.cssText = 'font-size:9px;letter-spacing:.1em;color:#4a4a6a;text-transform:uppercase';
+  previewLabel.textContent = '외형 프롬프트 미리보기';
+
+  const previewCopyBtn = document.createElement('button');
+  previewCopyBtn.className = 'ibtn';
+  previewCopyBtn.textContent = '📋 전체 복사';
+  previewCopyBtn.onclick = async () => {
+    const body = PROMPT_FIELDS.map(f=>getPrompts(getSelected())[f.key]).filter(Boolean).join(', ');
+    const full = artStyle ? `${artStyle}, ${body}` : body;
+    await navigator.clipboard.writeText(full).catch(()=>{});
+    previewCopyBtn.textContent = '✓ 복사됨';
+    previewCopyBtn.classList.add('active');
+    setTimeout(() => { previewCopyBtn.textContent='📋 전체 복사'; previewCopyBtn.classList.remove('active'); }, 1500);
+  };
+
+  previewHeader.appendChild(previewLabel);
+  previewHeader.appendChild(previewCopyBtn);
+
+  const previewText = document.createElement('div');
+  previewText.id = 'preview-text-val';
+  previewText.style.cssText = 'font-size:11px;color:#7070a0;font-family:"DM Mono",monospace;line-height:1.9;word-break:break-all';
+  
+  const currentPromptsVal = PROMPT_FIELDS.map(f=>prompts[f.key]).filter(Boolean).join(', ');
+  previewText.textContent = currentPromptsVal || '—';
+
+  previewBox.appendChild(previewHeader);
+  previewBox.appendChild(previewText);
+  container.appendChild(previewBox);
+}
+
+function updatePreviewBox(char) {
+  const el = document.getElementById('preview-text-val');
+  if (!el) return;
+  const prompts = getPrompts(char);
+  const val = PROMPT_FIELDS.map(f=>prompts[f.key]).filter(Boolean).join(', ');
+  el.textContent = val || '—';
+}
+
+function renderGhStatus() {
+  const icon = document.getElementById('gh-status-icon');
+  const text = document.getElementById('gh-status-text');
+  const syncBtn = document.getElementById('gh-sync-btn');
+  if (ghToken) {
+    icon.textContent = '●'; icon.style.color = '#44aa66';
+    text.textContent = 'GitHub 연결됨'; text.style.color = '#44aa66';
+    syncBtn.className = 'btn gh-sync-connected';
+    syncBtn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:8px 13px;background:#0f1a0f;color:#44aa66;border-radius:9px;font-size:12px;border:1px solid #2a4a2a;cursor:pointer;font-family:inherit';
+  } else {
+    icon.textContent = '◌'; icon.style.color = '#4a4a6a';
+    text.textContent = 'GitHub 미연결'; text.style.color = '#4a4a6a';
+    syncBtn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:8px 13px;background:#131318;color:#5a5a7a;border-radius:9px;font-size:12px;border:1px solid #2a2a3a;cursor:pointer;font-family:inherit';
+  }
+}
+
+function setGhMsg(msg, duration=3000) {
+  const el = document.getElementById('gh-msg');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+  if (duration && msg) setTimeout(() => { el.textContent=''; el.style.display='none'; }, duration);
+}
+
+function renderAll() {
+  renderFilters();
+  renderGrid();
+  renderArtStyle();
+  renderRightPanel();
+  renderGhStatus();
+}
+
+/* ════════════════════════════════════════
+   COPY ALL
+════════════════════════════════════════ */
+async function copyAll() {
+  const char = getSelected();
+  if (!char) return;
+  const prompts = getPrompts(char);
+  const body = PROMPT_FIELDS.map(f=>prompts[f.key]).filter(Boolean).join(', ');
+  const full = artStyle ? `${artStyle}, ${body}` : body;
+  await navigator.clipboard.writeText(full).catch(()=>{});
+  const btn = document.getElementById('copy-all-btn');
+  btn.textContent = '✓ 전체 복사됨!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent='📋 화풍 + 외형 전체 복사'; btn.classList.remove('copied'); }, 1500);
+}
+
+/* ════════════════════════════════════════
+   IMAGE UPLOAD
+════════════════════════════════════════ */
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !uploadTargetId) return;
+  e.target.value = '';
+  const charId = uploadTargetId;
+
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const dataUrl = ev.target.result;
+    // Apply locally immediately
+    characters = characters.map(c => c.id===charId ? {...c, img:dataUrl} : c);
+    save();
+    renderGrid();
+    renderRightPanel();
+
+    if (ghToken) {
+      document.getElementById('img-uploading').style.display = 'flex';
+      try {
+        const ghUrl = await uploadImage(charId, dataUrl);
+        characters = characters.map(c => c.id===charId ? {...c, img:ghUrl} : c);
+        save();
+        renderGrid();
+        renderRightPanel();
+        setGhMsg('✓ 이미지 GitHub에 저장됨');
+      } catch(err) {
+        setGhMsg('이미지 업로드 실패: ' + err.message);
+      } finally {
+        document.getElementById('img-uploading').style.display = 'none';
+      }
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+/* ════════════════════════════════════════
+   ADD CHARACTER MODAL
+════════════════════════════════════════ */
+const AI_SYSTEM = `You are a character prompt analyzer for AI image generation.
+The user gives a character description in Korean or English.
+Extract appearance details and output ONLY a valid JSON object with these exact keys:
+- name, gender ("female"/"male"), genre ("modern"/"fantasy"/"historical")
+- tags: array of exactly 3 short Korean strings (2-5 chars)
+- prompts: {base, hair, skin, eyes, accessories, top, bottom, legwear, shoes}
+  base must be "1girl, solo" or "1boy, solo". All values: English comma-separated descriptors. If unknown: "".
+Output ONLY valid JSON. No markdown. No explanation.`;
+
+function openAddModal() {
+  addStep = 'input';
+  document.getElementById('analyze-textarea').value = '';
+  document.getElementById('analyze-error').style.display = 'none';
+  document.getElementById('add-modal-sub').textContent = '외형 설명을 자유롭게 입력하세요 (한국어·영어 모두 가능)';
+  showAddStep('input');
+  document.getElementById('add-modal').style.display = 'flex';
+}
+
+function closeAddModal() {
+  document.getElementById('add-modal').style.display = 'none';
+  analyzedData = null;
+}
+
+function showAddStep(step) {
+  document.getElementById('add-step-input').style.display   = step==='input'   ? 'block' : 'none';
+  document.getElementById('add-step-preview').style.display = step==='preview' ? 'block' : 'none';
+  document.getElementById('add-step-done').style.display    = step==='done'    ? 'block' : 'none';
+  addStep = step;
+}
+
+async function doAnalyze() {
+  const text = document.getElementById('analyze-textarea').value.trim();
+  if (!text) return;
+  if (!anthropicKey) {
+    const errEl = document.getElementById('analyze-error');
+    errEl.textContent = 'Anthropic API 키가 없습니다. ⚙️ 설정에서 입력해주세요.';
+    errEl.style.display = 'block'; return;
+  }
+  const btn = document.getElementById('analyze-btn');
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;margin-right:6px"></span>AI 분석 중…';
+  btn.disabled = true;
+  document.getElementById('analyze-error').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:AI_SYSTEM,messages:[{role:'user',content:text}]})
+    });
+    const data = await res.json();
+    const raw  = data.content?.find(b=>b.type==='text')?.text || '';
+    analyzedData = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderPreviewStep();
+    showAddStep('preview');
+    document.getElementById('add-modal-sub').textContent = 'AI 분석 결과를 확인하고 저장하세요';
+  } catch(err) {
+    const errEl = document.getElementById('analyze-error');
+    errEl.textContent = '분석 실패: ' + err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.innerHTML = '✦ AI로 자동 분류';
+    btn.disabled = false;
+  }
+}
+
+function renderPreviewStep() {
+  if (!analyzedData) return;
+  const d = analyzedData;
+
+  const av = document.getElementById('preview-avatar');
+  setAvatarEl(av, d.name, d.gender, 46);
+  av.style.width='46px'; av.style.height='46px'; av.style.borderRadius='10px';
+
+  document.getElementById('preview-name').textContent = d.name || '이름 없음';
+  document.getElementById('preview-meta').textContent = `${GENDER_LABELS[d.gender]||'—'} · ${GENRE_LABELS[d.genre]||'—'}`;
+
+  const tagsEl = document.getElementById('preview-tags');
+  tagsEl.innerHTML = '';
+  (d.tags||[]).forEach(t => {
+    const sp = document.createElement('span'); sp.className='tag'; sp.textContent='#'+t;
+    tagsEl.appendChild(sp);
+  });
+
+  const fieldsEl = document.getElementById('preview-fields');
+  fieldsEl.innerHTML = '';
+  PROMPT_FIELDS.forEach(field => {
+    const val = d.prompts?.[field.key];
+    const div = document.createElement('div');
+    div.className = 'preview-field ' + (val ? 'filled' : 'empty');
+    div.innerHTML = `<div class="preview-field-label">${field.label}</div><div class="preview-field-val ${val?'filled':'empty'}">${val||'— 감지되지 않음'}</div>`;
+    fieldsEl.appendChild(div);
+  });
+}
+
+function saveNewChar() {
+  if (!analyzedData) return;
+  const d = analyzedData;
+  const nc = {
+    id: Date.now(),
+    name: d.name||'새 캐릭터',
+    gender: d.gender||'female',
+    genre:  d.genre||'modern',
+    img: null,
+    tags: d.tags||[],
+    prompts: {base:'',hair:'',skin:'',eyes:'',accessories:'',top:'',bottom:'',legwear:'',shoes:'',...(d.prompts||{})}
+  };
+  characters = [nc, ...characters];
+  selectedId = nc.id;
+  save();
+  showAddStep('done');
+  document.getElementById('add-modal-sub').textContent = '✦ 저장 완료!';
+  setTimeout(() => { closeAddModal(); renderAll(); }, 1100);
+}
+
+/* ════════════════════════════════════════
+   GITHUB SYNC
+════════════════════════════════════════ */
+async function doSync() {
+  if (!ghToken) { openSettings(); return; }
+  const btn = document.getElementById('gh-sync-btn');
+  btn.innerHTML = '<span class="spin-sm"></span> 동기화 중…';
+  btn.disabled = true;
+  setGhMsg('GitHub 동기화 중…', 0);
+
+  try {
+    // Upload any base64 images first
+    for (let i=0; i<characters.length; i++) {
+      const c = characters[i];
+      if (c.img && c.img.startsWith('data:')) {
+        try {
+          const url = await uploadImage(c.id, c.img);
+          characters[i] = {...c, img:url};
+        } catch {}
+      }
+    }
+    save();
+    await syncCharacters();
+    setGhMsg('✓ GitHub 동기화 완료');
+  } catch(err) {
+    setGhMsg('동기화 실패: ' + err.message);
+  } finally {
+    btn.innerHTML = '⬆ GitHub 동기화';
+    btn.disabled = false;
+    renderGrid();
+    renderRightPanel();
+  }
+}
+
+/* ════════════════════════════════════════
+   SETTINGS
+════════════════════════════════════════ */
+function openSettings() {
+  document.getElementById('token-input').value = ghToken;
+  document.getElementById('aikey-input').value = anthropicKey;
+  document.getElementById('conn-result').textContent = '';
+  document.getElementById('settings-modal').style.display = 'flex';
+}
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+function saveSettings() {
+  ghToken      = document.getElementById('token-input').value.trim();
+  anthropicKey = document.getElementById('aikey-input').value.trim();
+  localStorage.setItem('cp_ghtoken', ghToken);
+  localStorage.setItem('cp_aikey', anthropicKey);
+  closeSettings();
+  renderGhStatus();
+}
+async function testConn() {
+  const tok = document.getElementById('token-input').value.trim();
+  if (!tok) { document.getElementById('conn-result').textContent='토큰을 입력하세요'; return; }
+  const btn = document.getElementById('test-conn-btn');
+  btn.textContent = '테스트 중…'; btn.disabled = true;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`,{headers:{Authorization:`token ${tok}`}});
+    document.getElementById('conn-result').style.color = r.ok ? '#44aa66' : '#cc5555';
+    document.getElementById('conn-result').textContent = r.ok ? `✓ 연결 성공 · ${GH.owner}/${GH.repo}` : '연결 실패: repo 스코프 확인';
+  } catch { document.getElementById('conn-result').textContent='네트워크 오류'; }
+  finally { btn.textContent='연결 테스트'; btn.disabled=false; }
+}
+
+/* ════════════════════════════════════════
+   EVENTS
+════════════════════════════════════════ */
+document.getElementById('search-input').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  renderGrid();
+  renderFilters();
+});
+
+// Art style
+document.getElementById('art-edit-btn').addEventListener('click', () => {
+  if (artEditing) {
+    artStyle = document.getElementById('art-textarea').value;
+    localStorage.setItem('cp_art', artStyle);
+    artEditing = false;
+  } else {
+    artEditing = true;
+  }
+  renderArtStyle();
+});
+document.getElementById('art-copy-btn').addEventListener('click', async () => {
+  await navigator.clipboard.writeText(artStyle).catch(()=>{});
+  const btn = document.getElementById('art-copy-btn');
+  btn.textContent = '✓ 복사됨'; btn.classList.add('active');
+  setTimeout(() => { btn.textContent='복사'; btn.classList.remove('active'); }, 1500);
+});
+document.getElementById('art-del-btn').addEventListener('click', () => {
+  artStyle = ''; artEditing = true;
+  localStorage.setItem('cp_art', '');
+  renderArtStyle();
+});
+document.getElementById('art-display').addEventListener('click', () => {
+  artEditing = true; renderArtStyle();
+  setTimeout(() => document.getElementById('art-textarea').focus(), 50);
+});
+document.getElementById('art-textarea').addEventListener('input', e => { artStyle = e.target.value; });
+
+// Copy all
+document.getElementById('copy-all-btn').addEventListener('click', copyAll);
+
+// Add character
+document.getElementById('add-char-btn').addEventListener('click', openAddModal);
+document.getElementById('add-modal-close').addEventListener('click', closeAddModal);
+document.getElementById('add-cancel-btn').addEventListener('click', closeAddModal);
+document.getElementById('analyze-btn').addEventListener('click', doAnalyze);
+document.getElementById('preview-back-btn').addEventListener('click', () => {
+  showAddStep('input');
+  document.getElementById('add-modal-sub').textContent = '외형 설명을 자유롭게 입력하세요 (한국어·영어 모두 가능)';
+});
+document.getElementById('save-char-btn').addEventListener('click', saveNewChar);
+document.getElementById('add-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeAddModal(); });
+
+// GitHub
+document.getElementById('gh-sync-btn').addEventListener('click', doSync);
+
+// Settings
+document.getElementById('settings-btn').addEventListener('click', openSettings);
+document.getElementById('settings-close').addEventListener('click', closeSettings);
+document.getElementById('settings-cancel').addEventListener('click', closeSettings);
+document.getElementById('settings-save').addEventListener('click', saveSettings);
+document.getElementById('test-conn-btn').addEventListener('click', testConn);
+document.getElementById('settings-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeSettings(); });
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+if (characters.length) selectedId = characters[0].id;
+
+// Load from GitHub if token present
+if (ghToken) {
+  (async () => {
+    try {
+      const file = await ghGet(GH.dataFile);
+      if (file) {
+        const loaded = JSON.parse(b64dec(file.content.replace(/\n/g,'')));
+        if (loaded && loaded.length) {
+          characters = loaded;
+          selectedId = loaded[0].id;
+          save();
+        }
+      }
+    } catch {}
+    renderAll();
+  })();
+} else {
+  renderAll();
+}
 </script>
 </body>
 </html>
