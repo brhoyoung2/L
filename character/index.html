@@ -102,19 +102,44 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
 #art-textarea{width:100%;background:#0f0f1a;border:1px solid #3a3a5a;border-radius:8px;padding:9px 11px;color:#c8d0ff;font-size:11px;font-family:'DM Mono',monospace;line-height:1.65;outline:none;display:none}
 
 /* Right panel header */
-#char-header{padding:16px 18px 13px;border-bottom:1px solid #1a1a28;background:#0b0b14}
-#char-header-inner{display:flex;gap:13px;align-items:center}
-#char-avatar-wrap{width:54px;height:54px;border-radius:50%;overflow:hidden;border:2px solid #2a2a4a;cursor:pointer;position:relative;flex-shrink:0}
+#char-header{border-bottom:1px solid #1a1a28;background:#0b0b14}
+
+/* Image banner */
+#char-img-banner{position:relative;width:100%;aspect-ratio:4/3;background:#0c0c18;overflow:hidden;cursor:pointer}
+#char-img-banner img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
+#char-img-banner:hover img{transform:scale(1.03)}
+#char-img-banner-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+#char-img-banner-btns{position:absolute;bottom:10px;right:10px;display:flex;gap:6px}
+.banner-btn{padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit;backdrop-filter:blur(6px);transition:all .13s}
+.banner-btn.view{background:#ffffff22;color:#fff;border:1px solid #ffffff33}
+.banner-btn.view:hover{background:#ffffff40}
+.banner-btn.change{background:#5566ffcc;color:#fff;border:1px solid #7788ff44}
+.banner-btn.change:hover{background:#6677ff}
+#banner-upload-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#0c0c18;border:2px dashed #2a2a4a;cursor:pointer;transition:background .15s}
+#banner-upload-hint:hover{background:#0f0f22}
+#banner-upload-hint span:first-child{font-size:28px}
+#banner-upload-hint span:last-child{font-size:11px;color:#5a5a7a}
+
+/* Header info row */
+#char-header-inner{display:flex;gap:13px;align-items:center;padding:13px 18px 0}
+#char-avatar-wrap{width:42px;height:42px;border-radius:50%;overflow:hidden;border:2px solid #2a2a4a;flex-shrink:0}
 #char-avatar-wrap img{width:100%;height:100%;object-fit:cover}
-#char-avatar-wrap .cam-overlay{position:absolute;inset:0;background:#000000aa;display:none;align-items:center;justify-content:center;font-size:14px}
-#char-avatar-wrap:hover .cam-overlay{display:flex}
 #char-name{font-size:16px;font-weight:600;letter-spacing:-0.02em}
 #char-sub{font-size:11px;color:#6666aa;margin-top:2px}
 #char-gh-status{font-size:9px;color:#44aa66;margin-top:3px;display:none}
 #char-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
-#copy-all-btn{width:100%;margin-top:11px;padding:9px;background:#161626;color:#9090c0;border-radius:8px;font-size:12px;font-weight:500;border:1px solid #2a2a3a;cursor:pointer;font-family:inherit;transition:all .13s}
+#char-header-btns{padding:10px 18px 13px;display:flex;gap:7px}
+#copy-all-btn{flex:1;padding:9px;background:#161626;color:#9090c0;border-radius:8px;font-size:12px;font-weight:500;border:1px solid #2a2a3a;cursor:pointer;font-family:inherit;transition:all .13s}
 #copy-all-btn.copied{background:#22223a;color:#88aaff}
-#img-uploading{margin-top:8px;display:none;align-items:center;gap:6px;font-size:11px;color:#8888ff}
+#img-uploading{padding:0 18px 10px;display:none;align-items:center;gap:6px;font-size:11px;color:#8888ff}
+
+/* Lightbox */
+#lightbox{position:fixed;inset:0;background:#000000ee;z-index:500;display:none;align-items:center;justify-content:center;animation:fadeIn .2s ease;cursor:zoom-out}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:10px;box-shadow:0 24px 80px #000000aa;cursor:default;animation:fadeUp .25s ease}
+#lightbox-close{position:absolute;top:20px;right:24px;background:#ffffff18;border:1px solid #ffffff22;border-radius:50%;width:38px;height:38px;font-size:18px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#lightbox-close:hover{background:#ffffff30}
+#lightbox-name{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:#000000aa;padding:6px 16px;border-radius:20px;font-size:13px;color:#e8e8f0;backdrop-filter:blur(4px)}
 
 /* Prompt fields */
 #prompt-fields{padding:13px 18px;display:flex;flex-direction:column;gap:10px}
@@ -295,11 +320,25 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
     </div>
     <div id="char-detail">
       <div id="char-header">
+        <!-- 이미지 배너 -->
+        <div id="char-img-banner">
+          <div id="char-img-banner-placeholder">
+            <div id="char-avatar" class="avatar"></div>
+          </div>
+          <img id="char-banner-img" style="display:none" alt=""/>
+          <div id="banner-upload-hint" style="display:none">
+            <span>📷</span><span>이미지 추가</span>
+          </div>
+          <div id="char-img-banner-btns" style="display:none">
+            <button class="banner-btn view" id="banner-view-btn">🔍 전체보기</button>
+            <button class="banner-btn change" id="banner-change-btn">📷 변경</button>
+          </div>
+        </div>
+        <!-- 캐릭터 정보 -->
         <div id="char-header-inner">
           <div id="char-avatar-wrap">
-            <div id="char-avatar" class="avatar" style="width:54px;height:54px;border-radius:50%"></div>
+            <div id="char-avatar-sm" class="avatar" style="width:42px;height:42px;border-radius:50%"></div>
             <img id="char-avatar-img" style="display:none;width:100%;height:100%;object-fit:cover"/>
-            <div class="cam-overlay">📷</div>
           </div>
           <div style="flex:1;min-width:0">
             <div id="char-name">—</div>
@@ -308,7 +347,10 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
             <div id="char-tags"></div>
           </div>
         </div>
-        <button id="copy-all-btn">📋 화풍 + 외형 전체 복사</button>
+        <!-- 버튼 행 -->
+        <div id="char-header-btns">
+          <button id="copy-all-btn">📋 화풍 + 외형 전체 복사</button>
+        </div>
         <div id="img-uploading"><div class="spin-sm"></div> 이미지 GitHub 업로드 중…</div>
       </div>
       <div id="prompt-fields"></div>
@@ -317,6 +359,13 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
   </div>
   </div><!-- /#main-area -->
 </div><!-- /#app -->
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <button id="lightbox-close">✕</button>
+  <img id="lightbox-img" src="" alt=""/>
+  <div id="lightbox-name"></div>
+</div>
 
 <!-- Sync Toast -->
 <div id="sync-toast">
@@ -581,22 +630,26 @@ let addStep      = 'input';
 let uploadTargetId = null;
 let isDirty      = false; // tracks unsaved changes
 
-const CHAR_VERSION = 92; // update this when DEFAULT_CHARS changes
+const CHAR_VERSION = 92;
 
-/* ── load persisted ── */
+/* ── localStorage 버전 체크 후 로드 ── */
 try {
-  const saved = JSON.parse(localStorage.getItem('cp_chars'));
-  // If saved has fewer chars than current DEFAULT_CHARS, use DEFAULT_CHARS
-  if (saved && saved.length >= CHAR_VERSION) {
-    characters = saved;
+  const savedVer = parseInt(localStorage.getItem('cp_ver') || '0');
+  if (savedVer < CHAR_VERSION) {
+    // 구버전 캐시 제거, 이미지만 보존
+    const oldSaved = JSON.parse(localStorage.getItem('cp_chars') || '[]');
+    const imgMap = {};
+    oldSaved.forEach(c => { if (c.img) imgMap[c.id] = c.img; });
+    characters = DEFAULT_CHARS.map(def => imgMap[def.id] ? {...def, img: imgMap[def.id]} : def);
+    localStorage.setItem('cp_ver', String(CHAR_VERSION));
+    localStorage.setItem('cp_chars', JSON.stringify(characters));
   } else {
-    // Merge: keep any user-added chars (id > DEFAULT_CHARS max) and user images
-    const userAdded = (saved || []).filter(c => c.id > 92);
-    const merged = DEFAULT_CHARS.map(def => {
-      const existing = (saved || []).find(s => s.id === def.id);
-      return existing ? { ...def, img: existing.img, prompts: existing.prompts || def.prompts } : def;
-    });
-    characters = [...merged, ...userAdded];
+    const saved = JSON.parse(localStorage.getItem('cp_chars'));
+    if (saved && saved.length >= CHAR_VERSION) {
+      characters = saved;
+    } else {
+      characters = DEFAULT_CHARS;
+    }
   }
 } catch { characters = DEFAULT_CHARS; }
 try { artStyle = localStorage.getItem('cp_art') || DEFAULT_ART; } catch { artStyle = DEFAULT_ART; }
@@ -928,28 +981,63 @@ function renderRightPanel() {
   detail.style.display = 'block';
   empty.style.display  = 'none';
 
-  // avatar
-  const avatarWrap = document.getElementById('char-avatar-wrap');
-  const avatarDiv  = document.getElementById('char-avatar');
-  const avatarImg  = document.getElementById('char-avatar-img');
+  // ── 이미지 배너 ──
+  const bannerImg     = document.getElementById('char-banner-img');
+  const bannerHint    = document.getElementById('banner-upload-hint');
+  const bannerBtns    = document.getElementById('char-img-banner-btns');
+  const bannerPlaceholder = document.getElementById('char-img-banner-placeholder');
+  const avatarBig     = document.getElementById('char-avatar');
+
   if (char.img) {
-    avatarDiv.style.display = 'none';
+    bannerImg.src = char.img;
+    bannerImg.style.display = 'block';
+    bannerHint.style.display = 'none';
+    bannerPlaceholder.style.display = 'none';
+    bannerBtns.style.display = 'flex';
+  } else {
+    bannerImg.style.display = 'none';
+    bannerHint.style.display = 'flex';
+    bannerBtns.style.display = 'none';
+    bannerPlaceholder.style.display = 'flex';
+    avatarBig.style.cssText = 'width:72px;height:72px;border-radius:0';
+    setAvatarEl(avatarBig, char.name, char.gender, 72);
+  }
+
+  // 배너 클릭 → 이미지 없으면 업로드, 있으면 전체보기
+  document.getElementById('char-img-banner').onclick = (e) => {
+    if (e.target.closest('.banner-btn')) return;
+    if (char.img) openLightbox(char.img, char.name);
+    else { uploadTargetId = char.id; document.getElementById('file-input').click(); }
+  };
+  document.getElementById('banner-upload-hint').onclick = (e) => {
+    e.stopPropagation();
+    uploadTargetId = char.id; document.getElementById('file-input').click();
+  };
+  document.getElementById('banner-view-btn').onclick = (e) => {
+    e.stopPropagation();
+    if (char.img) openLightbox(char.img, char.name);
+  };
+  document.getElementById('banner-change-btn').onclick = (e) => {
+    e.stopPropagation();
+    uploadTargetId = char.id; document.getElementById('file-input').click();
+  };
+
+  // ── 작은 아바타 (헤더 정보 행) ──
+  const avatarSm  = document.getElementById('char-avatar-sm');
+  const avatarImg = document.getElementById('char-avatar-img');
+  if (char.img) {
+    avatarSm.style.display  = 'none';
     avatarImg.style.display = 'block';
     avatarImg.src = char.img;
   } else {
-    avatarDiv.style.display = 'flex';
+    avatarSm.style.display  = 'flex';
     avatarImg.style.display = 'none';
-    avatarDiv.style.width = '54px';
-    avatarDiv.style.height = '54px';
-    avatarDiv.style.borderRadius = '50%';
-    setAvatarEl(avatarDiv, char.name, char.gender, 54);
+    setAvatarEl(avatarSm, char.name, char.gender, 42);
   }
-
-  avatarWrap.onclick = () => { uploadTargetId = char.id; document.getElementById('file-input').click(); };
 
   document.getElementById('char-name').textContent = char.name;
   document.getElementById('char-sub').textContent = `${GENDER_LABELS[char.gender]||char.gender} · ${GENRE_LABELS[char.genre]||char.genre}`;
-  
+
   const ghSt = document.getElementById('char-gh-status');
   ghSt.style.display = (char.img && char.img.startsWith('http')) ? 'block' : 'none';
 
@@ -1103,6 +1191,24 @@ function renderAll() {
   renderRightPanel();
   renderGhStatus();
 }
+
+/* ════════════════════════════════════════
+   LIGHTBOX
+════════════════════════════════════════ */
+function openLightbox(src, name) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox-name').textContent = name || '';
+  lb.classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.getElementById('lightbox').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
 /* ════════════════════════════════════════
    CLIPBOARD HELPER (works on file:// too)
