@@ -225,28 +225,17 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
 #add-char-btn:active{transform:scale(.97)}
 #empty-state{text-align:center;color:#3a3a5a;margin-top:80px;font-size:13px}
 
-/* CSV toolbar */
-#csv-bar{height:40px;min-height:40px;background:#07070f;border-bottom:1px solid #16162a;display:flex;align-items:center;padding:0 16px;gap:8px;z-index:99;flex-wrap:nowrap;overflow-x:auto}
-#csv-bar::-webkit-scrollbar{height:0}
-.csv-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:inherit;white-space:nowrap;transition:all .13s}
-.csv-btn:active{transform:scale(.97)}
-.csv-btn.sheets{background:#0f2a1a;color:#44cc88;border:1px solid #1a4a2a}
-.csv-btn.sheets:hover{background:#143520}
-.csv-btn.dl{background:#0f1a2a;color:#4499cc;border:1px solid #1a3a4a}
-.csv-btn.dl:hover{background:#142030}
-.csv-btn.ul{background:#1a1a0f;color:#aaaa44;border:1px solid #3a3a1a}
-.csv-btn.ul:hover{background:#222210}
-.csv-btn.sync{background:#1a0f2a;color:#9944cc;border:1px solid #3a1a4a}
-.csv-btn.sync:hover{background:#22143a}
-.csv-btn:disabled{opacity:.4;cursor:default}
-#csv-status{font-size:10px;color:#4a4a6a;flex:1;text-align:right;font-family:'DM Mono',monospace}
-#csv-status.ok{color:#44aa66}
-#csv-status.err{color:#cc5555}
-#csv-status.info{color:#6688cc}
+/* DB 드롭다운 */
 #csv-file-input{display:none}
-
-.csv-btn.export{background:#1a0f0f;color:#cc8844;border:1px solid #4a2a1a}
-.csv-btn.export:hover{background:#221510}
+#csv-status{display:none} /* inline으로 대체 */
+#db-toggle-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;background:#0f0f1a;border:1px solid #2a2a3a;border-radius:8px;color:#8888cc;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+#db-toggle-btn:hover,#db-toggle-btn.open{background:#161626;border-color:#4455ff44;color:#aaaaee}
+#db-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:210px;background:#0f0f1a;border:1px solid #2a2a3a;border-radius:10px;box-shadow:0 12px 40px #00000099;z-index:300;padding:6px;animation:fadeIn .15s ease}
+.db-menu-section{font-size:9px;letter-spacing:.12em;color:#3a3a5a;text-transform:uppercase;padding:6px 10px 3px;font-weight:700}
+.db-menu-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;background:none;border:none;border-radius:7px;color:#8888b8;font-size:12px;font-family:inherit;cursor:pointer;text-align:left;transition:all .12s;white-space:nowrap}
+.db-menu-item:hover{background:#1a1a2a;color:#ccccee}
+.db-menu-divider{height:1px;background:#1a1a2a;margin:4px 6px}
+#csv-status-inline{font-size:10px;padding:5px 10px 4px}
 
 /* 알림 팝업 (범용) */
 #popup-modal .modal-box{max-width:500px}
@@ -282,6 +271,28 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
       <span id="dirty-text">미저장 변경사항</span>
     </div>
     <div id="spacer"></div>
+
+    <!-- DB 드롭다운 -->
+    <div id="db-dropdown-wrap" style="position:relative">
+      <button id="db-toggle-btn">
+        <span>🗄</span>
+        <span>DB</span>
+        <span id="db-chevron" style="font-size:9px;opacity:.6;transition:transform .2s">▼</span>
+      </button>
+      <div id="db-menu" style="display:none">
+        <div class="db-menu-section">스프레드시트</div>
+        <button class="db-menu-item" id="btn-open-sheets">📊 스프레드시트 열기</button>
+        <button class="db-menu-item" id="btn-sync-sheets">🔄 시트에서 불러오기</button>
+        <button class="db-menu-item" id="btn-export-sheets">📤 시트로 내보내기</button>
+        <div class="db-menu-divider"></div>
+        <div class="db-menu-section">CSV 파일</div>
+        <button class="db-menu-item" id="btn-csv-dl">⬇ CSV 다운로드</button>
+        <button class="db-menu-item" id="btn-csv-ul">⬆ CSV 업로드</button>
+        <input type="file" id="csv-file-input" accept=".csv"/>
+        <div id="csv-status-inline" style="font-size:10px;color:#44aa66;padding:6px 14px 4px;display:none"></div>
+      </div>
+    </div>
+
     <a id="pages-link" href="https://brhoyoung2.github.io/L/character/" target="_blank" class="no-token">
       🌐 GitHub Pages에서 보기
     </a>
@@ -291,18 +302,8 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
     </button>
   </div>
 
-  <!-- ══ CSV / SHEETS 툴바 ══ -->
-  <div id="csv-bar">
-    <span style="font-size:10px;color:#3a3a5a;letter-spacing:.08em;font-weight:600;margin-right:2px">DB</span>
-    <button class="csv-btn sheets" id="btn-open-sheets">📊 스프레드시트 열기</button>
-    <button class="csv-btn sync"   id="btn-sync-sheets">🔄 시트에서 불러오기</button>
-    <button class="csv-btn export" id="btn-export-sheets">📤 시트로 내보내기</button>
-    <div style="width:1px;height:20px;background:#1a1a2a;margin:0 2px"></div>
-    <button class="csv-btn dl"     id="btn-csv-dl">⬇ CSV 다운로드</button>
-    <button class="csv-btn ul"     id="btn-csv-ul">⬆ CSV 업로드</button>
-    <input type="file" id="csv-file-input" accept=".csv"/>
-    <span id="csv-status"></span>
-  </div>
+  <!-- ══ CSV / SHEETS 툴바 → DB 드롭다운으로 통합 ══ -->
+  <!-- csv-bar 제거, top-bar의 DB 버튼으로 이동 -->
 
   <!-- ══ MAIN AREA ══ -->
   <div id="main-area">
@@ -1872,10 +1873,21 @@ function csvToChars(rows) {
 
 let csvParsedData = null;
 
+/* ── DB 드롭다운 토글 ── */
+const dbToggleBtn = document.getElementById('db-toggle-btn');
+const dbMenu      = document.getElementById('db-menu');
+const dbChevron   = document.getElementById('db-chevron');
+function openDbMenu()  { dbMenu.style.display='block'; dbToggleBtn.classList.add('open'); dbChevron.style.transform='rotate(180deg)'; }
+function closeDbMenu() { dbMenu.style.display='none';  dbToggleBtn.classList.remove('open'); dbChevron.style.transform=''; }
+dbToggleBtn.addEventListener('click', e => { e.stopPropagation(); dbMenu.style.display==='none' ? openDbMenu() : closeDbMenu(); });
+document.addEventListener('click', e => { if (!document.getElementById('db-dropdown-wrap').contains(e.target)) closeDbMenu(); });
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeDbMenu(); });
+
 function setCsvStatus(msg, type='') {
-  const el = document.getElementById('csv-status');
+  const el = document.getElementById('csv-status-inline');
+  if (!msg) { el.style.display='none'; return; }
+  el.style.display = 'block';
   el.textContent = msg;
-  el.className = type ? `csv-status ${type}` : 'csv-status';
   el.style.color = type==='ok'?'#44aa66':type==='err'?'#cc5555':type==='info'?'#6688cc':'#4a4a6a';
 }
 
@@ -1896,10 +1908,11 @@ function downloadCSV() {
   setTimeout(() => setCsvStatus(''), 3000);
 }
 
-document.getElementById('btn-csv-dl').addEventListener('click', downloadCSV);
+document.getElementById('btn-csv-dl').addEventListener('click', () => { closeDbMenu(); downloadCSV(); });
 
 /* 스프레드시트 열기 */
 document.getElementById('btn-open-sheets').addEventListener('click', () => {
+  closeDbMenu();
   const a = document.createElement('a');
   a.href = SHEETS_EDIT; a.target = '_blank'; a.rel = 'noopener';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
