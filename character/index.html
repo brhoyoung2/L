@@ -245,6 +245,14 @@ input::placeholder,textarea::placeholder{color:#4a4a6a}
       <div style="font-size:10px;letter-spacing:.12em;color:#4a4a6a;margin-bottom:8px;text-transform:uppercase">장르</div>
       <div id="genre-filters"></div>
     </div>
+    <div>
+      <div style="font-size:10px;letter-spacing:.12em;color:#4a4a6a;margin-bottom:8px;text-transform:uppercase">연령대</div>
+      <div id="age-filters"></div>
+    </div>
+    <div>
+      <div style="font-size:10px;letter-spacing:.12em;color:#4a4a6a;margin-bottom:8px;text-transform:uppercase">체형</div>
+      <div id="body-filters"></div>
+    </div>
     <div style="margin-top:auto">
       <div id="gh-status-box">
         <div style="display:flex;align-items:center;gap:6px">
@@ -511,6 +519,34 @@ const DEFAULT_ART = `0.3::artist:lunch (shin new) ::, 0.4::artist:gogalking ::, 
 
 const GENRE_LABELS  = {modern:"현대",fantasy:"판타지",historical:"사극·고대"};
 const GENDER_LABELS = {female:"여성",male:"남성"};
+
+/* ── 태그 기반 자동 분류 ── */
+const AGE_RULES = [
+  {key:'child',  label:'아기·어린이', keywords:['아기','유아','유치원생','초등학생','꼬마','어린이']},
+  {key:'teen',   label:'청소년',      keywords:['청소년','중학생','고등학생','10대']},
+  {key:'middle', label:'아줌마·아저씨',keywords:['아줌마','아저씨','중년','식당사장','식당아주머니','편의점','택배기사','경비원','버스기사','청소','환경미화원','노가다','현장반장','이발사','약사','치킨집','목사','미용사','학원선생','학부모','마트알바','카페사장','체육선생','노래방','부동산']},
+  {key:'elder',  label:'할머니·할아버지',keywords:['할머니','할아버지','할배','할매','노인','노점상']},
+];
+const BODY_RULES = [
+  {key:'fat',    label:'뚱뚱', keywords:['뚱뚱']},
+  {key:'chubby', label:'통통', keywords:['통통']},
+  {key:'slim',   label:'마른', keywords:['마른']},
+];
+
+function getAgeGroup(char) {
+  const tags = char.tags.join(' ');
+  for (const rule of AGE_RULES) {
+    if (rule.keywords.some(k => tags.includes(k))) return rule.key;
+  }
+  return 'adult';
+}
+function getBodyType(char) {
+  const tags = char.tags.join(' ');
+  for (const rule of BODY_RULES) {
+    if (rule.keywords.some(k => tags.includes(k))) return rule.key;
+  }
+  return 'average';
+}
 const PROMPT_FIELDS = [
   {key:"base",        label:"기본 (인원수)"},
   {key:"hair",        label:"헤어 스타일·색상"},
@@ -531,8 +567,10 @@ const GH = {owner:'brhoyoung2',repo:'L',branch:'main',imgDir:'character/images',
 let characters = [];
 let selectedId = null;
 let editedPrompts = {};
-let filterGender = null;
-let filterGenre  = null;
+let filterGender   = null;
+let filterGenre    = null;
+let filterAgeGroup = null;
+let filterBodyType = null;
 let searchQuery  = '';
 let artStyle     = '';
 let artEditing   = false;
@@ -688,8 +726,10 @@ async function syncCharacters() {
 ════════════════════════════════════════ */
 function filteredChars() {
   return characters.filter(c => {
-    if (filterGender && c.gender !== filterGender) return false;
-    if (filterGenre  && c.genre  !== filterGenre)  return false;
+    if (filterGender   && c.gender !== filterGender) return false;
+    if (filterGenre    && c.genre  !== filterGenre)  return false;
+    if (filterAgeGroup && getAgeGroup(c) !== filterAgeGroup) return false;
+    if (filterBodyType && getBodyType(c) !== filterBodyType) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return c.name.includes(q) || c.tags.some(t=>t.includes(q))
@@ -772,28 +812,70 @@ function renderGrid() {
 }
 
 function renderFilters() {
+  /* ── 성별 ── */
   const genderDiv = document.getElementById('gender-filters');
-  const genreDiv  = document.getElementById('genre-filters');
-
   genderDiv.innerHTML = '';
   [null,'female','male'].forEach(g => {
+    const cnt = g ? characters.filter(c=>c.gender===g).length : characters.length;
     const btn = document.createElement('button');
     btn.className = 'filter-btn' + (filterGender===g?' active-gender':'');
-    btn.textContent = g===null?'전체':GENDER_LABELS[g];
+    btn.innerHTML = `${g===null?'전체':GENDER_LABELS[g]} <span style="opacity:.45;font-size:10px;margin-left:3px">${cnt}</span>`;
     btn.addEventListener('click', () => { filterGender=g; renderAll(); });
     genderDiv.appendChild(btn);
   });
 
+  /* ── 장르 ── */
+  const genreDiv = document.getElementById('genre-filters');
   genreDiv.innerHTML = '';
   [null,'modern','fantasy','historical'].forEach(g => {
+    const cnt = g ? characters.filter(c=>c.genre===g).length : characters.length;
     const btn = document.createElement('button');
     btn.className = 'filter-btn' + (filterGenre===g?' active-genre':'');
-    btn.textContent = g===null?'전체':(GENRE_LABELS[g]||g);
+    btn.innerHTML = `${g===null?'전체':(GENRE_LABELS[g]||g)} <span style="opacity:.45;font-size:10px;margin-left:3px">${cnt}</span>`;
     btn.addEventListener('click', () => { filterGenre=g; renderAll(); });
     genreDiv.appendChild(btn);
   });
 
-  // badges
+  /* ── 연령대 ── */
+  const ageDiv = document.getElementById('age-filters');
+  ageDiv.innerHTML = '';
+  const ageOptions = [
+    {key:null,     label:'전체'},
+    {key:'child',  label:'아기·어린이'},
+    {key:'teen',   label:'청소년'},
+    {key:'adult',  label:'일반 성인'},
+    {key:'middle', label:'아줌마·아저씨'},
+    {key:'elder',  label:'할머니·할아버지'},
+  ];
+  ageOptions.forEach(({key, label}) => {
+    const cnt = key ? characters.filter(c=>getAgeGroup(c)===key).length : characters.length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (filterAgeGroup===key?' active-genre':'');
+    btn.innerHTML = `${label} <span style="opacity:.45;font-size:10px;margin-left:3px">${cnt}</span>`;
+    btn.addEventListener('click', () => { filterAgeGroup=key; renderAll(); });
+    ageDiv.appendChild(btn);
+  });
+
+  /* ── 체형 ── */
+  const bodyDiv = document.getElementById('body-filters');
+  bodyDiv.innerHTML = '';
+  const bodyOptions = [
+    {key:null,      label:'전체'},
+    {key:'slim',    label:'마른'},
+    {key:'average', label:'보통'},
+    {key:'chubby',  label:'통통'},
+    {key:'fat',     label:'뚱뚱'},
+  ];
+  bodyOptions.forEach(({key, label}) => {
+    const cnt = key ? characters.filter(c=>getBodyType(c)===key).length : characters.length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (filterBodyType===key?' active-gender':'');
+    btn.innerHTML = `${label} <span style="opacity:.45;font-size:10px;margin-left:3px">${cnt}</span>`;
+    btn.addEventListener('click', () => { filterBodyType=key; renderAll(); });
+    bodyDiv.appendChild(btn);
+  });
+
+  /* ── 상단 배지 ── */
   const bGender = document.getElementById('filter-badge-gender');
   const bGenre  = document.getElementById('filter-badge-genre');
   bGender.style.display = filterGender ? 'inline' : 'none';
@@ -962,14 +1044,14 @@ function renderPromptFields(char) {
 
   const previewCopyBtn = document.createElement('button');
   previewCopyBtn.className = 'ibtn';
-  previewCopyBtn.textContent = '📋 전체 복사';
+  previewCopyBtn.textContent = '외형만 복사';
   previewCopyBtn.onclick = async () => {
+    // appearance only — no art style
     const body = PROMPT_FIELDS.map(f=>getPrompts(getSelected())[f.key]).filter(Boolean).join(', ');
-    const full = artStyle ? `${artStyle}, ${body}` : body;
-    await copyText(full);
+    await copyText(body);
     previewCopyBtn.textContent = '✓ 복사됨';
     previewCopyBtn.classList.add('active');
-    setTimeout(() => { previewCopyBtn.textContent='📋 전체 복사'; previewCopyBtn.classList.remove('active'); }, 1500);
+    setTimeout(() => { previewCopyBtn.textContent='외형만 복사'; previewCopyBtn.classList.remove('active'); }, 1500);
   };
 
   previewHeader.appendChild(previewLabel);
