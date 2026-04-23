@@ -6,36 +6,28 @@
   if (params.get('admin') === 'false') localStorage.removeItem('tb_admin_mode');
   const isAdmin = localStorage.getItem('tb_admin_mode') === 'true';
 
-  const adminBadge = document.getElementById('admin-badge');
-  if (isAdmin && adminBadge) {
-    adminBadge.style.display = 'inline-flex';
+  if (isAdmin) {
+    const badge = document.getElementById('admin-badge');
+    if (badge) badge.style.display = 'inline-flex';
   }
 
   /* ── 데이터 로드 ── */
   let books = [], categories = [], webtoons = [];
   try {
     [books, categories, webtoons] = await Promise.all([
-      TB.getBooks(),
-      TB.getCategories(),
-      TB.getWebtoons()
+      TB.getBooks(), TB.getCategories(), TB.getWebtoons()
     ]);
   } catch (err) {
     console.error('데이터 로드 실패', err);
     document.getElementById('main-content').innerHTML =
-      '<div style="padding:60px;text-align:center;color:var(--color-text-3)">데이터를 불러올 수 없습니다.</div>';
+      '<div class="loading-state"><div style="font-size:40px">😕</div><p>데이터를 불러올 수 없습니다.</p></div>';
     return;
   }
 
-  /* ── 히어로 배너 ── */
-  const heroBook = books.find(b => b.is_featured) || books[0];
-  if (heroBook) {
-    document.getElementById('hero-title').textContent = heroBook.title;
-    document.getElementById('hero-sub').textContent = heroBook.subtitle;
-    document.getElementById('hero-cta').dataset.bookId = heroBook.book_id;
-    document.getElementById('hero-illust').style.background =
-      `linear-gradient(135deg,${heroBook.cover_color},${heroBook.cover_color}88)`;
-    document.getElementById('hero-illust').textContent = '📚';
-  }
+  /* ── 히어로 슬라이더 ── */
+  const featured = books.filter(b => b.is_featured);
+  const heroBooks = featured.length ? featured : books.slice(0, 3);
+  buildHero(heroBooks);
 
   /* ── 섹션별 도서 렌더링 ── */
   const mainContent = document.getElementById('main-content');
@@ -43,52 +35,60 @@
     const catBooks = TB.getBooksInCategory(books, cat.category_id);
     return TB.renderBookSection(cat, catBooks);
   }).join('');
-  mainContent.innerHTML = sectionsHtml;
+  mainContent.innerHTML = sectionsHtml || '<div class="loading-state"><p>표시할 도서가 없습니다.</p></div>';
 
   /* ── 웹툰 섹션 ── */
-  if (webtoons.length) {
-    const wtSection = document.getElementById('webtoon-section');
-    if (wtSection) {
-      wtSection.querySelector('.book-scroll').innerHTML = webtoons.map(TB.renderWebtoonCard).join('');
-    }
+  const wtScroll = document.getElementById('webtoon-scroll');
+  if (wtScroll && webtoons.length) {
+    wtScroll.innerHTML = webtoons.map(TB.renderWebtoonCard).join('');
   }
 
-  /* ── 학년 탭 이벤트 (grade_best 섹션) ── */
+  /* ── 글로벌 이벤트 위임 ── */
   document.addEventListener('click', e => {
+
+    /* 학년 탭 */
     const tab = e.target.closest('.grade-tab');
     if (tab) {
-      const grade = tab.dataset.grade;
+      const grade   = tab.dataset.grade;
       const section = tab.closest('.book-section');
       section.querySelectorAll('.grade-tab').forEach(t => t.classList.remove('grade-tab--active'));
       tab.classList.add('grade-tab--active');
-
+      const catId  = section.id.replace('section-', '');
+      const base   = TB.getBooksInCategory(books, catId);
+      const filtered = grade === 'all' ? base : base.filter(b => b.grade === grade);
       const scroll = section.querySelector('.book-scroll');
-      const catId = section.id.replace('section-', '');
-      const catBooks = TB.getBooksInCategory(books, catId);
-      const filtered = grade === 'all' ? catBooks : catBooks.filter(b => b.grade === grade);
       scroll.innerHTML = filtered.length
         ? filtered.map(TB.renderBookCard).join('')
         : '<p style="color:var(--color-text-3);padding:20px">해당 학년 도서가 없습니다.</p>';
     }
 
-    /* ── 도서 카드 클릭 → 상세 페이지 ── */
+    /* 도서 카드 클릭 */
     const card = e.target.closest('[data-action="open-book"]');
     if (card) {
-      const id = card.dataset.bookId;
-      location.href = `detail.html?book_id=${id}`;
+      location.href = `detail.html?book_id=${card.dataset.bookId}`;
     }
 
-    /* ── 히어로 CTA ── */
-    const cta = e.target.closest('#hero-cta');
-    if (cta) {
-      const id = cta.dataset.bookId;
-      if (id) location.href = `detail.html?book_id=${id}`;
+    /* 히어로 CTA */
+    const cta = e.target.closest('[id^="hero-cta-"]');
+    if (cta && cta.dataset.bookId) {
+      location.href = `detail.html?book_id=${cta.dataset.bookId}`;
     }
 
-    /* ── 관리자 패널 열기/닫기 ── */
+    /* 관리자 패널 열기/닫기 */
     if (e.target.closest('#admin-toggle-btn')) openAdminPanel();
     if (e.target.closest('#admin-close-btn'))  closeAdminPanel();
     if (e.target.closest('#admin-overlay') && !e.target.closest('#admin-panel')) closeAdminPanel();
+
+    /* 히어로 도트 */
+    const dot = e.target.closest('.hero__dot');
+    if (dot) {
+      const idx = Number(dot.dataset.idx);
+      goToSlide(idx, heroBooks);
+    }
+
+    /* 히어로 화살표 */
+    if (e.target.closest('#hero-prev')) goToSlide(currentSlide - 1, heroBooks);
+    if (e.target.closest('#hero-next')) goToSlide(currentSlide + 1, heroBooks);
   });
 
   /* ── 관리자 패널 ── */
@@ -103,4 +103,100 @@
 
   if (isAdmin) openAdminPanel();
 
+  /* ── 검색 ── */
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const q = searchInput.value.trim();
+        if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
+      }
+    });
+  }
+
+  /* ── 히어로 슬라이더 ── */
+  let currentSlide = 0;
+  let autoTimer;
+
+  function buildHero(heroBooks) {
+    const banner = document.getElementById('hero-banner');
+    const dotsEl = document.getElementById('hero-dots');
+    if (!banner || !heroBooks.length) return;
+
+    /* 슬라이드 HTML 생성 */
+    banner.innerHTML = heroBooks.map((b, i) => {
+      const dark = isColorDark(b.cover_color);
+      return `
+        <div class="hero__slide${i === 0 ? ' hero__slide--active' : ''}" id="hero-slide-${i}">
+          <div class="hero__text">
+            <span class="hero__tag">${getCategoryLabel(b.categories, categories)}</span>
+            <h1 class="hero__title">${b.title}</h1>
+            <p class="hero__sub">${b.subtitle}</p>
+            <div class="hero__meta">
+              <span>✍️ ${b.author}</span>
+              <span>📅 ${b.year}년</span>
+              <span>⏱ 약 ${b.reading_minutes}분</span>
+              <span>${GRADE_LABEL[b.grade] || b.grade}</span>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <button class="hero__cta" id="hero-cta-${i}" data-book-id="${b.book_id}">📖 자세히 보기</button>
+              <button class="hero__cta hero__cta--secondary" data-book-id="${b.book_id}" id="hero-like-${i}">❤️ ${b.like_count.toLocaleString()}</button>
+            </div>
+          </div>
+          <div class="hero__cover" style="background:${b.cover_color}">
+            <div class="hero__cover-book">
+              ${renderHeroDeco(b)}
+              <span style="position:relative;z-index:1;font-size:60px">📚</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    /* 도트 */
+    dotsEl.innerHTML = heroBooks.map((_, i) =>
+      `<button class="hero__dot${i === 0 ? ' hero__dot--active' : ''}" data-idx="${i}"></button>`
+    ).join('');
+
+    startAuto(heroBooks);
+  }
+
+  function goToSlide(idx, heroBooks) {
+    const len = heroBooks.length;
+    currentSlide = ((idx % len) + len) % len;
+
+    document.querySelectorAll('.hero__slide').forEach((s, i) =>
+      s.classList.toggle('hero__slide--active', i === currentSlide));
+    document.querySelectorAll('.hero__dot').forEach((d, i) =>
+      d.classList.toggle('hero__dot--active', i === currentSlide));
+
+    clearInterval(autoTimer);
+    startAuto(heroBooks);
+  }
+
+  function startAuto(heroBooks) {
+    autoTimer = setInterval(() => goToSlide(currentSlide + 1, heroBooks), 5000);
+  }
+
+  function getCategoryLabel(cats, allCats) {
+    const cat = allCats.find(c => cats.includes(c.category_id));
+    return cat ? `📖 ${cat.name}` : '📖 추천 도서';
+  }
+
+  function renderHeroDeco(book) {
+    switch(book.cover_deco) {
+      case 'circle': return `<div style="position:absolute;width:80px;height:80px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);top:20px;left:50%;transform:translateX(-50%)"></div>`;
+      case 'quote':  return `<div style="position:absolute;font-size:80px;color:rgba(255,255,255,0.15);top:0;left:6px;font-family:Georgia,serif;line-height:1">"</div>`;
+      case 'lines':  return `<div style="position:absolute;top:20px;left:20%;width:60%;display:flex;flex-direction:column;gap:6px"><span style="height:2px;background:rgba(255,255,255,0.2);border-radius:1px;display:block"></span><span style="height:2px;background:rgba(255,255,255,0.2);border-radius:1px;display:block"></span></div>`;
+      default: return '';
+    }
+  }
+
+  function isColorDark(hex) {
+    const c = hex.replace('#','');
+    const r = parseInt(c.slice(0,2),16), g = parseInt(c.slice(2,4),16), b = parseInt(c.slice(4,6),16);
+    return (r*299 + g*587 + b*114) / 1000 < 128;
+  }
+
 })();
+
+const GRADE_LABEL = { elementary: '초등', middle: '중등', high: '고등' };

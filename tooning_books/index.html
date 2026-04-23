@@ -26,14 +26,12 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="search" placeholder="도서 제목, 작가, 태그 검색">
+        <input type="search" id="search-input" placeholder="도서 제목, 작가, 태그 검색">
       </div>
 
       <div class="site-header__actions">
-        <span id="admin-badge" class="admin-badge hidden" style="display:none">
-          ⚙️ 관리자 모드
-        </span>
-        <button class="btn-icon" id="admin-toggle-btn" title="관리자 패널">⚙️</button>
+        <span id="admin-badge" class="admin-badge" style="display:none">⚙️ 관리자 모드</span>
+        <button class="btn-icon" id="admin-toggle-btn" title="관리자 패널 열기">⚙️</button>
         <button class="btn-icon" title="알림">🔔</button>
         <button class="btn-icon" title="라이브러리">📚</button>
         <button class="btn-icon" title="프로필">👤</button>
@@ -53,29 +51,43 @@
   </nav>
 
   <!-- ═══ HERO BANNER ═══ -->
-  <div style="padding:0 80px;max-width:calc(var(--container-max) + 160px);margin:0 auto">
-    <div class="hero">
-      <div class="hero__text">
-        <span class="hero__tag">📖 이달의 추천</span>
-        <h1 class="hero__title" id="hero-title">로딩 중...</h1>
-        <p class="hero__sub" id="hero-sub"></p>
-        <button class="hero__cta" id="hero-cta" data-book-id="">
-          📖 자세히 보기
-        </button>
-        <div class="hero__dots">
-          <button class="hero__dot hero__dot--active"></button>
-          <button class="hero__dot"></button>
-          <button class="hero__dot"></button>
+  <div class="hero-wrap">
+    <div class="hero" id="hero-banner">
+      <!-- 슬라이드 복수: JS가 featured 도서로 채움 -->
+      <div class="hero__slide hero__slide--active" id="hero-slide-0">
+        <div class="hero__text">
+          <span class="hero__tag" id="hero-tag-0">📖 이달의 추천</span>
+          <h1 class="hero__title" id="hero-title-0">도서를 불러오는 중...</h1>
+          <p class="hero__sub" id="hero-sub-0">잠시만 기다려주세요.</p>
+          <div class="hero__meta" id="hero-meta-0"></div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px">
+            <button class="hero__cta" id="hero-cta-0" data-book-id="">
+              📖 자세히 보기
+            </button>
+            <button class="hero__cta hero__cta--secondary" id="hero-like-0">
+              ❤️ 좋아요
+            </button>
+          </div>
+        </div>
+        <div class="hero__cover" id="hero-cover-0">
+          <div class="hero__cover-book" id="hero-cover-inner-0">📚</div>
         </div>
       </div>
-      <div class="hero__illust" id="hero-illust">📚</div>
+    </div>
+
+    <!-- 슬라이더 컨트롤 -->
+    <div class="hero-controls">
+      <div class="hero__dots" id="hero-dots"></div>
+      <div style="display:flex;gap:4px">
+        <button class="hero-arrow" id="hero-prev">‹</button>
+        <button class="hero-arrow" id="hero-next">›</button>
+      </div>
     </div>
   </div>
 
-  <!-- ═══ MAIN CONTENT (섹션 동적 삽입) ═══ -->
+  <!-- ═══ MAIN CONTENT ═══ -->
   <main id="main-content" style="padding-bottom:20px">
-    <!-- 도서 섹션이 JS로 삽입됩니다 -->
-    <div style="padding:60px;text-align:center;color:var(--color-text-3)">
+    <div class="loading-state">
       <div style="font-size:40px;margin-bottom:16px">📚</div>
       <p>도서 목록을 불러오는 중...</p>
     </div>
@@ -87,13 +99,11 @@
       <div class="section-header">
         <div>
           <div class="section-header__label">USER WEBTOONS</div>
-          <h2 class="section-header__title">이 책으로 만든 학생 웹툰</h2>
+          <h2 class="section-header__title">학생들이 만든 웹툰</h2>
         </div>
         <a class="section-header__more" href="#">전체 보기 →</a>
       </div>
-      <div class="book-scroll">
-        <!-- 웹툰 카드 JS로 삽입 -->
-      </div>
+      <div class="book-scroll" id="webtoon-scroll"></div>
     </div>
   </section>
 
@@ -116,150 +126,84 @@
   <aside class="admin-panel" id="admin-panel">
     <div class="admin-panel__header">
       <div>
-        <div style="font-size:11px;color:var(--color-text-3);letter-spacing:1px;margin-bottom:4px">⚙️ ADMIN</div>
+        <div style="font-size:11px;color:var(--color-text-3);letter-spacing:1px;margin-bottom:4px">⚙️ ADMIN DASHBOARD</div>
         <div class="admin-panel__title">관리자 패널</div>
       </div>
       <button class="admin-panel__close" id="admin-close-btn">✕</button>
     </div>
 
-    <!-- 탭 -->
     <div style="display:flex;border-bottom:1px solid var(--color-border)">
-      <button class="site-nav__item site-nav__item--active" style="flex:1;text-align:center;border:none;background:none">도서 (6)</button>
-      <button class="site-nav__item" style="flex:1;text-align:center;border:none;background:none">배너</button>
-      <button class="site-nav__item" style="flex:1;text-align:center;border:none;background:none">공지</button>
+      <button class="site-nav__item site-nav__item--active" data-admin-tab="books" style="flex:1;text-align:center;border:none;background:none" id="admin-tab-books">도서</button>
+      <button class="site-nav__item" data-admin-tab="banners" style="flex:1;text-align:center;border:none;background:none">배너</button>
+      <button class="site-nav__item" data-admin-tab="notices" style="flex:1;text-align:center;border:none;background:none">공지</button>
     </div>
 
     <div class="admin-panel__body">
-      <!-- 도서 추가 폼 (v0.3: UI만, localStorage 저장) -->
+      <!-- 도서 추가 폼 -->
       <div style="background:var(--color-chip);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <strong style="font-size:14px">새 도서 추가</strong>
-          <span style="font-size:11px;color:var(--color-text-3)">v0.3: UI 데모</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <strong style="font-size:14px">+ 새 도서 등록</strong>
+          <span style="font-size:10px;color:var(--color-text-3);background:var(--color-edit-bg);padding:2px 8px;border-radius:var(--radius-pill);border:1px solid var(--color-edit-border)">v0.3 로컬 저장</span>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px">
           <div>
-            <label style="font-size:12px;color:var(--color-text-2);display:block;margin-bottom:4px">도서 제목 *</label>
-            <input type="text" id="admin-title" placeholder="예: 어린 왕자"
-              style="width:100%;padding:8px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-family:var(--font-family);font-size:14px;outline:none">
+            <label class="form-label">도서 제목 *</label>
+            <input type="text" id="admin-title" placeholder="예: 어린 왕자" class="form-input">
           </div>
           <div>
-            <label style="font-size:12px;color:var(--color-text-2);display:block;margin-bottom:4px">작가</label>
-            <input type="text" id="admin-author" placeholder="예: 생텍쥐페리"
-              style="width:100%;padding:8px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-family:var(--font-family);font-size:14px;outline:none">
+            <label class="form-label">작가</label>
+            <input type="text" id="admin-author" placeholder="예: 생텍쥐페리" class="form-input">
           </div>
           <div>
-            <label style="font-size:12px;color:var(--color-text-2);display:block;margin-bottom:4px">학년 구분</label>
-            <div style="display:flex;gap:8px">
+            <label class="form-label">한 줄 소개</label>
+            <input type="text" id="admin-subtitle" placeholder="책을 소개하는 한 문장" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">학년 구분</label>
+            <div style="display:flex;gap:6px">
               <button class="chip chip--active" data-grade-select="elementary">초등</button>
               <button class="chip" data-grade-select="middle">중등</button>
               <button class="chip" data-grade-select="high">고등</button>
             </div>
           </div>
           <div>
-            <label style="font-size:12px;color:var(--color-text-2);display:block;margin-bottom:6px">카드 배경색</label>
+            <label class="form-label">카드 배경색</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="color-pick" data-color="#3D3080" style="width:28px;height:28px;border-radius:50%;background:#3D3080;border:3px solid #3D3080;cursor:pointer"></button>
-              <button class="color-pick" data-color="#F5D5E5" style="width:28px;height:28px;border-radius:50%;background:#F5D5E5;border:2px solid var(--color-border);cursor:pointer"></button>
-              <button class="color-pick" data-color="#FFD8B0" style="width:28px;height:28px;border-radius:50%;background:#FFD8B0;border:2px solid var(--color-border);cursor:pointer"></button>
-              <button class="color-pick" data-color="#B8DFD5" style="width:28px;height:28px;border-radius:50%;background:#B8DFD5;border:2px solid var(--color-border);cursor:pointer"></button>
-              <button class="color-pick" data-color="#DEC8F0" style="width:28px;height:28px;border-radius:50%;background:#DEC8F0;border:2px solid var(--color-border);cursor:pointer"></button>
-              <button class="color-pick" data-color="#F8B6A0" style="width:28px;height:28px;border-radius:50%;background:#F8B6A0;border:2px solid var(--color-border);cursor:pointer"></button>
-              <button class="color-pick" data-color="#FF6B35" style="width:28px;height:28px;border-radius:50%;background:#FF6B35;border:2px solid var(--color-border);cursor:pointer"></button>
+              <button class="color-pick color-pick--active" data-color="#3D3080" style="background:#3D3080"></button>
+              <button class="color-pick" data-color="#F5D5E5" style="background:#F5D5E5"></button>
+              <button class="color-pick" data-color="#FFD8B0" style="background:#FFD8B0"></button>
+              <button class="color-pick" data-color="#B8DFD5" style="background:#B8DFD5"></button>
+              <button class="color-pick" data-color="#DEC8F0" style="background:#DEC8F0"></button>
+              <button class="color-pick" data-color="#F8B6A0" style="background:#F8B6A0"></button>
+              <button class="color-pick" data-color="#FF6B35" style="background:#FF6B35"></button>
             </div>
+          </div>
+          <div>
+            <label class="form-label">카테고리 (복수 선택)</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap" id="admin-cat-chips"></div>
           </div>
         </div>
 
         <div style="display:flex;gap:8px;margin-top:16px">
-          <button id="admin-cancel" style="flex:1;padding:10px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);background:transparent;font-family:var(--font-family);font-size:13px;font-weight:600;color:var(--color-text-2)">취소</button>
-          <button id="admin-save" style="flex:2;padding:10px;border:none;border-radius:var(--radius-md);background:var(--color-primary);color:#fff;font-family:var(--font-family);font-size:13px;font-weight:700">💾 저장하기</button>
+          <button id="admin-cancel" class="btn-outline" style="flex:1">취소</button>
+          <button id="admin-save" class="btn-primary" style="flex:2">💾 저장하기</button>
         </div>
-        <p style="font-size:11px;color:var(--color-text-3);margin:8px 0 0;text-align:center">v0.3: 로컬 저장만 됩니다. 실제 반영은 v0.4+</p>
       </div>
 
       <!-- 등록된 도서 목록 -->
       <div>
-        <strong style="font-size:13px;color:var(--color-text-2)">등록된 도서</strong>
-        <div id="admin-book-list" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <strong style="font-size:13px;color:var(--color-text-2)">등록된 도서 <span id="admin-count" style="color:var(--color-primary)"></span></strong>
+        </div>
+        <div id="admin-book-list" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
     </div>
   </aside>
 
-  <!-- ═══ 관리자 패널 JS ═══ -->
-  <style>
-    .hidden { display: none !important; }
-  </style>
-
   <script src="./assets/js/data.js"></script>
   <script src="./assets/js/renderer.js"></script>
   <script src="./assets/js/app.js"></script>
-  <script>
-    /* 관리자 패널 — 색상 선택 & 학년 선택 & 저장 */
-    let selectedColor = '#3D3080';
-    let selectedGrade = 'elementary';
-
-    document.addEventListener('click', e => {
-      const colorBtn = e.target.closest('.color-pick');
-      if (colorBtn) {
-        document.querySelectorAll('.color-pick').forEach(b =>
-          b.style.border = '2px solid var(--color-border)');
-        colorBtn.style.border = `3px solid ${colorBtn.dataset.color}`;
-        selectedColor = colorBtn.dataset.color;
-      }
-
-      const gradeBtn = e.target.closest('[data-grade-select]');
-      if (gradeBtn) {
-        document.querySelectorAll('[data-grade-select]').forEach(b =>
-          b.classList.remove('chip--active'));
-        gradeBtn.classList.add('chip--active');
-        selectedGrade = gradeBtn.dataset.gradeSelect;
-      }
-
-      if (e.target.closest('#admin-save')) {
-        const title = document.getElementById('admin-title').value.trim();
-        const author = document.getElementById('admin-author').value.trim();
-        if (!title) { alert('도서 제목을 입력하세요.'); return; }
-        const saved = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
-        saved.push({ title, author, grade: selectedGrade, cover_color: selectedColor, created: new Date().toISOString() });
-        localStorage.setItem('tb_local_books', JSON.stringify(saved));
-        document.getElementById('admin-title').value = '';
-        document.getElementById('admin-author').value = '';
-        renderAdminList();
-        alert(`"${title}" 저장됨 (로컬)\nv0.4+에서 실제 반영됩니다.`);
-      }
-
-      if (e.target.closest('#admin-cancel')) {
-        document.getElementById('admin-title').value = '';
-        document.getElementById('admin-author').value = '';
-      }
-    });
-
-    function renderAdminList() {
-      const list = document.getElementById('admin-book-list');
-      const saved = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
-      if (!saved.length) { list.innerHTML = '<p style="font-size:13px;color:var(--color-text-3)">아직 추가된 도서가 없습니다.</p>'; return; }
-      list.innerHTML = saved.map((b, i) => `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--color-chip);border-radius:var(--radius-md)">
-          <div style="width:32px;height:40px;border-radius:6px;background:${b.cover_color};flex-shrink:0"></div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.title}</div>
-            <div style="font-size:11px;color:var(--color-text-3)">${b.author || '작가 미입력'} · ${b.grade}</div>
-          </div>
-          <button data-del-idx="${i}" style="border:none;background:none;font-size:16px;color:var(--color-text-3);cursor:pointer">🗑</button>
-        </div>`).join('');
-
-      list.querySelectorAll('[data-del-idx]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.delIdx);
-          const items = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
-          items.splice(idx, 1);
-          localStorage.setItem('tb_local_books', JSON.stringify(items));
-          renderAdminList();
-        });
-      });
-    }
-
-    renderAdminList();
-  </script>
+  <script src="./assets/js/admin.js"></script>
 </body>
 </html>
