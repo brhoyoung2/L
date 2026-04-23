@@ -53,6 +53,21 @@
     wtScroll.innerHTML = webtoons.map(TB.renderWebtoonCard).join('');
   }
 
+  /* ── 섹션 새로고침 (관리자 저장/삭제 후 호출) ── */
+  window._tb_reloadSections = async function() {
+    Object.keys(sessionStorage).filter(k => k.startsWith('tb_cache_')).forEach(k => sessionStorage.removeItem(k));
+    try {
+      const [newBooks, newCats] = await Promise.all([TB.getBooks(), TB.getCategories()]);
+      books = newBooks;
+      categories = newCats;
+      const sectionsHtml = newCats.map(cat => {
+        const catBooks = TB.getBooksInCategory(newBooks, cat.category_id);
+        return TB.renderBookSection(cat, catBooks);
+      }).join('');
+      mainContent.innerHTML = sectionsHtml || '<div class="loading-state"><p>표시할 도서가 없습니다.</p></div>';
+    } catch(e) { console.error('섹션 새로고침 실패', e); }
+  };
+
   /* ── 글로벌 이벤트 위임 ── */
   document.addEventListener('click', e => {
 

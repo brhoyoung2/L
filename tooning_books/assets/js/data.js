@@ -158,7 +158,12 @@ function castWebtoon(row) {
 /* ── 공개 API ── */
 async function getBooks() {
   const raw = await fetchData('books');
-  return raw.map(castBook).filter(b => !b.is_deleted && b.is_published);
+  const sheetBooks = raw.map(castBook).filter(b => !b.is_deleted && b.is_published);
+  try {
+    const localRaw = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
+    const localBooks = localRaw.map(castBook).filter(b => !b.is_deleted && b.is_published);
+    return [...sheetBooks, ...localBooks];
+  } catch { return sheetBooks; }
 }
 
 async function getCategories() {
