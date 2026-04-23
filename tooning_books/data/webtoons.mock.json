@@ -1,0 +1,58 @@
+[
+  {
+    "webtoon_id": "wt_01",
+    "book_id": "book_01",
+    "creator_name": "민지수",
+    "creator_grade": "middle",
+    "title": "어린 왕자와 여우의 대화",
+    "thumbnail_gradient": "{\"from\":\"#3D3080\",\"to\":\"#6B5CB5\",\"deco\":\"stars\"}",
+    "panel_count": 4,
+    "view_count": 892,
+    "like_count": 143,
+    "is_published": "true",
+    "is_deleted": "false",
+    "created_at": "2026-04-10T09:30:00Z"
+  },
+  {
+    "webtoon_id": "wt_02",
+    "book_id": "book_01",
+    "creator_name": "이준혁",
+    "creator_grade": "middle",
+    "title": "B-612 별의 하루",
+    "thumbnail_gradient": "{\"from\":\"#FF6B35\",\"to\":\"#FF525C\",\"deco\":\"planet\"}",
+    "panel_count": 4,
+    "view_count": 654,
+    "like_count": 98,
+    "is_published": "true",
+    "is_deleted": "false",
+    "created_at": "2026-04-12T14:00:00Z"
+  },
+  {
+    "webtoon_id": "wt_03",
+    "book_id": "book_03",
+    "creator_name": "박서연",
+    "creator_grade": "middle",
+    "title": "완득이의 첫 킥복싱",
+    "thumbnail_gradient": "{\"from\":\"#FF6B35\",\"to\":\"#FFD8B0\",\"deco\":\"gloves\"}",
+    "panel_count": 4,
+    "view_count": 1243,
+    "like_count": 234,
+    "is_published": "true",
+    "is_deleted": "false",
+    "created_at": "2026-04-15T11:20:00Z"
+  },
+  {
+    "webtoon_id": "wt_04",
+    "book_id": "book_06",
+    "creator_name": "김도현",
+    "creator_grade": "middle",
+    "title": "윤재의 특별한 하루",
+    "thumbnail_gradient": "{\"from\":\"#F8B6A0\",\"to\":\"#DEC8F0\",\"deco\":\"heart\"}",
+    "panel_count": 4,
+    "view_count": 987,
+    "like_count": 176,
+    "is_published": "true",
+    "is_deleted": "false",
+    "created_at": "2026-04-18T16:45:00Z"
+  }
+]

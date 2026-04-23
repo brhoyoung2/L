@@ -1,0 +1,57 @@
+[
+  {
+    "category_id": "cat_popular",
+    "name": "인기 도서",
+    "label": "POPULAR NOW",
+    "color": "#3D3080",
+    "applied_grades": "elementary,middle,high",
+    "display_order": 0,
+    "after_section": "",
+    "is_default": "true",
+    "is_deleted": "false"
+  },
+  {
+    "category_id": "cat_monthly",
+    "name": "이달의 추천",
+    "label": "BOOK OF THE MONTH",
+    "color": "#F5D5E5",
+    "applied_grades": "elementary,middle,high",
+    "display_order": 1,
+    "after_section": "cat_popular",
+    "is_default": "true",
+    "is_deleted": "false"
+  },
+  {
+    "category_id": "cat_webtoon",
+    "name": "웹툰으로 만드는 도서",
+    "label": "WEBTOON ADAPTATION",
+    "color": "#FFD8B0",
+    "applied_grades": "elementary,middle,high",
+    "display_order": 2,
+    "after_section": "cat_monthly",
+    "is_default": "true",
+    "is_deleted": "false"
+  },
+  {
+    "category_id": "cat_grade_best",
+    "name": "학년별 BEST",
+    "label": "GRADE BEST",
+    "color": "#B8DFD5",
+    "applied_grades": "elementary,middle,high",
+    "display_order": 3,
+    "after_section": "cat_webtoon",
+    "is_default": "true",
+    "is_deleted": "false"
+  },
+  {
+    "category_id": "cat_new",
+    "name": "새로 들어온 도서",
+    "label": "NEW ARRIVALS",
+    "color": "#DEC8F0",
+    "applied_grades": "elementary,middle,high",
+    "display_order": 4,
+    "after_section": "cat_grade_best",
+    "is_default": "true",
+    "is_deleted": "false"
+  }
+]

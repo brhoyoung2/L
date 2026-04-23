@@ -1,0 +1,226 @@
+/* ===== TOONING LOGO ===== */
+.tooning-logo {
+  display: inline-block;
+  position: relative;
+  font-family: var(--font-family);
+  line-height: 1;
+}
+.tooning-logo__word {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  background: linear-gradient(90deg,
+    var(--grad-orange) 0%,
+    var(--grad-coral) 45%,
+    var(--grad-pink) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tooning-logo__smile {
+  position: absolute;
+  top: 26px;
+  left: 14px;
+  width: 38px;
+  height: 16px;
+  pointer-events: none;
+}
+.tooning-logo__sub {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 5px;
+}
+
+/* Small variant */
+.tooning-logo--sm .tooning-logo__word { font-size: 20px; }
+.tooning-logo--sm .tooning-logo__smile { top: 17px; left: 9px; width: 25px; height: 11px; }
+.tooning-logo--sm .tooning-logo__sub { font-size: 9px; letter-spacing: 4px; }
+
+
+/* ===== BOOK CARD ===== */
+.book-card {
+  width: 180px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.book-card__cover {
+  width: 180px;
+  height: 240px;
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.book-card__cover-title {
+  position: absolute;
+  bottom: 16px;
+  left: 12px;
+  right: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.4;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.book-card__cover-author {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.8);
+}
+/* Deco shapes */
+.book-card__deco {
+  position: absolute;
+  pointer-events: none;
+}
+.book-card__deco--circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.25);
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.book-card__deco--quote::before {
+  content: '"';
+  position: absolute;
+  font-size: 80px;
+  color: rgba(255,255,255,0.18);
+  top: 10px;
+  left: 10px;
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+.book-card__deco--lines {
+  width: 60%;
+  top: 30px;
+  left: 20%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.book-card__deco--lines span {
+  display: block;
+  height: 2px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 1px;
+}
+.book-card__deco--square {
+  width: 70px;
+  height: 70px;
+  border: 3px solid rgba(255,255,255,0.2);
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.book-card__info {
+  margin-top: 10px;
+  padding: 0 2px;
+}
+.book-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.book-card__author {
+  font-size: 12px;
+  color: var(--color-text-3);
+  margin-top: 2px;
+}
+.book-card__metrics {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--color-text-3);
+}
+
+
+/* ===== SECTION HEADER ===== */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.section-header__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+  text-transform: uppercase;
+}
+.section-header__title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 4px 0 0;
+}
+.section-header__more {
+  font-size: 13px;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.section-header__more:hover { text-decoration: underline; }
+
+
+/* ===== CATEGORY CHIP ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-chip);
+  color: var(--color-text-2);
+  border: 1.5px solid var(--color-border);
+}
+.chip--active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+
+/* ===== BADGE ===== */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.badge--new { background: var(--color-primary); color: #fff; }
+.badge--webtoon { background: var(--grad-coral); color: #fff; }
+.badge--featured { background: #FFD700; color: #5A4200; }
+
+
+/* ===== ADMIN BADGE ===== */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-edit-bg);
+  border: 1.5px solid var(--color-edit-border);
+  color: var(--color-edit-text);
+  font-size: 12px;
+  font-weight: 700;
+}
