@@ -1386,3 +1386,185 @@
   .book-card { width: 130px; }
   .hero__title { font-size: 19px; }
 }
+
+
+/* ===== DETAIL PAGE — EDIT MODE ===== */
+
+/* 통계 미니 배지 (편집 모드 상단) */
+.detail-stats-mini {
+  display: inline-flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text-3);
+  background: var(--color-chip);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+/* 표지 편집 오버레이 */
+.detail-cover--editable {
+  cursor: pointer;
+  position: relative;
+}
+.cover-change-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.52);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+.detail-cover--editable:hover .cover-change-overlay {
+  opacity: 1;
+}
+
+/* contenteditable 필드 스타일 */
+.detail-field--editable {
+  cursor: text;
+  outline: none;
+  border-bottom: 2px solid var(--color-primary-bg);
+  padding-bottom: 3px;
+  border-radius: 0;
+  transition: border-color 0.15s;
+}
+.detail-field--editable:focus {
+  border-bottom-color: var(--color-primary);
+}
+.detail-field--editable:empty::before {
+  content: attr(placeholder);
+  color: var(--color-text-3);
+}
+
+/* 태그 편집 */
+.detail-tag--editable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 4px;
+}
+.tag-del-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  transition: background 0.15s;
+}
+.tag-del-btn:hover { background: var(--color-danger); }
+.tag-add-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1.5px dashed var(--color-border);
+  background: transparent;
+  color: var(--color-text-3);
+  font-size: 12px;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  vertical-align: middle;
+}
+.tag-add-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* 블록 에디터 카드 */
+.edit-block-card {
+  background: var(--color-chip);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.edit-block-card:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+.edit-block-card__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.edit-block-type-sel {
+  padding: 4px 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-family: var(--font-family);
+  font-size: 12px;
+  color: var(--color-text-2);
+  cursor: pointer;
+  outline: none;
+}
+.edit-block-type-sel:focus { border-color: var(--color-primary); }
+.edit-block-ctrl {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+}
+.edit-block-ctrl:hover { background: var(--color-chip); border-color: var(--color-primary); }
+.edit-add-block-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1.5px dashed var(--color-border);
+}
+
+/* 관련 도서 × 버튼 */
+.related-del-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 20;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: transform 0.12s;
+}
+.related-del-btn:hover { transform: scale(1.15); }
