@@ -1,25 +1,22 @@
-/* 관리자 패널 v0.4 — 탭/폼/드롭존/새카테고리/localStorage + 편집 모드 */
+/* 관리자 패널 v0.5 — 도서/배너/공지/통계 + 편집 모드 */
 (function initAdmin() {
 
   /* ── 상태 ── */
-  let selectedColor = '#3D3080';
-  let selectedGrade = 'elementary';
-  let catModalColor = '#3D3080';
-  let coverDataUrl  = null;
-  let editIdx       = -1; // -1 = 신규, >=0 = 수정 중 인덱스
+  let selectedColor  = '#3D3080';
+  let selectedGrade  = 'elementary';
+  let catModalColor  = '#3D3080';
+  let bannerColor    = '#3D3080';
+  let coverDataUrl   = null;
+  let editIdx        = -1;
 
-  /* ── 숨겨진 관리자 활성화: 로고 5회 클릭 ── */
+  /* ── 로고 5회 클릭으로 관리자 활성화 ── */
   let logoClickCount = 0;
   const logo = document.querySelector('.tooning-logo');
   if (logo) {
     logo.addEventListener('click', e => {
       e.preventDefault();
       logoClickCount++;
-      if (logoClickCount >= 5) {
-        logoClickCount = 0;
-        localStorage.setItem('tb_admin_mode', 'true');
-        openAdminPanel();
-      }
+      if (logoClickCount >= 5) { logoClickCount = 0; localStorage.setItem('tb_admin_mode','true'); openAdminPanel(); }
     });
   }
 
@@ -32,13 +29,16 @@
     document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('admin-tab-pane--active'));
     tab.classList.add('admin-tab--active');
     document.getElementById(`admin-pane-${name}`)?.classList.add('admin-tab-pane--active');
+    if (name === 'stats')   renderStats();
+    if (name === 'banners') renderBannersTab();
+    if (name === 'notices') renderNoticesTab();
   });
 
-  /* ── 색상 선택 ── */
+  /* ── 색상 선택 (도서 폼) ── */
   document.addEventListener('click', e => {
-    const colorBtn = e.target.closest('.color-pick:not([data-cat-color])');
+    const colorBtn = e.target.closest('.color-pick:not([data-cat-color]):not([data-banner-color])');
     if (!colorBtn) return;
-    document.querySelectorAll('.color-pick:not([data-cat-color])').forEach(b => b.classList.remove('color-pick--active'));
+    document.querySelectorAll('.color-pick:not([data-cat-color]):not([data-banner-color])').forEach(b => b.classList.remove('color-pick--active'));
     colorBtn.classList.add('color-pick--active');
     selectedColor = colorBtn.dataset.color;
   });
@@ -60,7 +60,7 @@
     else catBtn.classList.toggle('chip--active');
   });
 
-  /* ── 저장 / 수정 ── */
+  /* ── 도서 저장 / 수정 ── */
   document.addEventListener('click', e => {
     if (!e.target.closest('#admin-save')) return;
 
@@ -76,7 +76,7 @@
     const cats = Array.from(document.querySelectorAll('[data-cat-select].chip--active'))
       .map(c => c.dataset.catSelect).join(',');
 
-    const saved = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
+    const saved  = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
     const isEdit = editIdx >= 0;
     const prev   = isEdit ? saved[editIdx] : null;
 
@@ -117,13 +117,11 @@
 
   /* ── 취소 ── */
   document.addEventListener('click', e => {
-    if (!e.target.closest('#admin-cancel')) return;
-    resetForm();
+    if (e.target.closest('#admin-cancel')) resetForm();
   });
 
-  /* ── 도서 목록 수정/삭제 버튼 ── */
+  /* ── 도서 목록 수정/삭제 ── */
   document.addEventListener('click', e => {
-    /* 수정 */
     const editBtn = e.target.closest('[data-edit-idx]');
     if (editBtn) {
       const idx   = Number(editBtn.dataset.editIdx);
@@ -131,16 +129,20 @@
       if (items[idx]) {
         editIdx = idx;
         loadBookIntoForm(items[idx]);
+        /* 도서 탭으로 이동 */
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('admin-tab--active'));
+        document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('admin-tab-pane--active'));
+        document.querySelector('[data-admin-tab="books"]')?.classList.add('admin-tab--active');
+        document.getElementById('admin-pane-books')?.classList.add('admin-tab-pane--active');
         document.getElementById('admin-title')?.focus();
         document.getElementById('admin-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       return;
     }
 
-    /* 삭제 */
     const delBtn = e.target.closest('[data-del-idx]');
     if (!delBtn) return;
-    const idx = Number(delBtn.dataset.delIdx);
+    const idx   = Number(delBtn.dataset.delIdx);
     if (!confirm('이 도서를 삭제하시겠습니까?')) return;
     const items = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
     items.splice(idx, 1);
@@ -161,24 +163,20 @@
     const featuredEl = document.getElementById('admin-featured');
     if (featuredEl) featuredEl.checked = !!book.is_featured;
 
-    /* 학년 */
     selectedGrade = book.grade || 'elementary';
     document.querySelectorAll('[data-grade-select]').forEach(b =>
       b.classList.toggle('chip--active', b.dataset.gradeSelect === selectedGrade));
 
-    /* 색상 */
     selectedColor = book.cover_color || '#3D3080';
-    document.querySelectorAll('.color-pick:not([data-cat-color])').forEach(b =>
+    document.querySelectorAll('.color-pick:not([data-cat-color]):not([data-banner-color])').forEach(b =>
       b.classList.toggle('color-pick--active', b.dataset.color === selectedColor));
 
-    /* 카테고리 */
     const catIds = (book.categories || '').split(',').map(s => s.trim());
     document.querySelectorAll('[data-cat-select]').forEach(b => {
       if (b.dataset.catSelect !== '__new__')
         b.classList.toggle('chip--active', catIds.includes(b.dataset.catSelect));
     });
 
-    /* 표지 이미지 */
     coverDataUrl = book.cover_data_url || null;
     const preview     = document.getElementById('admin-dropzone-preview');
     const placeholder = document.getElementById('admin-dropzone-placeholder');
@@ -194,13 +192,11 @@
       }
     }
 
-    /* 버튼 텍스트 */
-    const saveBtn = document.getElementById('admin-save');
-    if (saveBtn) saveBtn.textContent = '✏️ 수정 완료';
+    const saveBtn   = document.getElementById('admin-save');
     const cancelBtn = document.getElementById('admin-cancel');
+    if (saveBtn)   saveBtn.textContent   = '✏️ 수정 완료';
     if (cancelBtn) cancelBtn.textContent = '← 취소';
 
-    /* 수정 중 배너 */
     let banner = document.getElementById('admin-edit-banner');
     if (!banner) {
       banner = document.createElement('div');
@@ -218,8 +214,8 @@
   const fileInput = document.getElementById('admin-cover-file');
   if (dropzone) {
     dropzone.addEventListener('click', () => fileInput?.click());
-    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('admin-dropzone--over'); });
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('admin-dropzone--over'));
+    dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('admin-dropzone--over'); });
+    dropzone.addEventListener('dragleave', ()  => dropzone.classList.remove('admin-dropzone--over'));
     dropzone.addEventListener('drop', e => {
       e.preventDefault();
       dropzone.classList.remove('admin-dropzone--over');
@@ -246,29 +242,264 @@
     reader.readAsDataURL(file);
   }
 
-  /* ── 새 카테고리 모달 ── */
-  let catModalOpen = false;
+  /* ═══════════════════════════════════════════════════
+     배너 탭
+  ═══════════════════════════════════════════════════ */
+  const BANNER_COLORS = ['#3D3080','#F5D5E5','#FFD8B0','#B8DFD5','#DEC8F0','#F8B6A0','#FF6B35'];
 
+  function renderBannersTab() {
+    const el = document.getElementById('admin-pane-banners');
+    if (!el) return;
+    const banners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]');
+
+    el.innerHTML = `
+      <div style="background:var(--color-chip);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--color-text)">새 배너 추가</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <input id="banner-title" type="text" placeholder="배너 제목 *" class="form-input">
+          <input id="banner-subtitle" type="text" placeholder="배너 부제목 (선택)" class="form-input">
+          <input id="banner-book-id" type="text" placeholder="연결 도서 ID (선택)" class="form-input">
+          <div>
+            <label class="form-label">배경색</label>
+            <div style="display:flex;gap:7px;flex-wrap:wrap">
+              ${BANNER_COLORS.map((c,i) => `
+                <button class="color-pick${i===0?' color-pick--active':''}" data-banner-color="${c}" style="background:${c}" title="${c}"></button>`).join('')}
+            </div>
+          </div>
+          <button id="banner-add-btn" class="btn-primary">+ 배너 추가</button>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--color-text-2);margin-bottom:8px">등록된 배너 <span style="color:var(--color-primary)">(${banners.length})</span></div>
+      <div id="banner-list" style="display:flex;flex-direction:column;gap:8px">
+        ${banners.length
+          ? banners.map((b,i) => renderBannerItem(b,i)).join('')
+          : '<p style="font-size:13px;color:var(--color-text-3)">등록된 배너가 없습니다.</p>'}
+      </div>`;
+
+    /* 배너 색상 선택 */
+    el.querySelectorAll('[data-banner-color]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        el.querySelectorAll('[data-banner-color]').forEach(b => b.classList.remove('color-pick--active'));
+        btn.classList.add('color-pick--active');
+        bannerColor = btn.dataset.bannerColor;
+      });
+    });
+  }
+
+  function renderBannerItem(b, i) {
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--color-chip);border-radius:var(--radius-md);opacity:${b.is_active?1:0.5}">
+        <div style="width:36px;height:24px;border-radius:4px;background:${b.cover_color||'#3D3080'};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.title}</div>
+          ${b.subtitle ? `<div style="font-size:11px;color:var(--color-text-3)">${b.subtitle}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button data-banner-toggle="${i}" style="border:none;background:none;font-size:14px;cursor:pointer" title="${b.is_active?'비활성화':'활성화'}">${b.is_active?'✅':'⬜'}</button>
+          <button data-banner-del="${i}" style="border:none;background:none;font-size:14px;cursor:pointer;color:var(--color-text-3)" title="삭제">🗑</button>
+        </div>
+      </div>`;
+  }
+
+  document.addEventListener('click', e => {
+    /* 배너 추가 */
+    if (e.target.closest('#banner-add-btn')) {
+      const title    = document.getElementById('banner-title')?.value.trim();
+      const subtitle = document.getElementById('banner-subtitle')?.value.trim();
+      const bookId   = document.getElementById('banner-book-id')?.value.trim();
+      if (!title) { alert('배너 제목을 입력하세요.'); return; }
+      const banners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]');
+      banners.push({
+        banner_id:   `banner_${Date.now()}`,
+        title, subtitle, book_id: bookId,
+        cover_color: bannerColor,
+        is_active:   true,
+        created:     new Date().toISOString(),
+      });
+      localStorage.setItem('tb_local_banners', JSON.stringify(banners));
+      showToast(`"${title}" 배너 추가됨`);
+      renderBannersTab();
+      return;
+    }
+
+    /* 배너 토글 */
+    const bannerToggle = e.target.closest('[data-banner-toggle]');
+    if (bannerToggle) {
+      const banners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]');
+      const idx = Number(bannerToggle.dataset.bannerToggle);
+      if (banners[idx]) {
+        banners[idx].is_active = !banners[idx].is_active;
+        localStorage.setItem('tb_local_banners', JSON.stringify(banners));
+        renderBannersTab();
+      }
+      return;
+    }
+
+    /* 배너 삭제 */
+    const bannerDel = e.target.closest('[data-banner-del]');
+    if (bannerDel) {
+      if (!confirm('배너를 삭제하시겠습니까?')) return;
+      const banners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]');
+      banners.splice(Number(bannerDel.dataset.bannerDel), 1);
+      localStorage.setItem('tb_local_banners', JSON.stringify(banners));
+      showToast('배너가 삭제됐습니다');
+      renderBannersTab();
+      return;
+    }
+  });
+
+  /* ═══════════════════════════════════════════════════
+     공지 탭
+  ═══════════════════════════════════════════════════ */
+  function renderNoticesTab() {
+    const el = document.getElementById('admin-pane-notices');
+    if (!el) return;
+    const notices = JSON.parse(localStorage.getItem('tb_local_notices') || '[]');
+
+    el.innerHTML = `
+      <div style="background:var(--color-chip);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--color-text)">새 공지 등록</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <input id="notice-title" type="text" placeholder="공지 제목 *" class="form-input">
+          <textarea id="notice-content" placeholder="공지 내용" class="form-textarea" rows="3"></textarea>
+          <div style="display:flex;gap:6px">
+            <button class="chip chip--active" data-notice-type="normal" id="notice-type-normal">📢 일반</button>
+            <button class="chip" data-notice-type="important" id="notice-type-important">🔴 중요</button>
+          </div>
+          <button id="notice-add-btn" class="btn-primary">+ 공지 등록</button>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--color-text-2);margin-bottom:8px">등록된 공지 <span style="color:var(--color-primary)">(${notices.length})</span></div>
+      <div id="notice-list" style="display:flex;flex-direction:column;gap:8px">
+        ${notices.length
+          ? notices.slice().reverse().map((n, revI) => renderNoticeItem(n, notices.length - 1 - revI)).join('')
+          : '<p style="font-size:13px;color:var(--color-text-3)">등록된 공지가 없습니다.</p>'}
+      </div>`;
+
+    let noticeType = 'normal';
+    el.querySelectorAll('[data-notice-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        el.querySelectorAll('[data-notice-type]').forEach(b => b.classList.remove('chip--active'));
+        btn.classList.add('chip--active');
+        noticeType = btn.dataset.noticeType;
+      });
+    });
+
+    el.querySelector('#notice-add-btn')?.addEventListener('click', () => {
+      const title   = el.querySelector('#notice-title')?.value.trim();
+      const content = el.querySelector('#notice-content')?.value.trim();
+      if (!title) { alert('공지 제목을 입력하세요.'); return; }
+      const notices = JSON.parse(localStorage.getItem('tb_local_notices') || '[]');
+      notices.push({
+        notice_id: `notice_${Date.now()}`,
+        title, content, type: noticeType,
+        is_visible: true,
+        created:    new Date().toISOString(),
+      });
+      localStorage.setItem('tb_local_notices', JSON.stringify(notices));
+      showToast(`"${title}" 공지 등록됨`);
+      renderNoticesTab();
+    });
+  }
+
+  function renderNoticeItem(n, realIdx) {
+    const date = new Date(n.created).toLocaleDateString('ko-KR', { month:'short', day:'numeric' });
+    return `
+      <div style="padding:12px;background:var(--color-chip);border-radius:var(--radius-md);border-left:3px solid ${n.type==='important'?'var(--color-danger)':'var(--color-border)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px">${n.type==='important'?'🔴':'📢'}</span>
+            <span style="font-size:13px;font-weight:700">${n.title}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:10px;color:var(--color-text-3)">${date}</span>
+            <button data-notice-del="${realIdx}" style="border:none;background:none;font-size:13px;cursor:pointer;color:var(--color-text-3)" title="삭제">🗑</button>
+          </div>
+        </div>
+        ${n.content ? `<div style="font-size:12px;color:var(--color-text-2);line-height:1.5">${n.content}</div>` : ''}
+      </div>`;
+  }
+
+  document.addEventListener('click', e => {
+    const noticeDel = e.target.closest('[data-notice-del]');
+    if (!noticeDel) return;
+    if (!confirm('이 공지를 삭제하시겠습니까?')) return;
+    const notices = JSON.parse(localStorage.getItem('tb_local_notices') || '[]');
+    notices.splice(Number(noticeDel.dataset.noticeDel), 1);
+    localStorage.setItem('tb_local_notices', JSON.stringify(notices));
+    showToast('공지가 삭제됐습니다');
+    renderNoticesTab();
+  });
+
+  /* ═══════════════════════════════════════════════════
+     통계 탭
+  ═══════════════════════════════════════════════════ */
+  function renderStats() {
+    const el = document.getElementById('admin-pane-stats');
+    if (!el) return;
+
+    const { books = [], categories = [], webtoons = [] } = window._tb_appData || {};
+    const localBooks = JSON.parse(localStorage.getItem('tb_local_books') || '[]').filter(b => !b.is_deleted);
+    const localBanners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]');
+    const localNotices = JSON.parse(localStorage.getItem('tb_local_notices') || '[]');
+
+    const totalViews   = books.reduce((s,b) => s + (b.view_count||0), 0);
+    const totalLikes   = books.reduce((s,b) => s + (b.like_count||0), 0);
+    const totalComments= books.reduce((s,b) => s + (b.comment_count||0), 0);
+    const topBooks     = [...books].sort((a,b) => (b.view_count||0)-(a.view_count||0)).slice(0,5);
+
+    const stat = (label, value, color='var(--color-primary)') =>
+      `<div style="background:var(--color-chip);border-radius:var(--radius-lg);padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:${color}">${value}</div>
+        <div style="font-size:11px;color:var(--color-text-3);margin-top:3px">${label}</div>
+      </div>`;
+
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        ${stat('전체 도서', books.length)}
+        ${stat('로컬 등록', localBooks.length, 'var(--color-text)')}
+        ${stat('총 조회수', totalViews.toLocaleString(), 'var(--color-text)')}
+        ${stat('총 좋아요', totalLikes.toLocaleString(), 'var(--color-danger, #e53e3e)')}
+        ${stat('댓글 수', totalComments.toLocaleString(), 'var(--color-text)')}
+        ${stat('카테고리', categories.length, 'var(--color-text)')}
+        ${stat('웹툰', webtoons.length, 'var(--color-text)')}
+        ${stat('공지', localNotices.length, 'var(--color-text)')}
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--color-text-2);margin-bottom:8px">👁 조회수 TOP 5</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${topBooks.length ? topBooks.map((b,i) => `
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--color-chip);border-radius:var(--radius-md)">
+            <span style="font-size:13px;font-weight:800;color:${i<3?'var(--color-primary)':'var(--color-text-3)'};width:16px;text-align:center;flex-shrink:0">${i+1}</span>
+            <div style="width:24px;height:34px;border-radius:4px;background:${b.cover_color||'#3D3080'};flex-shrink:0;${b.cover_data_url?`background-image:url('${b.cover_data_url}');background-size:cover`:''}"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.title}</div>
+              <div style="font-size:10px;color:var(--color-text-3)">${b.author}</div>
+            </div>
+            <span style="font-size:11px;color:var(--color-text-3);flex-shrink:0">👁 ${(b.view_count||0).toLocaleString()}</span>
+          </div>`).join('')
+          : '<p style="font-size:13px;color:var(--color-text-3)">데이터를 불러오는 중...</p>'}
+      </div>`;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     새 카테고리 모달
+  ═══════════════════════════════════════════════════ */
   function openCatModal() {
     const overlay = document.getElementById('cat-modal-overlay');
     if (!overlay) return;
     populateCatPositionSelect();
     overlay.classList.add('modal-overlay--open');
-    catModalOpen = true;
     document.getElementById('cat-modal-name')?.focus();
   }
-
   function closeCatModal() {
     document.getElementById('cat-modal-overlay')?.classList.remove('modal-overlay--open');
-    catModalOpen = false;
   }
-
   function populateCatPositionSelect() {
     const sel = document.getElementById('cat-modal-position');
     if (!sel) return;
     const localCats = JSON.parse(localStorage.getItem('tb_local_cats') || '[]');
-    const items = ['인기 도서 다음', '이달의 추천 다음', '웹툰 도서 다음', '학년별 BEST 다음', '마지막에 추가', ...localCats.map(c => c.name + ' 다음')];
-    sel.innerHTML = items.map((v, i) => `<option value="${i}">${v}</option>`).join('');
+    const items = ['인기 도서 다음','이달의 추천 다음','웹툰 도서 다음','학년별 BEST 다음','마지막에 추가',...localCats.map(c=>c.name+' 다음')];
+    sel.innerHTML = items.map((v,i) => `<option value="${i}">${v}</option>`).join('');
     sel.value = String(items.length - 1);
   }
 
@@ -290,13 +521,11 @@
     if (e.target.closest('#cat-modal-confirm')) {
       const name = document.getElementById('cat-modal-name')?.value.trim();
       if (!name) { alert('카테고리 이름을 입력하세요.'); return; }
-      const grades = Array.from(document.querySelectorAll('[data-cat-grade].chip--active')).map(b => b.dataset.catGrade).join(',');
+      const grades = Array.from(document.querySelectorAll('[data-cat-grade].chip--active')).map(b=>b.dataset.catGrade).join(',');
       const newCat = {
-        category_id: `cat_local_${Date.now()}`,
-        name, color: catModalColor,
-        applied_grades: grades,
-        display_order: 99,
-        is_default: false, is_deleted: false
+        category_id: `cat_local_${Date.now()}`, name,
+        color: catModalColor, applied_grades: grades,
+        display_order: 99, is_default: false, is_deleted: false,
       };
       const catSaved = JSON.parse(localStorage.getItem('tb_local_cats') || '[]');
       catSaved.push(newCat);
@@ -322,12 +551,12 @@
       const localCats  = JSON.parse(localStorage.getItem('tb_local_cats') || '[]');
       const allCats    = [...remoteCats, ...localCats];
       el.innerHTML = allCats.map(c => `
-        <button class="chip" data-cat-select="${c.category_id}" style="border-color:${c.color || 'var(--color-primary)'}">
+        <button class="chip" data-cat-select="${c.category_id}" style="border-color:${c.color||'var(--color-primary)'}">
           ${c.name}
         </button>`).join('') +
         `<button class="chip chip--dashed" data-cat-select="__new__" style="border-style:dashed">+ 새 카테고리</button>`;
     } catch {
-      el.innerHTML = '<button class="chip chip--dashed" data-cat-select="__new__" style="border-style:dashed">+ 새 카테고리</button>';
+      el.innerHTML = `<button class="chip chip--dashed" data-cat-select="__new__" style="border-style:dashed">+ 새 카테고리</button>`;
     }
   }
 
@@ -343,15 +572,15 @@
       return;
     }
     list.innerHTML = saved.map((b, i) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:${i === editIdx ? 'var(--color-edit-bg)' : 'var(--color-chip)'};border-radius:var(--radius-md);border:${i === editIdx ? '1.5px solid var(--color-edit-border)' : '1.5px solid transparent'}">
-        <div style="width:32px;height:44px;border-radius:6px;background:${b.cover_color || '#3D3080'};flex-shrink:0;${b.cover_data_url ? `background-image:url(${b.cover_data_url});background-size:cover;background-position:center` : ''}"></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:${i===editIdx?'var(--color-edit-bg)':'var(--color-chip)'};border-radius:var(--radius-md);border:${i===editIdx?'1.5px solid var(--color-edit-border)':'1.5px solid transparent'}">
+        <div style="width:32px;height:44px;border-radius:6px;background:${b.cover_color||'#3D3080'};flex-shrink:0;${b.cover_data_url?`background-image:url('${b.cover_data_url}');background-size:cover;background-position:center`:''}"></div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.title}</div>
-          <div style="font-size:11px;color:var(--color-text-3)">${b.author || '작가 미입력'} · ${b.grade === 'elementary' ? '초등' : b.grade === 'middle' ? '중등' : b.grade === 'high' ? '고등' : b.grade}</div>
+          <div style="font-size:11px;color:var(--color-text-3)">${b.author||'작가 미입력'} · ${b.grade==='elementary'?'초등':b.grade==='middle'?'중등':b.grade==='high'?'고등':b.grade}</div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
-          <button data-edit-idx="${i}" style="border:none;background:none;font-size:14px;cursor:pointer;color:${i === editIdx ? 'var(--color-edit-text)' : 'var(--color-text-2)'}" title="수정">✏️</button>
-          <button data-del-idx="${i}" style="border:none;background:none;font-size:14px;cursor:pointer;color:var(--color-text-3)" title="삭제">🗑</button>
+          <button data-edit-idx="${i}" style="border:none;background:none;font-size:14px;cursor:pointer;color:${i===editIdx?'var(--color-edit-text)':'var(--color-text-2)'}" title="수정">✏️</button>
+          <button data-del-idx="${i}"  style="border:none;background:none;font-size:14px;cursor:pointer;color:var(--color-text-3)" title="삭제">🗑</button>
         </div>
       </div>`).join('');
   }
@@ -363,24 +592,26 @@
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
-    const orderEl = document.getElementById('admin-order');
-    if (orderEl) orderEl.value = '0';
+    const orderEl    = document.getElementById('admin-order');
     const featuredEl = document.getElementById('admin-featured');
+    if (orderEl)    orderEl.value      = '0';
     if (featuredEl) featuredEl.checked = false;
+
     document.querySelectorAll('[data-cat-select]').forEach(b => b.classList.remove('chip--active'));
-    document.querySelectorAll('[data-grade-select]').forEach((b, i) => b.classList.toggle('chip--active', i === 0));
+    document.querySelectorAll('[data-grade-select]').forEach((b,i) => b.classList.toggle('chip--active', i === 0));
     selectedGrade = 'elementary';
     selectedColor = '#3D3080';
     coverDataUrl  = null;
+
     const preview     = document.getElementById('admin-dropzone-preview');
     const placeholder = document.getElementById('admin-dropzone-placeholder');
-    if (preview)     { preview.style.backgroundImage = ''; preview.style.display = 'none'; }
+    if (preview)     { preview.style.backgroundImage=''; preview.style.display='none'; }
     if (placeholder) placeholder.style.display = 'flex';
-    document.querySelectorAll('.color-pick:not([data-cat-color])').forEach((b, i) => b.classList.toggle('color-pick--active', i === 0));
+    document.querySelectorAll('.color-pick:not([data-cat-color]):not([data-banner-color])').forEach((b,i) => b.classList.toggle('color-pick--active', i === 0));
 
-    const saveBtn = document.getElementById('admin-save');
-    if (saveBtn) saveBtn.textContent = '💾 저장하기';
+    const saveBtn   = document.getElementById('admin-save');
     const cancelBtn = document.getElementById('admin-cancel');
+    if (saveBtn)   saveBtn.textContent   = '💾 저장하기';
     if (cancelBtn) cancelBtn.textContent = '취소';
 
     const banner = document.getElementById('admin-edit-banner');
@@ -413,6 +644,54 @@
     document.getElementById('admin-panel')?.classList.add('admin-panel--open');
     document.getElementById('admin-overlay')?.classList.add('admin-overlay--open');
   }
+
+  /* ═══════════════════════════════════════════════════
+     외부 API 노출
+  ═══════════════════════════════════════════════════ */
+
+  /* 카드 ✏️ → 관리자 패널 편집 모드 진입 */
+  window._tb_openEdit = function(bookId) {
+    const items = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
+    const idx   = items.findIndex(b => b.book_id === bookId);
+    if (idx >= 0) {
+      editIdx = idx;
+      loadBookIntoForm(items[idx]);
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('admin-tab--active'));
+      document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('admin-tab-pane--active'));
+      document.querySelector('[data-admin-tab="books"]')?.classList.add('admin-tab--active');
+      document.getElementById('admin-pane-books')?.classList.add('admin-tab-pane--active');
+      openAdminPanel();
+    } else {
+      openAdminPanel();
+      showToast('Google Sheets 도서는 시트에서 직접 편집하세요');
+    }
+  };
+
+  /* 카드 🖼 → 파일 선택 → 표지 즉시 변경 */
+  window._tb_changeCover = function(bookId) {
+    const items = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
+    const idx   = items.findIndex(b => b.book_id === bookId);
+    if (idx < 0) { showToast('로컬 등록 도서만 표지 변경이 가능합니다'); return; }
+
+    const input = document.createElement('input');
+    input.type   = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { showToast('파일 크기 5MB 초과'); return; }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        items[idx].cover_data_url = ev.target.result;
+        items[idx].updated        = new Date().toISOString();
+        localStorage.setItem('tb_local_books', JSON.stringify(items));
+        showToast(`"${items[idx].title}" 표지 변경됨`);
+        _reloadSections();
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
 
   /* ── 초기화 ── */
   buildCatChips();

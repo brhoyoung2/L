@@ -124,21 +124,27 @@
 /* 편집 모드 — 도서 카드 오버레이 */
 .book-card { position: relative; }
 .book-edit-overlay {
-  display: none;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
   position: absolute;
   inset: 0;
   border-radius: var(--radius-lg);
-  background: rgba(61,48,128,0.75);
+  background: rgba(61,48,128,0.84);
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   flex-direction: column;
   z-index: 10;
-  transition: opacity 0.2s;
+  transition: opacity 0.18s ease;
 }
-.edit-mode .book-card:hover .book-edit-overlay { display: flex; }
+.edit-mode .book-card:hover .book-edit-overlay {
+  opacity: 1;
+  pointer-events: all;
+}
 .book-edit-btn {
-  padding: 6px 14px;
+  padding: 8px 0;
+  width: 130px;
   border-radius: var(--radius-pill);
   background: #fff;
   color: var(--color-primary);
@@ -146,9 +152,16 @@
   font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: transform 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s;
+  text-align: center;
 }
-.book-edit-btn:hover { transform: scale(1.05); }
+.book-edit-btn:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+.book-edit-btn--ghost {
+  background: transparent;
+  color: rgba(255,255,255,0.88);
+  border: 1.5px solid rgba(255,255,255,0.45);
+}
+.book-edit-btn--ghost:hover { background: rgba(255,255,255,0.14); box-shadow: none; }
 
 /* 편집 모드 배너 */
 .edit-mode-banner {

@@ -36,16 +36,19 @@ function renderBookCard(book) {
   if (book.categories.includes('cat_new')) badges.push('<span class="badge badge--new">NEW</span>');
   if (book.categories.includes('cat_webtoon')) badges.push('<span class="badge badge--webtoon">웹툰</span>');
 
+  const coverStyle = book.cover_data_url
+    ? `background:${book.cover_color||'#3D3080'};background-image:url('${book.cover_data_url}');background-size:cover;background-position:center`
+    : `background:${book.cover_color||'#3D3080'}`;
+
+  const isLocal = String(book.book_id).startsWith('local_');
+
   return `
     <div class="book-card" data-action="open-book" data-book-id="${book.book_id}">
-      <div class="book-card__cover" style="background:${book.cover_color || '#3D3080'}">
-        ${renderDeco(book.cover_deco, book.cover_color)}
+      <div class="book-card__cover" style="${coverStyle}">
+        ${!book.cover_data_url ? renderDeco(book.cover_deco, book.cover_color) : ''}
         ${badges.length ? `<div style="position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
         <div class="book-card__cover-author" style="color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>
         <div class="book-card__cover-title" style="color:${textColor}">${book.title}</div>
-        <div class="book-edit-overlay">
-          <button class="book-edit-btn" onclick="event.stopPropagation()">✏️ 편집</button>
-        </div>
       </div>
       <div class="book-card__info">
         <div class="book-card__title">${book.title}</div>
@@ -55,6 +58,12 @@ function renderBookCard(book) {
           <span>❤️ ${(book.like_count||0).toLocaleString()}</span>
           <span>💬 ${book.comment_count||0}</span>
         </div>
+      </div>
+      <div class="book-edit-overlay">
+        <button class="book-edit-btn" data-edit-action="edit">✏️ 내용 편집</button>
+        ${isLocal
+          ? `<button class="book-edit-btn book-edit-btn--ghost" data-edit-action="cover">🖼 표지 변경</button>`
+          : `<button class="book-edit-btn book-edit-btn--ghost" data-edit-action="sheets">☁️ Sheets 편집</button>`}
       </div>
     </div>`;
 }

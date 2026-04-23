@@ -53,6 +53,9 @@
     wtScroll.innerHTML = webtoons.map(TB.renderWebtoonCard).join('');
   }
 
+  /* 통계·편집용 데이터 노출 */
+  window._tb_appData = { books, categories, webtoons };
+
   /* ── 섹션 새로고침 (관리자 저장/삭제 후 호출) ── */
   window._tb_reloadSections = async function() {
     Object.keys(sessionStorage).filter(k => k.startsWith('tb_cache_')).forEach(k => sessionStorage.removeItem(k));
@@ -70,6 +73,22 @@
 
   /* ── 글로벌 이벤트 위임 ── */
   document.addEventListener('click', e => {
+
+    /* 편집 모드 액션 버튼 — 카드 내비게이션보다 먼저 처리 */
+    const editActionBtn = e.target.closest('[data-edit-action]');
+    if (editActionBtn && isAdmin) {
+      const card = editActionBtn.closest('[data-book-id]');
+      if (card) {
+        const bookId = card.dataset.bookId;
+        const action = editActionBtn.dataset.editAction;
+        if (action === 'edit' || action === 'sheets') {
+          if (typeof window._tb_openEdit === 'function') window._tb_openEdit(bookId);
+        } else if (action === 'cover') {
+          if (typeof window._tb_changeCover === 'function') window._tb_changeCover(bookId);
+        }
+      }
+      return;
+    }
 
     /* 학년 탭 */
     const tab = e.target.closest('.grade-tab');
@@ -137,21 +156,6 @@
 
   if (isAdmin) openAdminPanel();
 
-  /* ── 편집 모드 오버레이 클릭 ── */
-  document.addEventListener('click', e => {
-    const editBtn = e.target.closest('.book-edit-btn');
-    if (!editBtn) return;
-    const card = editBtn.closest('[data-book-id]');
-    if (!card) return;
-    const book = books.find(b => b.book_id === card.dataset.bookId);
-    if (book) {
-      document.getElementById('admin-title').value    = book.title || '';
-      document.getElementById('admin-author').value   = book.author || '';
-      document.getElementById('admin-subtitle').value = book.subtitle || '';
-      document.getElementById('admin-tags').value     = (book.genre_tags || []).join(', ');
-      openAdminPanel();
-    }
-  });
 
   /* ── 검색 (데스크톱 + 모바일) ── */
   function bindSearch(id) {
