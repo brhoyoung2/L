@@ -111,16 +111,26 @@
 
   if (isAdmin) openAdminPanel();
 
-  /* ── 검색 ── */
-  const searchInput = document.getElementById('search-input');
-  if (searchInput) {
-    searchInput.addEventListener('keydown', e => {
+  /* ── 검색 (데스크톱 + 모바일) ── */
+  function bindSearch(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
-        const q = searchInput.value.trim();
+        const q = el.value.trim();
         if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
       }
     });
   }
+  bindSearch('search-input');
+  bindSearch('mobile-search-input');
+
+  /* 모바일 검색바 표시 */
+  const mobileBar = document.querySelector('.mobile-searchbar');
+  if (mobileBar && window.innerWidth <= 767) mobileBar.style.display = 'block';
+  window.addEventListener('resize', () => {
+    if (mobileBar) mobileBar.style.display = window.innerWidth <= 767 ? 'block' : 'none';
+  });
 
   /* ── 히어로 슬라이더 ── */
   let currentSlide = 0;
@@ -166,6 +176,7 @@
     ).join('');
 
     startAuto(heroBooks);
+    addHeroSwipe(heroBooks);
   }
 
   function goToSlide(idx, heroBooks) {
@@ -183,6 +194,19 @@
 
   function startAuto(heroBooks) {
     autoTimer = setInterval(() => goToSlide(currentSlide + 1, heroBooks), 5000);
+  }
+
+  /* ── 히어로 터치 스와이프 ── */
+  function addHeroSwipe(heroBooks) {
+    const banner = document.getElementById('hero-banner');
+    if (!banner) return;
+    let startX = 0;
+    banner.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+    banner.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) < 40) return;
+      goToSlide(currentSlide + (dx < 0 ? 1 : -1), heroBooks);
+    }, { passive: true });
   }
 
   function getCategoryLabel(cats, allCats) {
