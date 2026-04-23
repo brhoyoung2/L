@@ -210,18 +210,23 @@
   function renderAllCategories(cats, books) {
     document.title = '카테고리 — TOONING BOOKS';
     const chipsEl = document.getElementById('cat-list-chips');
+    chipsEl.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;width:100%';
     chipsEl.innerHTML = cats.map(c => {
       const cnt = TB.getBooksInCategory(books, c.category_id).length;
       return `<a href="category.html?id=${c.category_id}"
-        style="display:inline-flex;flex-direction:column;gap:4px;padding:14px 20px;
-               background:${c.color}22;border:2px solid ${c.color};
+        style="display:flex;flex-direction:column;gap:6px;padding:20px 16px 18px;
+               background:#fff;
+               border:1.5px solid rgba(0,0,0,0.08);
+               border-top:4px solid ${c.color};
                border-radius:var(--radius-lg);text-decoration:none;
-               transition:transform 0.15s;min-width:120px;text-align:center"
-        onmouseover="this.style.transform='translateY(-3px)'"
-        onmouseout="this.style.transform=''">
-        <span style="font-size:18px;font-weight:800;color:${c.color}">${cnt}</span>
-        <span style="font-size:13px;font-weight:700;color:var(--color-text)">${c.name}</span>
-        <span style="font-size:11px;color:var(--color-text-3)">${c.label || ''}</span>
+               text-align:center;
+               box-shadow:0 2px 10px rgba(0,0,0,0.07);
+               transition:transform 0.15s,box-shadow 0.15s"
+        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.13)'"
+        onmouseout="this.style.transform='';this.style.boxShadow='0 2px 10px rgba(0,0,0,0.07)'">
+        <span style="font-size:26px;font-weight:800;color:${c.color};line-height:1">${cnt}</span>
+        <span style="font-size:14px;font-weight:700;color:var(--color-text);margin-top:2px">${c.name}</span>
+        <span style="font-size:10px;color:var(--color-text-3);letter-spacing:1.5px;text-transform:uppercase">${c.label || ''}</span>
       </a>`;
     }).join('');
   }
