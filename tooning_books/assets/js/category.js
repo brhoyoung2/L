@@ -235,7 +235,6 @@
 
 })();
 
-const GRADE_LABEL = { elementary: '초등', middle: '중등', high: '고등' };
 const SORT_LABEL  = { popular: '인기순', latest: '최신순', likes: '좋아요순', title: '제목순' };
 
 function buildPagination(current, total) {

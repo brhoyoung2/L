@@ -314,8 +314,7 @@
 
 })();
 
-/* ─── 공용 상수 / 유틸 ─── */
-const GRADE_LABEL = { elementary: '초등', middle: '중등', high: '고등' };
+/* ─── 공용 상수는 renderer.js에 선언됨 ─── */
 
 function isColorDark(hex) {
   const c = hex.replace('#','');

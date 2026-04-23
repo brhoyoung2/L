@@ -152,9 +152,9 @@
             </div>
           </div>
           <div class="hero__cover" style="background:${b.cover_color}">
-            <div class="hero__cover-book">
+            <div class="hero__cover-book" style="box-shadow:none">
               ${renderHeroDeco(b)}
-              <span style="position:relative;z-index:1;font-size:60px">📚</span>
+              <img src="./images/main_banner_image_01.png" alt="배너 이미지" style="position:relative;z-index:1;width:100%;height:100%;object-fit:contain;display:block">
             </div>
           </div>
         </div>`;
@@ -207,4 +207,3 @@
 
 })();
 
-const GRADE_LABEL = { elementary: '초등', middle: '중등', high: '고등' };
