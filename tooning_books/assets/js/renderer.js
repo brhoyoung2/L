@@ -45,11 +45,17 @@ function renderBookCard(book) {
 
   return `
     <div class="book-card" data-action="open-book" data-book-id="${book.book_id}">
+      ${badges.length ? `<div class="book-card__badges">${badges.join('')}</div>` : ''}
       <div class="book-card__cover" style="${coverStyle}">
         ${!coverImg ? renderDeco(book.cover_deco, book.cover_color) : ''}
-        ${badges.length ? `<div style="position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
         ${!coverImg ? `<div class="book-card__cover-author" style="color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>` : ''}
         ${!coverImg ? `<div class="book-card__cover-title" style="color:${textColor}">${book.title}</div>` : ''}
+        <div class="book-edit-overlay">
+          <button class="book-edit-btn" data-edit-action="edit">✏️ 내용 편집</button>
+          ${isLocal
+            ? `<button class="book-edit-btn book-edit-btn--ghost" data-edit-action="cover">🖼 표지 변경</button>`
+            : `<button class="book-edit-btn book-edit-btn--ghost" data-edit-action="sheets">☁️ Sheets 편집</button>`}
+        </div>
       </div>
       <div class="book-card__info">
         <div class="book-card__title">${book.title}</div>
@@ -59,12 +65,6 @@ function renderBookCard(book) {
           <span>❤️ ${(book.like_count||0).toLocaleString()}</span>
           <span>💬 ${book.comment_count||0}</span>
         </div>
-      </div>
-      <div class="book-edit-overlay">
-        <button class="book-edit-btn" data-edit-action="edit">✏️ 내용 편집</button>
-        ${isLocal
-          ? `<button class="book-edit-btn book-edit-btn--ghost" data-edit-action="cover">🖼 표지 변경</button>`
-          : `<button class="book-edit-btn book-edit-btn--ghost" data-edit-action="sheets">☁️ Sheets 편집</button>`}
       </div>
     </div>`;
 }
@@ -143,10 +143,10 @@ function renderGridCard(book, highlight) {
 
   return `
     <div class="book-card book-card--grid" data-action="open-book" data-book-id="${book.book_id}">
+      ${badges.length ? `<div class="book-card__badges">${badges.join('')}</div>` : ''}
       <div class="book-card__cover" style="${coverBg};width:100%;height:0;padding-bottom:133%;position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card)">
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
           ${!gridCoverImg ? renderDeco(book.cover_deco, book.cover_color) : ''}
-          ${badges.length ? `<div style="position:absolute;top:8px;left:8px;display:flex;gap:3px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
           ${!gridCoverImg ? `<div style="position:absolute;bottom:10px;left:8px;right:8px;font-size:12px;font-weight:700;color:${textColor};line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,0.2)">${book.title}</div>` : ''}
           ${!gridCoverImg ? `<div style="position:absolute;top:8px;right:8px;font-size:10px;color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>` : ''}
         </div>

@@ -9,6 +9,7 @@
   if (params.get('admin') === 'false') localStorage.removeItem('tb_admin_mode');
   const isAdmin  = localStorage.getItem('tb_admin_mode') === 'true';
   const editMode = isAdmin; /* 관리자 모드 = 항상 편집 모드 */
+  let previewMode = false;  /* 미리보기 토글 상태 */
 
   if (isAdmin) document.getElementById('admin-badge').style.display = 'inline-flex';
   if (!bookId) { showError(); return; }
@@ -189,7 +190,7 @@
   /* ── 본문 블록 ── */
   function renderBody(em) {
     const bodyEl = document.getElementById('detail-body');
-    if (em) {
+    if (em && !previewMode) {
       bodyEl.innerHTML = buildBlocksEditor();
       /* textarea 실시간 동기화 */
       bodyEl.querySelectorAll('.block-text-input').forEach(ta => {
@@ -491,11 +492,13 @@
         return;
       }
 
-      /* ── 미리보기 ── */
+      /* ── 미리보기 토글 ── */
       if (e.target.closest('#preview-btn')) {
-        const url = new URL(location.href);
-        url.searchParams.delete('mode');
-        window.open(url.toString(), '_blank');
+        previewMode = !previewMode;
+        const btn = document.getElementById('preview-btn');
+        if (btn) btn.textContent = previewMode ? '✏️ 편집으로' : '미리보기';
+        syncBlockInputs();
+        renderBody(editMode);
         return;
       }
 

@@ -227,25 +227,33 @@
 
     /* 슬라이드 HTML 생성 */
     banner.innerHTML = heroBooks.map((b, i) => {
-      const dark = isColorDark(b.cover_color);
+      const bgColor = b.cover_color || '#EDD9C4';
+      const dark    = isColorDark(bgColor);
       const metaParts = [
         b.author ? `<span>✍️ ${b.author}</span>` : '',
         b.year   ? `<span>📅 ${b.year}년</span>` : '',
         b.grade  ? `<span>${GRADE_LABEL[b.grade] || b.grade}</span>` : '',
       ].filter(Boolean).join('');
-      const heroImg = b.cover_data_url
-        ? `<img src="${b.cover_data_url}" alt="배너 이미지" class="hero__banner-img" style="object-fit:cover;border-radius:12px">`
-        : `<img src="./images/main_banner_image_01.png" alt="배너 이미지" class="hero__banner-img">`;
+
+      /* 배너 이미지 우선순위: cover_data_url → images/banner/book_NN.png → image_url → 기본 */
+      let bannerSrc = b.cover_data_url || '';
+      if (!bannerSrc) {
+        const m = String(b.book_id || '').match(/^book_(\d+)$/);
+        if (m) bannerSrc = `./images/banner/book_${String(Number(m[1])).padStart(2,'0')}.png`;
+      }
+      if (!bannerSrc) bannerSrc = b.image_url || './images/main_banner_image_01.png';
+
+      const heroImg = `<img src="${bannerSrc}" alt="${b.title}" class="hero__banner-img">`;
+
       return `
-        <div class="hero__slide${i === 0 ? ' hero__slide--active' : ''}" id="hero-slide-${i}">
+        <div class="hero__slide${i === 0 ? ' hero__slide--active' : ''} hero__slide--${dark ? 'dark' : 'light'}" id="hero-slide-${i}" style="background:${bgColor}">
           <div class="hero__text">
             <span class="hero__tag">${b.categories?.length ? getCategoryLabel(b.categories, categories) : '📢 배너'}</span>
             <h1 class="hero__title">${b.title}</h1>
             <p class="hero__sub">${b.subtitle}</p>
             ${metaParts ? `<div class="hero__meta">${metaParts}</div>` : ''}
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-              ${b.book_id ? `<button class="hero__cta" id="hero-cta-${i}" data-book-id="${b.book_id}">📖 자세히 보기</button>` : ''}
-              ${b.like_count ? `<button class="hero__cta hero__cta--secondary" data-book-id="${b.book_id}" id="hero-like-${i}">❤️ ${b.like_count.toLocaleString()}</button>` : ''}
+              ${b.book_id ? `<button class="hero__cta" id="hero-cta-${i}" data-book-id="${b.book_id}">지금 시작 →</button>` : `<a class="hero__cta" href="https://tooning.io" target="_blank" style="text-decoration:none">지금 시작 →</a>`}
             </div>
           </div>
           <div class="hero__cover">
