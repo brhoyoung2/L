@@ -136,6 +136,8 @@ function castBook(row) {
 function castCategory(row) {
   return {
     ...row,
+    category_id:   (row.category_id || '').trim(),
+    name:          (row.name || '').trim(),
     display_order: parseNum(row.display_order),
     is_default:    parseBool(row.is_default),
     is_deleted:    parseBool(row.is_deleted),
@@ -176,8 +178,9 @@ async function getWebtoons(bookId) {
 }
 
 function getBooksInCategory(books, categoryId) {
+  const id = (categoryId || '').trim();
   return books
-    .filter(b => b.categories.includes(categoryId))
+    .filter(b => Array.isArray(b.categories) && b.categories.includes(id))
     .sort((a, b) => a.display_order - b.display_order);
 }
 

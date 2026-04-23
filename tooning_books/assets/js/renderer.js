@@ -38,19 +38,22 @@ function renderBookCard(book) {
 
   return `
     <div class="book-card" data-action="open-book" data-book-id="${book.book_id}">
-      <div class="book-card__cover" style="background:${book.cover_color}">
+      <div class="book-card__cover" style="background:${book.cover_color || '#3D3080'}">
         ${renderDeco(book.cover_deco, book.cover_color)}
         ${badges.length ? `<div style="position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
         <div class="book-card__cover-author" style="color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>
         <div class="book-card__cover-title" style="color:${textColor}">${book.title}</div>
+        <div class="book-edit-overlay">
+          <button class="book-edit-btn" onclick="event.stopPropagation()">✏️ 편집</button>
+        </div>
       </div>
       <div class="book-card__info">
         <div class="book-card__title">${book.title}</div>
         <div class="book-card__author">${book.author} · ${book.year}</div>
         <div class="book-card__metrics">
-          <span>👁 ${book.view_count.toLocaleString()}</span>
-          <span>❤️ ${book.like_count.toLocaleString()}</span>
-          <span>💬 ${book.comment_count}</span>
+          <span>👁 ${(book.view_count||0).toLocaleString()}</span>
+          <span>❤️ ${(book.like_count||0).toLocaleString()}</span>
+          <span>💬 ${book.comment_count||0}</span>
         </div>
       </div>
     </div>`;

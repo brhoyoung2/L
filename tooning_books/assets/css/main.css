@@ -73,6 +73,113 @@
 }
 .btn-icon:hover { background: var(--color-chip); }
 
+/* 관리자 모드 토글 */
+.admin-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-mode-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.admin-mode-toggle--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.admin-mode-toggle__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-3);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.admin-mode-toggle--active .admin-mode-toggle__dot { background: #7CFC00; }
+.admin-mode-toggle__label { white-space: nowrap; }
+
+/* 헤더 프로필 아바타 */
+.header-profile {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 편집 모드 — 도서 카드 오버레이 */
+.book-card { position: relative; }
+.book-edit-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: rgba(61,48,128,0.75);
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-direction: column;
+  z-index: 10;
+  transition: opacity 0.2s;
+}
+.edit-mode .book-card:hover .book-edit-overlay { display: flex; }
+.book-edit-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.book-edit-btn:hover { transform: scale(1.05); }
+
+/* 편집 모드 배너 */
+.edit-mode-banner {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: var(--color-edit-bg);
+  border-bottom: 2px solid var(--color-edit-border);
+  padding: 10px 80px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-edit-text);
+  align-items: center;
+  gap: 12px;
+}
+.edit-mode-banner--visible { display: flex; }
+.edit-mode-banner .edit-mode-banner__close {
+  margin-left: auto;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-edit-border);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-edit-text);
+  cursor: pointer;
+}
+
 .site-nav {
   background: var(--color-card);
   border-bottom: 1px solid var(--color-border);
@@ -104,16 +211,17 @@
   padding: 0 80px;
 }
 .hero {
-  background: var(--color-banner);
+  background: var(--color-card);
   border-radius: var(--radius-2xl);
   overflow: hidden;
-  min-height: 300px;
+  min-height: 340px;
   position: relative;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 .hero__slide {
   display: none;
-  padding: 52px 64px;
-  gap: 48px;
+  padding: 52px 72px;
+  gap: 40px;
   align-items: center;
   animation: heroFadeIn 0.4s ease;
 }
@@ -187,40 +295,28 @@
 .hero__cta--secondary:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
 .hero__cover {
-  width: 160px;
-  height: 220px;
+  width: 340px;
   flex-shrink: 0;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: none;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  font-size: 60px;
+  position: relative;
+  /* 기존 카드 스타일 제거 */
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  font-size: 0;
   transition: transform 0.3s;
 }
-.hero__cover:hover { transform: scale(1.03) rotate(-1deg); }
-.hero__cover-book {
+.hero__cover:hover { transform: none; }
+.hero__banner-img {
   width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 60px;
-  position: relative;
-}
-/* 책 표지 데코 — 밝은색 줄무늬 */
-.hero__cover-book::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: repeating-linear-gradient(
-    135deg,
-    transparent,
-    transparent 20px,
-    rgba(255,255,255,0.07) 20px,
-    rgba(255,255,255,0.07) 40px
-  );
+  max-width: 320px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 24px 40px rgba(0,0,0,0.12));
 }
 
 .hero-controls {
@@ -1212,13 +1308,18 @@
     min-height: unset;
     align-items: flex-start;
   }
-  .hero__cover { width: 90px; height: 124px; align-self: flex-end; }
+  .hero__cover { width: 140px; align-self: flex-end; }
+  .hero__banner-img { max-width: 140px; }
   .hero__title { font-size: 22px; line-height: 1.3; }
   .hero__tag { font-size: 11px; padding: 4px 10px; }
   .hero__sub { display: none; }
   .hero__meta { display: none; }
   .hero__cta { padding: 10px 18px; font-size: 13px; }
   .hero-controls { padding: 8px 12px; }
+  /* 헤더 관리자 토글 축소 */
+  .admin-mode-toggle__label { display: none; }
+  .admin-mode-toggle { padding: 7px 10px; gap: 0; }
+  .header-profile { width: 32px; height: 32px; font-size: 13px; }
 
   /* 도서 카드 스크롤 */
   .book-scroll { gap: 12px; padding: 0 16px 12px; }

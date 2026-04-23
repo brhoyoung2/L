@@ -4,12 +4,14 @@
   const params = new URLSearchParams(location.search);
   if (params.get('admin') === 'true')  localStorage.setItem('tb_admin_mode', 'true');
   if (params.get('admin') === 'false') localStorage.removeItem('tb_admin_mode');
-  const isAdmin = localStorage.getItem('tb_admin_mode') === 'true';
+  let isAdmin = localStorage.getItem('tb_admin_mode') === 'true';
 
-  if (isAdmin) {
-    const badge = document.getElementById('admin-badge');
-    if (badge) badge.style.display = 'inline-flex';
+  function syncAdminUI() {
+    const toggle = document.getElementById('admin-toggle-btn');
+    if (toggle) toggle.classList.toggle('admin-mode-toggle--active', isAdmin);
+    document.body.classList.toggle('edit-mode', isAdmin);
   }
+  syncAdminUI();
 
   /* ── 데이터 로드 ── */
   let books = [], categories = [], webtoons = [];
@@ -35,7 +37,7 @@
   /* ── 히어로 슬라이더 ── */
   const featured = books.filter(b => b.is_featured);
   const heroBooks = featured.length ? featured : books.slice(0, 3);
-  buildHero(heroBooks);
+  try { buildHero(heroBooks); } catch(e) { console.error('buildHero 오류:', e); }
 
   /* ── 섹션별 도서 렌더링 ── */
   const mainContent = document.getElementById('main-content');
@@ -82,8 +84,17 @@
       location.href = `detail.html?book_id=${cta.dataset.bookId}`;
     }
 
-    /* 관리자 패널 열기/닫기 */
-    if (e.target.closest('#admin-toggle-btn')) openAdminPanel();
+    /* 관리자 모드 토글 */
+    if (e.target.closest('#admin-toggle-btn')) {
+      isAdmin = !isAdmin;
+      if (isAdmin) localStorage.setItem('tb_admin_mode', 'true');
+      else         localStorage.removeItem('tb_admin_mode');
+      syncAdminUI();
+      if (isAdmin) openAdminPanel();
+      else         closeAdminPanel();
+    }
+
+    /* 관리자 패널 닫기 */
     if (e.target.closest('#admin-close-btn'))  closeAdminPanel();
     if (e.target.closest('#admin-overlay') && !e.target.closest('#admin-panel')) closeAdminPanel();
 
@@ -110,6 +121,22 @@
   }
 
   if (isAdmin) openAdminPanel();
+
+  /* ── 편집 모드 오버레이 클릭 ── */
+  document.addEventListener('click', e => {
+    const editBtn = e.target.closest('.book-edit-btn');
+    if (!editBtn) return;
+    const card = editBtn.closest('[data-book-id]');
+    if (!card) return;
+    const book = books.find(b => b.book_id === card.dataset.bookId);
+    if (book) {
+      document.getElementById('admin-title').value    = book.title || '';
+      document.getElementById('admin-author').value   = book.author || '';
+      document.getElementById('admin-subtitle').value = book.subtitle || '';
+      document.getElementById('admin-tags').value     = (book.genre_tags || []).join(', ');
+      openAdminPanel();
+    }
+  });
 
   /* ── 검색 (데스크톱 + 모바일) ── */
   function bindSearch(id) {
@@ -161,11 +188,8 @@
               <button class="hero__cta hero__cta--secondary" data-book-id="${b.book_id}" id="hero-like-${i}">❤️ ${b.like_count.toLocaleString()}</button>
             </div>
           </div>
-          <div class="hero__cover" style="background:${b.cover_color}">
-            <div class="hero__cover-book" style="box-shadow:none">
-              ${renderHeroDeco(b)}
-              <img src="./images/main_banner_image_01.png" alt="배너 이미지" style="position:relative;z-index:1;width:100%;height:100%;object-fit:contain;display:block">
-            </div>
+          <div class="hero__cover">
+            <img src="./images/main_banner_image_01.png" alt="배너 이미지" class="hero__banner-img">
           </div>
         </div>`;
     }).join('');
