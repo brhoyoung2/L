@@ -24,6 +24,14 @@
     return;
   }
 
+  /* ── 데이터 소스 배지 ── */
+  const st = TB.getDataStatus();
+  const badge = document.getElementById('data-source-badge');
+  if (badge) {
+    badge.textContent = st.source === 'sheets' ? '🟢 Google Sheets 연결됨' : '🟡 오프라인 (mock 데이터)';
+    badge.className = 'data-source-badge' + (st.source === 'sheets' ? ' data-source-badge--live' : '');
+  }
+
   /* ── 히어로 슬라이더 ── */
   const featured = books.filter(b => b.is_featured);
   const heroBooks = featured.length ? featured : books.slice(0, 3);
