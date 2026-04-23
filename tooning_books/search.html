@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="cache-control" content="no-cache">
+  <title>검색 — TOONING BOOKS</title>
+  <link rel="stylesheet" href="./assets/css/tokens.css">
+  <link rel="stylesheet" href="./assets/css/components.css">
+  <link rel="stylesheet" href="./assets/css/main.css">
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="site-header">
+    <div class="container">
+      <a href="./index.html" class="tooning-logo">
+        <span class="tooning-logo__word">tooning</span>
+        <svg class="tooning-logo__smile" viewBox="0 0 44 22" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 3 3 Q 22 19 41 3" stroke="#FF5252" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="tooning-logo__sub">BOOKS</span>
+      </a>
+      <!-- 검색창 확장 (search 페이지) -->
+      <div class="site-header__search" style="max-width:600px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" id="search-input" placeholder="도서 제목, 작가, 태그 검색" autofocus>
+      </div>
+      <div class="site-header__actions">
+        <button class="btn-icon" title="알림">🔔</button>
+        <button class="btn-icon" title="프로필">👤</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="site-nav">
+    <div class="container">
+      <a class="site-nav__item" href="./index.html">홈</a>
+      <a class="site-nav__item" href="category.html">카테고리</a>
+      <a class="site-nav__item" href="#">이벤트</a>
+      <a class="site-nav__item" href="#">웹툰만들기</a>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:32px;padding-bottom:60px">
+
+    <!-- 검색 상태 영역 -->
+    <div id="search-meta" style="margin-bottom:24px">
+      <div class="loading-state" id="loading-state">
+        <div style="font-size:32px;margin-bottom:10px">🔍</div>
+        <p>검색 중...</p>
+      </div>
+    </div>
+
+    <!-- 필터 칩 -->
+    <div id="filter-chips" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:20px"></div>
+
+    <!-- 결과 그리드 -->
+    <div id="search-grid" class="book-grid"></div>
+
+    <!-- 빈 결과 -->
+    <div id="empty-state" style="display:none;padding:60px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">🤔</div>
+      <h3 style="font-size:20px;font-weight:700;margin:0 0 8px" id="empty-title">검색 결과가 없습니다</h3>
+      <p style="color:var(--color-text-3)" id="empty-desc"></p>
+      <div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="related-tags"></div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <nav class="pagination" id="pagination" style="display:none"></nav>
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="tooning-logo tooning-logo--sm">
+        <span class="tooning-logo__word">tooning</span>
+        <svg class="tooning-logo__smile" viewBox="0 0 44 22" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 3 3 Q 22 19 41 3" stroke="#FF5252" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="tooning-logo__sub">BOOKS</span>
+      </div>
+      <p class="site-footer__copy">© 2026 Toonsquare Inc. 교육용 웹툰 창작 플랫폼</p>
+    </div>
+  </footer>
+
+  <!-- 바텀 네비 (모바일) -->
+  <nav class="bottom-nav">
+    <a href="./index.html" class="bottom-nav__item"><span>🏠</span><span>홈</span></a>
+    <a href="category.html" class="bottom-nav__item"><span>📚</span><span>카테고리</span></a>
+    <a href="#" class="bottom-nav__fab">✨</a>
+    <a href="#" class="bottom-nav__item"><span>❤️</span><span>즐겨찾기</span></a>
+    <a href="#" class="bottom-nav__item"><span>👤</span><span>My</span></a>
+  </nav>
+
+  <script src="./assets/js/data.js"></script>
+  <script src="./assets/js/renderer.js"></script>
+  <script src="./assets/js/search.js"></script>
+</body>
+</html>

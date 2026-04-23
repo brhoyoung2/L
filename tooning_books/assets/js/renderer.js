@@ -109,5 +109,45 @@ function renderWebtoonCard(wt) {
 
 function parseNum(v) { return Number(v) || 0; }
 
+/* 그리드 카드 (카테고리/검색 페이지용 — 유연한 너비) */
+function renderGridCard(book, highlight) {
+  const isDark = isColorDark(book.cover_color);
+  const textColor = isDark ? '#fff' : '#2A1F5C';
+  const badges = [];
+  if (book.is_featured) badges.push('<span class="badge badge--featured">★ 추천</span>');
+  if (book.categories.includes('cat_new')) badges.push('<span class="badge badge--new">NEW</span>');
+  if (book.categories.includes('cat_webtoon')) badges.push('<span class="badge badge--webtoon">웹툰</span>');
+
+  const hl = (text) => {
+    if (!highlight) return text;
+    const re = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return text.replace(re, '<mark style="background:#fff0a0;border-radius:2px">$1</mark>');
+  };
+
+  return `
+    <div class="book-card book-card--grid" data-action="open-book" data-book-id="${book.book_id}">
+      <div class="book-card__cover" style="background:${book.cover_color};width:100%;height:0;padding-bottom:133%;position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card)">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          ${renderDeco(book.cover_deco, book.cover_color)}
+          ${badges.length ? `<div style="position:absolute;top:8px;left:8px;display:flex;gap:3px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
+          <div style="position:absolute;bottom:10px;left:8px;right:8px;font-size:12px;font-weight:700;color:${textColor};line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,0.2)">${book.title}</div>
+          <div style="position:absolute;top:8px;right:8px;font-size:10px;color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>
+        </div>
+      </div>
+      <div class="book-card__info" style="padding:0;margin-top:10px">
+        <div class="book-card__title" style="font-size:13px">${hl(book.title)}</div>
+        <div class="book-card__author">${hl(book.author)} · ${book.year}</div>
+        <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+          ${book.genre_tags.slice(0,2).map(t => `<span class="chip" style="padding:2px 8px;font-size:10px">#${t}</span>`).join('')}
+        </div>
+        <div class="book-card__metrics" style="margin-top:6px">
+          <span>👁 ${parseNum(book.view_count).toLocaleString()}</span>
+          <span>❤️ ${parseNum(book.like_count).toLocaleString()}</span>
+          <span>🎨 ${parseNum(book.webtoon_count)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
 window.TB = window.TB || {};
-Object.assign(window.TB, { renderBookCard, renderBookSection, renderWebtoonCard });
+Object.assign(window.TB, { renderBookCard, renderBookSection, renderWebtoonCard, renderGridCard });
