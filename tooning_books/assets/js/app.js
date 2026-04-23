@@ -35,8 +35,11 @@
   }
 
   /* ── 히어로 슬라이더 ── */
-  const featured = books.filter(b => b.is_featured);
+  const HERO_TITLE_ORDER = ['왕자와 거지', '홍길동전', '전우치전', '박씨전', '로빈슨 크루소', '크리스마스 선물'];
   const localBanners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]').filter(b => b.is_active);
+  /* 제목 순서로 6권 추출 (시트 book_id 형식과 무관하게 동작) */
+  const heroByTitle = HERO_TITLE_ORDER.map(t => books.find(b => b.title === t)).filter(Boolean);
+  const featured    = books.filter(b => b.is_featured);
   const heroBooks = localBanners.length
     ? localBanners.map(b => {
         const linked = b.book_id ? books.find(bk => bk.book_id === b.book_id) : null;
@@ -55,7 +58,7 @@
           is_featured:     false,
         };
       })
-    : (featured.length ? featured : books.slice(0, 3));
+    : (heroByTitle.length ? heroByTitle : (featured.length ? featured : books.slice(0, 6)));
   try { buildHero(heroBooks); } catch(e) { console.error('buildHero 오류:', e); }
 
   /* ── 섹션별 도서 렌더링 ── */
@@ -235,12 +238,21 @@
         b.grade  ? `<span>${GRADE_LABEL[b.grade] || b.grade}</span>` : '',
       ].filter(Boolean).join('');
 
-      /* 배너 이미지 우선순위: cover_data_url → images/banner/book_NN.png → image_url → 기본 */
+      /* 배너 이미지 우선순위: cover_data_url → book_NN id → 제목 매핑 → image_url → 기본 */
+      const TITLE_BANNER_MAP = {
+        '왕자와 거지':    './images/banner/book_01.png',
+        '홍길동전':      './images/banner/book_02.png',
+        '전우치전':      './images/banner/book_03.png',
+        '박씨전':        './images/banner/book_04.png',
+        '로빈슨 크루소':  './images/banner/book_05.png',
+        '크리스마스 선물': './images/banner/book_06.png',
+      };
       let bannerSrc = b.cover_data_url || '';
       if (!bannerSrc) {
         const m = String(b.book_id || '').match(/^book_(\d+)$/);
         if (m) bannerSrc = `./images/banner/book_${String(Number(m[1])).padStart(2,'0')}.png`;
       }
+      if (!bannerSrc) bannerSrc = TITLE_BANNER_MAP[b.title] || '';
       if (!bannerSrc) bannerSrc = b.image_url || './images/main_banner_image_01.png';
 
       const heroImg = `<img src="${bannerSrc}" alt="${b.title}" class="hero__banner-img">`;
