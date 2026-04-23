@@ -110,13 +110,15 @@
             <!-- 표지 -->
             <div class="detail-cover" id="detail-cover">
               <div id="detail-cover-inner" style="font-size:80px;z-index:1">📚</div>
-              <div class="detail-cover__time" id="detail-read-time">⏱ 약 -- 분 독서</div>
             </div>
 
-            <!-- EDIT 모드: 표지 변경 버튼 -->
-            <button id="cover-change-btn" style="display:none;width:100%;margin-top:10px;padding:8px;border:1.5px dashed var(--color-border);border-radius:var(--radius-md);background:transparent;font-size:13px;color:var(--color-text-3);cursor:pointer;font-family:var(--font-family)">
-              📷 표지 변경 (v0.4+)
-            </button>
+            <!-- 통계 (표지 아래, 작게) -->
+            <div class="detail-cover-stats" id="detail-stats">
+              <span>👁 <strong id="stat-views">0</strong></span>
+              <span>❤️ <strong id="stat-likes">0</strong></span>
+              <span>💬 <strong id="stat-comments">0</strong></span>
+              <span>🎨 <strong id="stat-webtoons">0</strong></span>
+            </div>
           </div>
 
           <div class="detail-info">
@@ -133,34 +135,12 @@
             <p class="detail-author" id="detail-author"></p>
             <p class="detail-subtitle" id="detail-subtitle"></p>
 
-            <!-- 통계 박스 -->
-            <div class="detail-stats" id="detail-stats">
-              <div class="detail-stat">
-                <span class="detail-stat__num" id="stat-views">0</span>
-                <span class="detail-stat__label">👁 조회</span>
-              </div>
-              <div class="detail-stat">
-                <span class="detail-stat__num" id="stat-likes">0</span>
-                <span class="detail-stat__label">❤️ 좋아요</span>
-              </div>
-              <div class="detail-stat">
-                <span class="detail-stat__num" id="stat-comments">0</span>
-                <span class="detail-stat__label">💬 댓글</span>
-              </div>
-              <div class="detail-stat">
-                <span class="detail-stat__num" id="stat-webtoons">0</span>
-                <span class="detail-stat__label">🎨 만든 웹툰</span>
-              </div>
-            </div>
-
             <!-- CTA 버튼 -->
             <div class="detail-actions" id="detail-actions">
-              <!-- READ 모드 버튼들 -->
               <button class="btn-cta-large" id="make-webtoon-btn">
                 ✨ 이 책으로 웹툰 만들기
               </button>
               <button class="btn-action" id="like-btn">❤️ <span id="like-count">0</span></button>
-              <button class="btn-action" id="save-btn">📥 저장</button>
               <button class="btn-action" id="share-btn">📤 공유</button>
 
               <!-- EDIT 모드 버튼들 (기본 숨김) -->
@@ -292,8 +272,8 @@
     <a href="#" class="bottom-nav__item"><span>👤</span><span>My</span></a>
   </nav>
 
-  <script src="./assets/js/data.js?v=7"></script>
-  <script src="./assets/js/renderer.js?v=7"></script>
-  <script src="./assets/js/detail.js?v=7"></script>
+  <script src="./assets/js/data.js?v=8"></script>
+  <script src="./assets/js/renderer.js?v=8"></script>
+  <script src="./assets/js/detail.js?v=8"></script>
 </body>
 </html>

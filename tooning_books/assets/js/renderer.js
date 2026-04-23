@@ -76,7 +76,6 @@ function renderBookSection(category, books) {
       <div class="container">
         <div class="section-header">
           <div>
-            <div class="section-header__label">${category.label || category.name}</div>
             <h2 class="section-header__title">${category.name}</h2>
           </div>
           <a class="section-header__more" href="category.html?id=${category.category_id}">전체보기 →</a>
@@ -136,14 +135,18 @@ function renderGridCard(book, highlight) {
     return text.replace(re, '<mark style="background:#fff0a0;border-radius:2px">$1</mark>');
   };
 
+  const coverBg = book.cover_data_url
+    ? `background:${book.cover_color||'#3D3080'};background-image:url('${book.cover_data_url}');background-size:cover;background-position:center`
+    : `background:${book.cover_color||'#3D3080'}`;
+
   return `
     <div class="book-card book-card--grid" data-action="open-book" data-book-id="${book.book_id}">
-      <div class="book-card__cover" style="background:${book.cover_color};width:100%;height:0;padding-bottom:133%;position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card)">
+      <div class="book-card__cover" style="${coverBg};width:100%;height:0;padding-bottom:133%;position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card)">
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-          ${renderDeco(book.cover_deco, book.cover_color)}
+          ${!book.cover_data_url ? renderDeco(book.cover_deco, book.cover_color) : ''}
           ${badges.length ? `<div style="position:absolute;top:8px;left:8px;display:flex;gap:3px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
-          <div style="position:absolute;bottom:10px;left:8px;right:8px;font-size:12px;font-weight:700;color:${textColor};line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,0.2)">${book.title}</div>
-          <div style="position:absolute;top:8px;right:8px;font-size:10px;color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>
+          ${!book.cover_data_url ? `<div style="position:absolute;bottom:10px;left:8px;right:8px;font-size:12px;font-weight:700;color:${textColor};line-height:1.3;text-shadow:0 1px 3px rgba(0,0,0,0.2)">${book.title}</div>` : ''}
+          ${!book.cover_data_url ? `<div style="position:absolute;top:8px;right:8px;font-size:10px;color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>` : ''}
         </div>
       </div>
       <div class="book-card__info" style="padding:0;margin-top:10px">

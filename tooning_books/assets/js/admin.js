@@ -6,6 +6,7 @@
   let selectedGrade  = 'elementary';
   let catModalColor  = '#3D3080';
   let bannerColor    = '#3D3080';
+  let bannerDataUrl  = null;
   let coverDataUrl   = null;
   let editIdx        = -1;
 
@@ -95,10 +96,10 @@
       is_featured:     featured,
       is_published:    true,
       is_deleted:      false,
-      like_count:      prev?.like_count    || 0,
-      view_count:      prev?.view_count    || 0,
-      comment_count:   prev?.comment_count || 0,
-      webtoon_count:   prev?.webtoon_count || 0,
+      view_count:      Number(document.getElementById('admin-view-count')?.value)    || (isEdit ? (prev.view_count    || 0) : Math.floor(Math.random() * 900 + 100)),
+      like_count:      Number(document.getElementById('admin-like-count')?.value)    || (isEdit ? (prev.like_count    || 0) : Math.floor(Math.random() * 490 + 10)),
+      comment_count:   Number(document.getElementById('admin-comment-count')?.value) || (isEdit ? (prev.comment_count || 0) : Math.floor(Math.random() * 40 + 5)),
+      webtoon_count:   prev?.webtoon_count  || 0,
       reading_minutes: prev?.reading_minutes || 0,
       year:            prev?.year || new Date().getFullYear(),
       created:         prev?.created || new Date().toISOString(),
@@ -160,6 +161,12 @@
     document.getElementById('admin-subtitle').value = book.subtitle || '';
     document.getElementById('admin-tags').value     = book.genre_tags || '';
     document.getElementById('admin-order').value    = book.display_order || 0;
+    const vcEl = document.getElementById('admin-view-count');
+    const lcEl = document.getElementById('admin-like-count');
+    const ccEl = document.getElementById('admin-comment-count');
+    if (vcEl) vcEl.value = book.view_count    || 0;
+    if (lcEl) lcEl.value = book.like_count    || 0;
+    if (ccEl) ccEl.value = book.comment_count || 0;
     const featuredEl = document.getElementById('admin-featured');
     if (featuredEl) featuredEl.checked = !!book.is_featured;
 
@@ -252,6 +259,7 @@
     if (!el) return;
     const banners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]');
 
+    bannerDataUrl = null;
     el.innerHTML = `
       <div style="background:var(--color-chip);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--color-text)">새 배너 추가</div>
@@ -259,6 +267,15 @@
           <input id="banner-title" type="text" placeholder="배너 제목 *" class="form-input">
           <input id="banner-subtitle" type="text" placeholder="배너 부제목 (선택)" class="form-input">
           <input id="banner-book-id" type="text" placeholder="연결 도서 ID (선택)" class="form-input">
+          <div>
+            <label class="form-label">배너 이미지 (선택)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="banner-img-preview" style="width:60px;height:40px;border-radius:6px;background:var(--color-border);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0">🖼</div>
+              <button id="banner-img-btn" class="btn-outline" style="flex:1;padding:7px;font-size:12px">📷 이미지 업로드</button>
+              <button id="banner-img-del" class="btn-outline" style="padding:7px 10px;font-size:12px;color:var(--color-danger);border-color:var(--color-danger)">✕</button>
+            </div>
+            <input type="file" id="banner-img-file" accept="image/*" style="display:none">
+          </div>
           <div>
             <label class="form-label">배경색</label>
             <div style="display:flex;gap:7px;flex-wrap:wrap">
@@ -283,6 +300,30 @@
         btn.classList.add('color-pick--active');
         bannerColor = btn.dataset.bannerColor;
       });
+    });
+
+    /* 배너 이미지 업로드 */
+    el.querySelector('#banner-img-btn')?.addEventListener('click', () => {
+      el.querySelector('#banner-img-file')?.click();
+    });
+    el.querySelector('#banner-img-file')?.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('파일 크기 5MB 초과'); return; }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        bannerDataUrl = ev.target.result;
+        const preview = el.querySelector('#banner-img-preview');
+        if (preview) { preview.innerHTML = `<img src="${bannerDataUrl}" style="width:100%;height:100%;object-fit:cover">`; }
+      };
+      reader.readAsDataURL(file);
+    });
+    el.querySelector('#banner-img-del')?.addEventListener('click', () => {
+      bannerDataUrl = null;
+      const preview = el.querySelector('#banner-img-preview');
+      if (preview) preview.innerHTML = '🖼';
+      const fileInput = el.querySelector('#banner-img-file');
+      if (fileInput) fileInput.value = '';
     });
   }
 
@@ -310,11 +351,12 @@
       if (!title) { alert('배너 제목을 입력하세요.'); return; }
       const banners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]');
       banners.push({
-        banner_id:   `banner_${Date.now()}`,
+        banner_id:      `banner_${Date.now()}`,
         title, subtitle, book_id: bookId,
-        cover_color: bannerColor,
-        is_active:   true,
-        created:     new Date().toISOString(),
+        cover_color:    bannerColor,
+        cover_data_url: bannerDataUrl || null,
+        is_active:      true,
+        created:        new Date().toISOString(),
       });
       localStorage.setItem('tb_local_banners', JSON.stringify(banners));
       showToast(`"${title}" 배너 추가됨`);
@@ -596,6 +638,13 @@
     const featuredEl = document.getElementById('admin-featured');
     if (orderEl)    orderEl.value      = '0';
     if (featuredEl) featuredEl.checked = false;
+    /* 통계 기본값: 신규 등록 시 적절한 숫자로 채움 */
+    const vcEl = document.getElementById('admin-view-count');
+    const lcEl = document.getElementById('admin-like-count');
+    const ccEl = document.getElementById('admin-comment-count');
+    if (vcEl) vcEl.value = Math.floor(Math.random() * 900 + 100);
+    if (lcEl) lcEl.value = Math.floor(Math.random() * 490 + 10);
+    if (ccEl) ccEl.value = Math.floor(Math.random() * 40 + 5);
 
     document.querySelectorAll('[data-cat-select]').forEach(b => b.classList.remove('chip--active'));
     document.querySelectorAll('[data-grade-select]').forEach((b,i) => b.classList.toggle('chip--active', i === 0));

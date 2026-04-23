@@ -36,7 +36,26 @@
 
   /* ── 히어로 슬라이더 ── */
   const featured = books.filter(b => b.is_featured);
-  const heroBooks = featured.length ? featured : books.slice(0, 3);
+  const localBanners = JSON.parse(localStorage.getItem('tb_local_banners') || '[]').filter(b => b.is_active);
+  const heroBooks = localBanners.length
+    ? localBanners.map(b => {
+        const linked = b.book_id ? books.find(bk => bk.book_id === b.book_id) : null;
+        return {
+          book_id:         b.book_id || '',
+          title:           b.title,
+          subtitle:        b.subtitle || '',
+          author:          linked?.author || '',
+          year:            linked?.year || 0,
+          cover_color:     b.cover_color || '#3D3080',
+          cover_data_url:  b.cover_data_url || null,
+          categories:      linked?.categories || [],
+          like_count:      linked?.like_count || 0,
+          reading_minutes: 0,
+          grade:           linked?.grade || '',
+          is_featured:     false,
+        };
+      })
+    : (featured.length ? featured : books.slice(0, 3));
   try { buildHero(heroBooks); } catch(e) { console.error('buildHero 오류:', e); }
 
   /* ── 섹션별 도서 렌더링 ── */
@@ -190,25 +209,28 @@
     /* 슬라이드 HTML 생성 */
     banner.innerHTML = heroBooks.map((b, i) => {
       const dark = isColorDark(b.cover_color);
+      const metaParts = [
+        b.author ? `<span>✍️ ${b.author}</span>` : '',
+        b.year   ? `<span>📅 ${b.year}년</span>` : '',
+        b.grade  ? `<span>${GRADE_LABEL[b.grade] || b.grade}</span>` : '',
+      ].filter(Boolean).join('');
+      const heroImg = b.cover_data_url
+        ? `<img src="${b.cover_data_url}" alt="배너 이미지" class="hero__banner-img" style="object-fit:cover;border-radius:12px">`
+        : `<img src="./images/main_banner_image_01.png" alt="배너 이미지" class="hero__banner-img">`;
       return `
         <div class="hero__slide${i === 0 ? ' hero__slide--active' : ''}" id="hero-slide-${i}">
           <div class="hero__text">
-            <span class="hero__tag">${getCategoryLabel(b.categories, categories)}</span>
+            <span class="hero__tag">${b.categories?.length ? getCategoryLabel(b.categories, categories) : '📢 배너'}</span>
             <h1 class="hero__title">${b.title}</h1>
             <p class="hero__sub">${b.subtitle}</p>
-            <div class="hero__meta">
-              <span>✍️ ${b.author}</span>
-              <span>📅 ${b.year}년</span>
-              <span>⏱ 약 ${b.reading_minutes}분</span>
-              <span>${GRADE_LABEL[b.grade] || b.grade}</span>
-            </div>
+            ${metaParts ? `<div class="hero__meta">${metaParts}</div>` : ''}
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-              <button class="hero__cta" id="hero-cta-${i}" data-book-id="${b.book_id}">📖 자세히 보기</button>
-              <button class="hero__cta hero__cta--secondary" data-book-id="${b.book_id}" id="hero-like-${i}">❤️ ${b.like_count.toLocaleString()}</button>
+              ${b.book_id ? `<button class="hero__cta" id="hero-cta-${i}" data-book-id="${b.book_id}">📖 자세히 보기</button>` : ''}
+              ${b.like_count ? `<button class="hero__cta hero__cta--secondary" data-book-id="${b.book_id}" id="hero-like-${i}">❤️ ${b.like_count.toLocaleString()}</button>` : ''}
             </div>
           </div>
           <div class="hero__cover">
-            <img src="./images/main_banner_image_01.png" alt="배너 이미지" class="hero__banner-img">
+            ${heroImg}
           </div>
         </div>`;
     }).join('');

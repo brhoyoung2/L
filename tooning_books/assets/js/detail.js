@@ -8,7 +8,7 @@
   if (params.get('admin') === 'true')  localStorage.setItem('tb_admin_mode', 'true');
   if (params.get('admin') === 'false') localStorage.removeItem('tb_admin_mode');
   const isAdmin  = localStorage.getItem('tb_admin_mode') === 'true';
-  const editMode = isEdit && isAdmin;
+  const editMode = isAdmin; /* 관리자 모드 = 항상 편집 모드 */
 
   if (isAdmin) document.getElementById('admin-badge').style.display = 'inline-flex';
   if (!bookId) { showError(); return; }
@@ -57,8 +57,9 @@
   if (book.categories.length)
     document.getElementById('breadcrumb-cat').href = `category.html?id=${book.categories[0]}`;
 
-  /* 읽기 시간 */
-  document.getElementById('detail-read-time').textContent = `⏱ 약 ${book.reading_minutes}분 독서`;
+  /* 읽기 시간 — 표시 안 함 */
+  const readTimeEl = document.getElementById('detail-read-time');
+  if (readTimeEl) readTimeEl.style.display = 'none';
 
   /* 통계 숫자 */
   document.getElementById('stat-views').textContent    = book.view_count.toLocaleString();
@@ -320,14 +321,17 @@
     const toolbar    = document.getElementById('editor-toolbar');
     const coverBtn   = document.getElementById('cover-change-btn');
 
-    const readBtns = ['make-webtoon-btn', 'like-btn', 'save-btn', 'share-btn'];
+    const readBtns = ['make-webtoon-btn', 'like-btn', 'share-btn'];
     const editBtns = ['edit-make-btn', 'edit-like-btn', 'edit-delete-btn'];
+    /* save-btn은 표시 안 함 (삭제) */
+    const saveBtnEl = document.getElementById('save-btn');
+    if (saveBtnEl) saveBtnEl.style.display = 'none';
 
     if (em) {
       if (editBanner) editBanner.style.display = 'block';
-      if (toolbar)    toolbar.style.display    = 'none'; /* 블록 에디터가 대체 */
+      if (toolbar)    toolbar.style.display    = 'none';
       if (coverBtn)   coverBtn.style.display   = 'none';
-      if (statsBox)   statsBox.style.display   = 'none';
+      if (statsBox)   statsBox.style.display   = 'none'; /* 편집 모드: 미니 배지로 대체 */
       readBtns.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
       editBtns.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'inline-flex'; });
 
@@ -352,7 +356,11 @@
 
     if (isAdmin) {
       const editModeBtn = document.getElementById('admin-edit-mode-btn');
-      if (editModeBtn) editModeBtn.textContent = em ? '✅ EDIT 모드 활성 중' : '✏️ EDIT 모드로 전환';
+      if (editModeBtn) {
+        editModeBtn.textContent = '✅ 편집 모드 활성 중';
+        editModeBtn.disabled    = true;
+        editModeBtn.style.opacity = '0.7';
+      }
     }
   }
 
@@ -470,16 +478,15 @@
 
       /* ── EDIT ↔ READ 모드 전환 ── */
       if (e.target.closest('#admin-edit-mode-btn')) {
-        const url = new URL(location.href);
-        url.searchParams.set('mode', 'edit');
-        url.searchParams.set('admin', 'true');
-        location.href = url.toString();
+        /* 이미 편집 모드 — 아무 동작 없음 */
         return;
       }
       if (e.target.closest('#admin-read-mode-btn')) {
+        /* 관리자 없이 새 탭에서 독자 뷰 미리보기 */
         const url = new URL(location.href);
+        url.searchParams.delete('admin');
         url.searchParams.delete('mode');
-        location.href = url.toString();
+        window.open(url.toString(), '_blank');
         return;
       }
 

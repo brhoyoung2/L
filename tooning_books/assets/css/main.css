@@ -774,13 +774,12 @@
   border-radius: var(--radius-pill);
   font-size: 16px;
   font-weight: 800;
-  box-shadow: var(--shadow-cta);
   border: none;
   cursor: pointer;
   font-family: var(--font-family);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s;
 }
-.btn-cta-large:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,82,92,0.4); }
+.btn-cta-large:hover { transform: translateY(-2px); }
 .btn-action {
   display: inline-flex;
   align-items: center;
@@ -1380,6 +1379,9 @@
   .site-footer .container { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
+/* 스무스 스크롤 */
+html { scroll-behavior: smooth; }
+
 /* 극소 화면 */
 @media (max-width: 360px) {
   .book-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1387,6 +1389,21 @@
   .hero__title { font-size: 19px; }
 }
 
+
+/* ===== DETAIL PAGE — 표지 아래 통계 ===== */
+.detail-cover-stats {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--color-text-3);
+}
+.detail-cover-stats strong {
+  color: var(--color-text-2);
+  font-weight: 700;
+}
 
 /* ===== DETAIL PAGE — EDIT MODE ===== */
 
