@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="cache-control" content="no-cache">
-  <title>TOONING BOOKS — 웹툰으로 만드는 독서 플랫폼</title>
-  <link rel="stylesheet" href="./assets/css/tokens.css?v=17">
-  <link rel="stylesheet" href="./assets/css/components.css?v=17">
-  <link rel="stylesheet" href="./assets/css/main.css?v=17">
+  <title>TOONING BOOKS ???�툰?�로 만드???�서 ?�랫??/title>
+  <link rel="stylesheet" href="./assets/css/tokens.css?v=18">
+  <link rel="stylesheet" href="./assets/css/components.css?v=18">
+  <link rel="stylesheet" href="./assets/css/main.css?v=18">
   <link rel="icon" type="image/png" href="./images/favicon.png">
 </head>
 <body>
 
-  <!-- ═══ HEADER ═══ -->
+  <!-- ?�═??HEADER ?�═??-->
   <header class="site-header">
     <div class="container">
       <a href="./index.html" class="tooning-logo">
@@ -23,15 +23,15 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="search" id="search-input" placeholder="도서 제목, 작가, 태그 검색">
+        <input type="search" id="search-input" placeholder="?�서 ?�목, ?��?, ?�그 검??>
       </div>
 
       <div class="site-header__actions">
-        <button class="admin-mode-toggle" id="admin-toggle-btn" title="관리자 패널 열기">
+        <button class="admin-mode-toggle" id="admin-toggle-btn" title="관리자 ?�널 ?�기">
           <span class="admin-mode-toggle__dot" id="admin-mode-dot"></span>
           <span class="admin-mode-toggle__label">관리자 모드</span>
         </button>
-        <button class="btn-icon" title="관심 도서">
+        <button class="btn-icon" title="관???�서">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
         </button>
         <div class="header-profile" id="header-profile">L</div>
@@ -39,144 +39,142 @@
     </div>
   </header>
 
-  <!-- ═══ NAV ═══ -->
+  <!-- ?�═??NAV ?�═??-->
   <nav class="site-nav">
     <div class="container">
-      <a class="site-nav__item site-nav__item--active" href="./index.html">홈</a>
-      <a class="site-nav__item" href="#section-cat_popular">인기도서</a>
+      <a class="site-nav__item site-nav__item--active" href="./index.html">??/a>
+      <a class="site-nav__item" href="#section-cat_popular">?�기?�서</a>
       <a class="site-nav__item" href="category.html">카테고리</a>
-      <a class="site-nav__item" href="event.html">이벤트</a>
-      <a class="site-nav__item" href="https://tooning.io" target="_blank">웹툰만들기</a>
+      <a class="site-nav__item" href="event.html">?�벤??/a>
     </div>
   </nav>
 
-  <!-- ═══ 모바일 검색바 ═══ -->
+  <!-- ?�═??모바??검?�바 ?�═??-->
   <div class="mobile-searchbar" style="display:none">
-    <input type="search" id="mobile-search-input" placeholder="🔍  도서 제목, 작가, 태그 검색">
+    <input type="search" id="mobile-search-input" placeholder="?��  ?�서 ?�목, ?��?, ?�그 검??>
   </div>
 
-  <!-- ═══ HERO BANNER ═══ -->
+  <!-- ?�═??HERO BANNER ?�═??-->
   <div class="hero-wrap">
     <div class="hero" id="hero-banner">
-      <!-- 슬라이드 복수: JS가 featured 도서로 채움 -->
+      <!-- ?�라?�드 복수: JS가 featured ?�서�?채�? -->
       <div class="hero__slide hero__slide--active" id="hero-slide-0">
         <div class="hero__text">
-          <span class="hero__tag" id="hero-tag-0">📖 이달의 추천</span>
-          <h1 class="hero__title" id="hero-title-0">도서를 불러오는 중...</h1>
-          <p class="hero__sub" id="hero-sub-0">잠시만 기다려주세요.</p>
+          <span class="hero__tag" id="hero-tag-0">?�� ?�달??추천</span>
+          <h1 class="hero__title" id="hero-title-0">?�서�?불러?�는 �?..</h1>
+          <p class="hero__sub" id="hero-sub-0">?�시�?기다?�주?�요.</p>
           <div class="hero__meta" id="hero-meta-0"></div>
           <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px">
             <button class="hero__cta" id="hero-cta-0" data-book-id="">
-              📖 자세히 보기
+              ?�� ?�세??보기
             </button>
             <button class="hero__cta hero__cta--secondary" id="hero-like-0">
-              ❤️ 좋아요
-            </button>
+              ?�️ 좋아??            </button>
           </div>
         </div>
         <div class="hero__cover" id="hero-cover-0">
-          <div class="hero__cover-book" id="hero-cover-inner-0">📚</div>
+          <div class="hero__cover-book" id="hero-cover-inner-0">?��</div>
         </div>
       </div>
     </div>
 
-    <!-- 슬라이더 컨트롤 -->
+    <!-- ?�라?�더 컨트�?-->
     <div class="hero-controls">
       <div class="hero__dots" id="hero-dots"></div>
       <div style="display:flex;gap:4px">
-        <button class="hero-arrow" id="hero-prev">‹</button>
-        <button class="hero-arrow" id="hero-next">›</button>
+        <button class="hero-arrow" id="hero-prev">??/button>
+        <button class="hero-arrow" id="hero-next">??/button>
       </div>
     </div>
   </div>
 
-  <!-- ═══ MAIN CONTENT ═══ -->
+  <!-- ?�═??MAIN CONTENT ?�═??-->
   <main id="main-content" style="padding-bottom:20px">
     <div class="loading-state">
-      <div style="font-size:40px;margin-bottom:16px">📚</div>
-      <p>도서 목록을 불러오는 중...</p>
+      <div style="font-size:40px;margin-bottom:16px">?��</div>
+      <p>?�서 목록??불러?�는 �?..</p>
     </div>
   </main>
 
-  <!-- ═══ WEBTOON SECTION ═══ -->
+  <!-- ?�═??WEBTOON SECTION ?�═??-->
   <section id="webtoon-section" class="book-section" style="background:var(--color-primary-bg)">
     <div class="container">
       <div class="section-header">
         <div>
           <div class="section-header__label">USER WEBTOONS</div>
-          <h2 class="section-header__title">학생들이 만든 웹툰</h2>
+          <h2 class="section-header__title">?�생?�이 만든 ?�툰</h2>
         </div>
-        <a class="section-header__more" href="#">전체 보기 →</a>
+        <a class="section-header__more" href="#">?�체 보기 ??/a>
       </div>
       <div class="book-scroll" id="webtoon-scroll"></div>
     </div>
   </section>
 
-  <!-- ═══ FOOTER ═══ -->
+  <!-- ?�═??FOOTER ?�═??-->
   <footer class="site-footer">
     <div class="container">
       <div class="tooning-logo tooning-logo--sm">
         <img src="./images/logo.png" alt="TOONING BOOKS" style="height:28px;display:block;object-fit:contain">
       </div>
-      <p class="site-footer__copy">© 2026 Toonsquare Inc. 교육용 웹툰 창작 플랫폼</p>
+      <p class="site-footer__copy">© 2026 Toonsquare Inc. 교육???�툰 창작 ?�랫??/p>
       <span id="data-source-badge" class="data-source-badge"></span>
     </div>
   </footer>
 
-  <!-- ═══ ADMIN OVERLAY & PANEL ═══ -->
+  <!-- ?�═??ADMIN OVERLAY & PANEL ?�═??-->
   <div class="admin-overlay" id="admin-overlay"></div>
   <aside class="admin-panel" id="admin-panel">
 
-    <!-- 헤더 -->
+    <!-- ?�더 -->
     <div class="admin-panel__header">
       <div>
-        <div style="font-size:10px;color:var(--color-text-3);letter-spacing:1.5px;margin-bottom:4px;text-transform:uppercase">⚙️ Admin Dashboard</div>
-        <div class="admin-panel__title">관리자 패널</div>
+        <div style="font-size:10px;color:var(--color-text-3);letter-spacing:1.5px;margin-bottom:4px;text-transform:uppercase">?�️ Admin Dashboard</div>
+        <div class="admin-panel__title">관리자 ?�널</div>
       </div>
-      <button class="admin-panel__close" id="admin-close-btn">✕</button>
+      <button class="admin-panel__close" id="admin-close-btn">??/button>
     </div>
 
-    <!-- 탭 -->
+    <!-- ??-->
     <div class="admin-tabs">
-      <button class="admin-tab admin-tab--active" data-admin-tab="books">도서 <span class="admin-tab__badge" id="tab-badge-books"></span></button>
+      <button class="admin-tab admin-tab--active" data-admin-tab="books">?�서 <span class="admin-tab__badge" id="tab-badge-books"></span></button>
       <button class="admin-tab" data-admin-tab="banners">배너</button>
-      <button class="admin-tab" data-admin-tab="notices">공지</button>
-      <button class="admin-tab" data-admin-tab="stats">통계</button>
+      <button class="admin-tab" data-admin-tab="notices">공�?</button>
+      <button class="admin-tab" data-admin-tab="stats">?�계</button>
     </div>
 
-    <!-- 패널 바디 -->
+    <!-- ?�널 바디 -->
     <div class="admin-panel__body">
 
-      <!-- ▶ 도서 탭 -->
+      <!-- ???�서 ??-->
       <div class="admin-tab-pane admin-tab-pane--active" id="admin-pane-books">
 
-        <!-- 표지 드롭존 -->
-        <div class="admin-dropzone" id="admin-dropzone" title="클릭하여 이미지 선택">
+        <!-- ?��? ?�롭�?-->
+        <div class="admin-dropzone" id="admin-dropzone" title="?�릭?�여 ?��?지 ?�택">
           <div id="admin-dropzone-preview" class="admin-dropzone__preview" style="display:none"></div>
           <div class="admin-dropzone__placeholder" id="admin-dropzone-placeholder">
-            <span style="font-size:28px">📷</span>
-            <span style="font-size:12px;color:var(--color-text-3)">표지 이미지 드롭 또는 클릭</span>
-            <span style="font-size:11px;color:var(--color-text-3)">JPG/PNG · 최대 5MB</span>
+            <span style="font-size:28px">?��</span>
+            <span style="font-size:12px;color:var(--color-text-3)">?��? ?��?지 ?�롭 ?�는 ?�릭</span>
+            <span style="font-size:11px;color:var(--color-text-3)">JPG/PNG · 최�? 5MB</span>
           </div>
           <input type="file" id="admin-cover-file" accept="image/jpeg,image/png" style="display:none">
         </div>
 
-        <!-- 폼 -->
+        <!-- ??-->
         <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
           <div>
-            <label class="form-label">도서 제목 *</label>
-            <input type="text" id="admin-title" placeholder="예: 어린 왕자" class="form-input">
+            <label class="form-label">?�서 ?�목 *</label>
+            <input type="text" id="admin-title" placeholder="?? ?�린 ?�자" class="form-input">
           </div>
           <div>
-            <label class="form-label">작가</label>
-            <input type="text" id="admin-author" placeholder="예: 생텍쥐페리" class="form-input">
+            <label class="form-label">?��?</label>
+            <input type="text" id="admin-author" placeholder="?? ?�텍쥐페�? class="form-input">
           </div>
           <div>
-            <label class="form-label">한 줄 소개</label>
-            <input type="text" id="admin-subtitle" placeholder="책을 소개하는 한 문장" class="form-input">
+            <label class="form-label">??�??�개</label>
+            <input type="text" id="admin-subtitle" placeholder="책을 ?�개?�는 ??문장" class="form-input">
           </div>
           <div>
-            <label class="form-label">학년 구분</label>
+            <label class="form-label">?�년 구분</label>
             <div style="display:flex;gap:6px">
               <button class="chip chip--active" data-grade-select="elementary">초등</button>
               <button class="chip" data-grade-select="middle">중등</button>
@@ -184,7 +182,7 @@
             </div>
           </div>
           <div>
-            <label class="form-label">카드 배경색</label>
+            <label class="form-label">카드 배경??/label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="color-pick color-pick--active" data-color="#3D3080" style="background:#3D3080"></button>
               <button class="color-pick" data-color="#F5D5E5" style="background:#F5D5E5"></button>
@@ -196,36 +194,36 @@
             </div>
           </div>
           <div>
-            <label class="form-label">📁 카테고리 [필수] — 복수 선택</label>
+            <label class="form-label">?�� 카테고리 [?�수] ??복수 ?�택</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap" id="admin-cat-chips"></div>
           </div>
           <div>
-            <label class="form-label">장르 태그</label>
-            <input type="text" id="admin-tags" placeholder="쉼표로 구분: 성장, 청소년, 우정" class="form-input">
+            <label class="form-label">?�르 ?�그</label>
+            <input type="text" id="admin-tags" placeholder="?�표�?구분: ?�장, �?��?? ?�정" class="form-input">
           </div>
           <div style="display:flex;gap:10px;align-items:flex-end">
             <div style="flex:1">
-              <label class="form-label">진열 순서</label>
+              <label class="form-label">진열 ?�서</label>
               <input type="number" id="admin-order" value="0" min="0" class="form-input" style="text-align:center">
             </div>
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding-bottom:10px;white-space:nowrap">
               <input type="checkbox" id="admin-featured" style="width:16px;height:16px;accent-color:var(--color-primary)">
-              <span class="form-label" style="margin:0">★ 추천 도서</span>
+              <span class="form-label" style="margin:0">??추천 ?�서</span>
             </label>
           </div>
           <div>
-            <label class="form-label">통계 기본값</label>
+            <label class="form-label">?�계 기본�?/label>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
               <div>
-                <label style="font-size:11px;color:var(--color-text-3);display:block;margin-bottom:4px">👁 조회</label>
+                <label style="font-size:11px;color:var(--color-text-3);display:block;margin-bottom:4px">?�� 조회</label>
                 <input type="number" id="admin-view-count" value="0" min="0" class="form-input" style="text-align:center;font-size:12px">
               </div>
               <div>
-                <label style="font-size:11px;color:var(--color-text-3);display:block;margin-bottom:4px">❤️ 좋아요</label>
+                <label style="font-size:11px;color:var(--color-text-3);display:block;margin-bottom:4px">?�️ 좋아??/label>
                 <input type="number" id="admin-like-count" value="0" min="0" class="form-input" style="text-align:center;font-size:12px">
               </div>
               <div>
-                <label style="font-size:11px;color:var(--color-text-3);display:block;margin-bottom:4px">💬 댓글</label>
+                <label style="font-size:11px;color:var(--color-text-3);display:block;margin-bottom:4px">?�� ?��?</label>
                 <input type="number" id="admin-comment-count" value="0" min="0" class="form-input" style="text-align:center;font-size:12px">
               </div>
             </div>
@@ -234,47 +232,47 @@
 
         <div style="display:flex;gap:8px;margin-top:16px">
           <button id="admin-cancel" class="btn-outline" style="flex:1">취소</button>
-          <button id="admin-save" class="btn-primary" style="flex:2">💾 저장하기</button>
+          <button id="admin-save" class="btn-primary" style="flex:2">?�� ?�?�하�?/button>
         </div>
 
-        <!-- 등록된 도서 목록 -->
+        <!-- ?�록???�서 목록 -->
         <div style="margin-top:24px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <strong style="font-size:13px;color:var(--color-text-2)">등록된 도서 <span id="admin-count" style="color:var(--color-primary)"></span></strong>
+            <strong style="font-size:13px;color:var(--color-text-2)">?�록???�서 <span id="admin-count" style="color:var(--color-primary)"></span></strong>
           </div>
           <div id="admin-book-list" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
 
-      <!-- ▶ 배너 탭 (admin.js가 렌더링) -->
+      <!-- ??배너 ??(admin.js가 ?�더�? -->
       <div class="admin-tab-pane" id="admin-pane-banners"></div>
 
-      <!-- ▶ 공지 탭 (admin.js가 렌더링) -->
+      <!-- ??공�? ??(admin.js가 ?�더�? -->
       <div class="admin-tab-pane" id="admin-pane-notices"></div>
 
-      <!-- ▶ 통계 탭 (admin.js가 렌더링) -->
+      <!-- ???�계 ??(admin.js가 ?�더�? -->
       <div class="admin-tab-pane" id="admin-pane-stats"></div>
 
     </div><!-- /admin-panel__body -->
   </aside>
 
-  <!-- ═══ 새 카테고리 만들기 모달 ═══ -->
+  <!-- ?�═????카테고리 만들�?모달 ?�═??-->
   <div class="modal-overlay" id="cat-modal-overlay">
     <div class="modal-box" id="cat-modal">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <strong style="font-size:16px">새 카테고리 만들기</strong>
-        <button class="admin-panel__close" id="cat-modal-close">✕</button>
+        <strong style="font-size:16px">??카테고리 만들�?/strong>
+        <button class="admin-panel__close" id="cat-modal-close">??/button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <div>
           <label class="form-label" style="display:flex;justify-content:space-between">
-            카테고리 이름 *
+            카테고리 ?�름 *
             <span id="cat-name-count" style="font-weight:400;color:var(--color-text-3)">0 / 20</span>
           </label>
-          <input type="text" id="cat-modal-name" maxlength="20" placeholder="예: 고전 문학" class="form-input">
+          <input type="text" id="cat-modal-name" maxlength="20" placeholder="?? 고전 문학" class="form-input">
         </div>
         <div>
-          <label class="form-label">대표 색상</label>
+          <label class="form-label">?�???�상</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="color-pick color-pick--active" data-cat-color="#3D3080" style="background:#3D3080"></button>
             <button class="color-pick" data-cat-color="#F5D5E5" style="background:#F5D5E5"></button>
@@ -286,7 +284,7 @@
           </div>
         </div>
         <div>
-          <label class="form-label">적용 학년 (복수)</label>
+          <label class="form-label">?�용 ?�년 (복수)</label>
           <div style="display:flex;gap:6px">
             <button class="chip chip--active" data-cat-grade="elementary">초등</button>
             <button class="chip chip--active" data-cat-grade="middle">중등</button>
@@ -294,29 +292,29 @@
           </div>
         </div>
         <div>
-          <label class="form-label">랜딩 진열 위치</label>
+          <label class="form-label">?�딩 진열 ?�치</label>
           <select id="cat-modal-position" class="form-input"></select>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:20px">
         <button id="cat-modal-cancel" class="btn-outline" style="flex:1">취소</button>
-        <button id="cat-modal-confirm" class="btn-primary" style="flex:2">✨ 카테고리 만들기</button>
+        <button id="cat-modal-confirm" class="btn-primary" style="flex:2">??카테고리 만들�?/button>
       </div>
     </div>
   </div>
 
-  <!-- 바텀 네비 (모바일) -->
+  <!-- 바�? ?�비 (모바?? -->
   <nav class="bottom-nav">
-    <a href="./index.html" class="bottom-nav__item bottom-nav__item--active"><span>🏠</span><span>홈</span></a>
-    <a href="category.html" class="bottom-nav__item"><span>📚</span><span>카테고리</span></a>
-    <a href="https://tooning.io" target="_blank" class="bottom-nav__fab">✨</a>
-    <a href="#" class="bottom-nav__item"><span>❤️</span><span>즐겨찾기</span></a>
-    <a href="#" class="bottom-nav__item"><span>👤</span><span>My</span></a>
+    <a href="./index.html" class="bottom-nav__item bottom-nav__item--active"><span>?��</span><span>??/span></a>
+    <a href="category.html" class="bottom-nav__item"><span>?��</span><span>카테고리</span></a>
+    <a href="#" class="bottom-nav__item"><span>?�️</span><span>즐겨찾기</span></a>
+    <a href="#" class="bottom-nav__item"><span>?��</span><span>My</span></a>
   </nav>
 
-  <script src="./assets/js/data.js?v=17"></script>
-  <script src="./assets/js/renderer.js?v=17"></script>
-  <script src="./assets/js/app.js?v=17"></script>
-  <script src="./assets/js/admin.js?v=17"></script>
+  <script src="./assets/js/data.js?v=18"></script>
+  <script src="./assets/js/renderer.js?v=18"></script>
+  <script src="./assets/js/app.js?v=18"></script>
+  <script src="./assets/js/admin.js?v=18"></script>
 </body>
 </html>
+

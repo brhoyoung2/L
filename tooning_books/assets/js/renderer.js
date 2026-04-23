@@ -54,7 +54,7 @@ function renderBookCard(book) {
       </div>
       <div class="book-card__info">
         <div class="book-card__title">${book.title}</div>
-        <div class="book-card__author">${book.author} · ${book.year}</div>
+        <div class="book-card__author">${book.author}</div>
         <div class="book-card__metrics">
           <span>👁 ${(book.view_count||0).toLocaleString()}</span>
           <span>❤️ ${(book.like_count||0).toLocaleString()}</span>
@@ -142,7 +142,7 @@ function renderGridCard(book, highlight) {
       </div>
       <div class="book-card__info" style="padding:0;margin-top:10px">
         <div class="book-card__title" style="font-size:13px">${hl(book.title)}</div>
-        <div class="book-card__author">${hl(book.author)} · ${book.year}</div>
+        <div class="book-card__author">${hl(book.author)}</div>
         <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
           ${book.genre_tags.slice(0,2).map(t => `<span class="chip" style="padding:2px 8px;font-size:10px">#${t}</span>`).join('')}
         </div>

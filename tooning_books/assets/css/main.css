@@ -105,6 +105,9 @@
 .admin-mode-toggle--active .admin-mode-toggle__dot { background: #7CFC00; }
 .admin-mode-toggle__label { white-space: nowrap; }
 
+/* 로고 세로 정렬 */
+a.tooning-logo { display: flex; align-items: center; }
+
 /* 헤더 프로필 아바타 */
 .header-profile {
   width: 36px;
@@ -227,7 +230,7 @@
   background: var(--color-card);
   border-radius: var(--radius-2xl);
   overflow: hidden;
-  min-height: 340px;
+  height: 320px;
   position: relative;
   box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
@@ -236,6 +239,7 @@
   padding: 52px 72px;
   gap: 40px;
   align-items: center;
+  height: 100%;
   animation: heroFadeIn 0.4s ease;
 }
 .hero__slide--active { display: flex; }
@@ -407,7 +411,7 @@
 
 .book-scroll {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   overflow-x: auto;
   padding-bottom: 16px;
   scroll-snap-type: x mandatory;
@@ -1339,12 +1343,12 @@
 
   /* 히어로 — 풀블리드 이미지 + 텍스트 오버레이 */
   .hero-wrap { padding: 0 12px; margin: 12px auto; }
-  .hero { border-radius: var(--radius-xl); overflow: hidden; touch-action: pan-y; }
+  .hero { border-radius: var(--radius-xl); overflow: hidden; touch-action: pan-y; height: 260px; }
   .hero__slide {
-    padding: 28px 20px 28px 24px;
+    padding: 0;
     flex-direction: column;
     gap: 0;
-    min-height: 300px;
+    height: 100%;
     align-items: flex-start;
     justify-content: flex-end;
     position: relative;
@@ -1355,15 +1359,17 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(to top, rgba(0,0,0,0.68) 35%, rgba(0,0,0,0.05) 80%);
+    background: linear-gradient(to top, rgba(0,0,0,0.72) 40%, rgba(0,0,0,0.0) 75%);
     border-radius: inherit;
     pointer-events: none;
   }
   .hero__text {
-    position: relative;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 2;
-    padding-bottom: 0;
-    width: 100%;
+    padding: 20px 24px 28px;
   }
   /* 텍스트 색상 강제 흰색 (이미지 위 오버레이) */
   .hero__slide .hero__title   { color: #fff; font-size: 26px; line-height: 1.25; letter-spacing: -0.3px; }
@@ -1397,7 +1403,7 @@
   .header-profile { width: 32px; height: 32px; font-size: 13px; }
 
   /* 도서 카드 스크롤 */
-  .book-scroll { gap: 12px; padding: 0 16px 12px; }
+  .book-scroll { gap: 16px; padding: 0 16px 12px; }
   .book-card { width: 150px; }
   .book-card__cover { height: 190px; }
 

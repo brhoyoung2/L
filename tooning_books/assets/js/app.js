@@ -104,6 +104,13 @@
       return;
     }
 
+    /* 상단 네비 활성 탭 */
+    const navItem = e.target.closest('.site-nav__item');
+    if (navItem) {
+      document.querySelectorAll('.site-nav__item').forEach(n => n.classList.remove('site-nav__item--active'));
+      navItem.classList.add('site-nav__item--active');
+    }
+
     /* 학년 탭 */
     const tab = e.target.closest('.grade-tab');
     if (tab) {
@@ -260,13 +267,9 @@
       return `
         <div class="hero__slide${i === 0 ? ' hero__slide--active' : ''} hero__slide--${dark ? 'dark' : 'light'}" id="hero-slide-${i}" style="background:${bgColor}">
           <div class="hero__text">
-            <span class="hero__tag">${b.categories?.length ? getCategoryLabel(b.categories, categories) : '📢 배너'}</span>
             <h1 class="hero__title">${b.title}</h1>
             <p class="hero__sub">${b.subtitle}</p>
             ${metaParts ? `<div class="hero__meta">${metaParts}</div>` : ''}
-            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-              ${b.book_id ? `<button class="hero__cta" id="hero-cta-${i}" data-book-id="${b.book_id}">지금 시작 →</button>` : `<a class="hero__cta" href="https://tooning.io" target="_blank" style="text-decoration:none">지금 시작 →</a>`}
-            </div>
           </div>
           <div class="hero__cover">
             ${heroImg}
