@@ -31,10 +31,6 @@ function isColorDark(hex) {
 function renderBookCard(book) {
   const isDark = isColorDark(book.cover_color);
   const textColor = isDark ? '#fff' : '#2A1F5C';
-  const badges = [];
-  if (book.is_featured) badges.push('<span class="badge badge--featured">추천</span>');
-  if (book.categories.includes('cat_new')) badges.push('<span class="badge badge--new">NEW</span>');
-  if (book.categories.includes('cat_webtoon')) badges.push('<span class="badge badge--webtoon">웹툰</span>');
 
   const coverImg = book.cover_data_url || book.image_url || null;
   const coverStyle = coverImg
@@ -45,7 +41,6 @@ function renderBookCard(book) {
 
   return `
     <div class="book-card" data-action="open-book" data-book-id="${book.book_id}">
-      ${badges.length ? `<div class="book-card__badges">${badges.join('')}</div>` : ''}
       <div class="book-card__cover" style="${coverStyle}">
         ${!coverImg ? renderDeco(book.cover_deco, book.cover_color) : ''}
         ${!coverImg ? `<div class="book-card__cover-author" style="color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>` : ''}
@@ -125,11 +120,6 @@ function parseNum(v) { return Number(v) || 0; }
 function renderGridCard(book, highlight) {
   const isDark = isColorDark(book.cover_color);
   const textColor = isDark ? '#fff' : '#2A1F5C';
-  const badges = [];
-  if (book.is_featured) badges.push('<span class="badge badge--featured">추천</span>');
-  if (book.categories.includes('cat_new')) badges.push('<span class="badge badge--new">NEW</span>');
-  if (book.categories.includes('cat_webtoon')) badges.push('<span class="badge badge--webtoon">웹툰</span>');
-
   const hl = (text) => {
     if (!highlight) return text;
     const re = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
@@ -143,7 +133,6 @@ function renderGridCard(book, highlight) {
 
   return `
     <div class="book-card book-card--grid" data-action="open-book" data-book-id="${book.book_id}">
-      ${badges.length ? `<div class="book-card__badges">${badges.join('')}</div>` : ''}
       <div class="book-card__cover" style="${coverBg};width:100%;height:0;padding-bottom:133%;position:relative;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card)">
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
           ${!gridCoverImg ? renderDeco(book.cover_deco, book.cover_color) : ''}
