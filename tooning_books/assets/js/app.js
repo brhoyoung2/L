@@ -165,7 +165,7 @@
     document.getElementById('admin-overlay')?.classList.remove('admin-overlay--open');
   }
 
-  if (isAdmin) openAdminPanel();
+  if (params.get('admin') === 'true') openAdminPanel();
 
 
   /* ── 검색 (데스크톱 + 모바일) ── */

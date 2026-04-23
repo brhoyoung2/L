@@ -32,7 +32,7 @@ function renderBookCard(book) {
   const isDark = isColorDark(book.cover_color);
   const textColor = isDark ? '#fff' : '#2A1F5C';
   const badges = [];
-  if (book.is_featured) badges.push('<span class="badge badge--featured">★ 추천</span>');
+  if (book.is_featured) badges.push('<span class="badge badge--featured">추천</span>');
   if (book.categories.includes('cat_new')) badges.push('<span class="badge badge--new">NEW</span>');
   if (book.categories.includes('cat_webtoon')) badges.push('<span class="badge badge--webtoon">웹툰</span>');
 
@@ -48,8 +48,8 @@ function renderBookCard(book) {
       <div class="book-card__cover" style="${coverStyle}">
         ${!coverImg ? renderDeco(book.cover_deco, book.cover_color) : ''}
         ${badges.length ? `<div style="position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
-        <div class="book-card__cover-author" style="color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>
-        <div class="book-card__cover-title" style="color:${textColor}">${book.title}</div>
+        ${!coverImg ? `<div class="book-card__cover-author" style="color:${isDark ? 'rgba(255,255,255,0.7)' : 'rgba(42,31,92,0.6)'}">${book.author}</div>` : ''}
+        ${!coverImg ? `<div class="book-card__cover-title" style="color:${textColor}">${book.title}</div>` : ''}
       </div>
       <div class="book-card__info">
         <div class="book-card__title">${book.title}</div>
@@ -126,7 +126,7 @@ function renderGridCard(book, highlight) {
   const isDark = isColorDark(book.cover_color);
   const textColor = isDark ? '#fff' : '#2A1F5C';
   const badges = [];
-  if (book.is_featured) badges.push('<span class="badge badge--featured">★ 추천</span>');
+  if (book.is_featured) badges.push('<span class="badge badge--featured">추천</span>');
   if (book.categories.includes('cat_new')) badges.push('<span class="badge badge--new">NEW</span>');
   if (book.categories.includes('cat_webtoon')) badges.push('<span class="badge badge--webtoon">웹툰</span>');
 
