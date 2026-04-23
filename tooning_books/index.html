@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="cache-control" content="no-cache">
   <title>TOONING BOOKS — 웹툰으로 만드는 독서 플랫폼</title>
-  <link rel="stylesheet" href="./assets/css/tokens.css">
-  <link rel="stylesheet" href="./assets/css/components.css">
-  <link rel="stylesheet" href="./assets/css/main.css">
+  <link rel="stylesheet" href="./assets/css/tokens.css?v=3">
+  <link rel="stylesheet" href="./assets/css/components.css?v=3">
+  <link rel="stylesheet" href="./assets/css/main.css?v=3">
 </head>
 <body>
 
@@ -125,29 +125,43 @@
   <!-- ═══ ADMIN OVERLAY & PANEL ═══ -->
   <div class="admin-overlay" id="admin-overlay"></div>
   <aside class="admin-panel" id="admin-panel">
+
+    <!-- 헤더 -->
     <div class="admin-panel__header">
       <div>
-        <div style="font-size:11px;color:var(--color-text-3);letter-spacing:1px;margin-bottom:4px">⚙️ ADMIN DASHBOARD</div>
+        <div style="font-size:10px;color:var(--color-text-3);letter-spacing:1.5px;margin-bottom:4px;text-transform:uppercase">⚙️ Admin Dashboard</div>
         <div class="admin-panel__title">관리자 패널</div>
       </div>
       <button class="admin-panel__close" id="admin-close-btn">✕</button>
     </div>
 
-    <div style="display:flex;border-bottom:1px solid var(--color-border)">
-      <button class="site-nav__item site-nav__item--active" data-admin-tab="books" style="flex:1;text-align:center;border:none;background:none" id="admin-tab-books">도서</button>
-      <button class="site-nav__item" data-admin-tab="banners" style="flex:1;text-align:center;border:none;background:none">배너</button>
-      <button class="site-nav__item" data-admin-tab="notices" style="flex:1;text-align:center;border:none;background:none">공지</button>
+    <!-- 탭 -->
+    <div class="admin-tabs">
+      <button class="admin-tab admin-tab--active" data-admin-tab="books">도서 <span class="admin-tab__badge" id="tab-badge-books"></span></button>
+      <button class="admin-tab" data-admin-tab="banners">배너</button>
+      <button class="admin-tab" data-admin-tab="notices">공지</button>
+      <button class="admin-tab" data-admin-tab="stats">통계</button>
     </div>
 
+    <!-- 패널 바디 -->
     <div class="admin-panel__body">
-      <!-- 도서 추가 폼 -->
-      <div style="background:var(--color-chip);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <strong style="font-size:14px">+ 새 도서 등록</strong>
-          <span style="font-size:10px;color:var(--color-text-3);background:var(--color-edit-bg);padding:2px 8px;border-radius:var(--radius-pill);border:1px solid var(--color-edit-border)">v0.3 로컬 저장</span>
+
+      <!-- ▶ 도서 탭 -->
+      <div class="admin-tab-pane admin-tab-pane--active" id="admin-pane-books">
+
+        <!-- 표지 드롭존 -->
+        <div class="admin-dropzone" id="admin-dropzone" title="클릭하여 이미지 선택">
+          <div id="admin-dropzone-preview" class="admin-dropzone__preview" style="display:none"></div>
+          <div class="admin-dropzone__placeholder" id="admin-dropzone-placeholder">
+            <span style="font-size:28px">📷</span>
+            <span style="font-size:12px;color:var(--color-text-3)">표지 이미지 드롭 또는 클릭</span>
+            <span style="font-size:11px;color:var(--color-text-3)">JPG/PNG · 최대 5MB</span>
+          </div>
+          <input type="file" id="admin-cover-file" accept="image/jpeg,image/png" style="display:none">
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:10px">
+        <!-- 폼 -->
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
           <div>
             <label class="form-label">도서 제목 *</label>
             <input type="text" id="admin-title" placeholder="예: 어린 왕자" class="form-input">
@@ -181,8 +195,22 @@
             </div>
           </div>
           <div>
-            <label class="form-label">카테고리 (복수 선택)</label>
+            <label class="form-label">📁 카테고리 [필수] — 복수 선택</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap" id="admin-cat-chips"></div>
+          </div>
+          <div>
+            <label class="form-label">장르 태그</label>
+            <input type="text" id="admin-tags" placeholder="쉼표로 구분: 성장, 청소년, 우정" class="form-input">
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-end">
+            <div style="flex:1">
+              <label class="form-label">진열 순서</label>
+              <input type="number" id="admin-order" value="0" min="0" class="form-input" style="text-align:center">
+            </div>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding-bottom:10px;white-space:nowrap">
+              <input type="checkbox" id="admin-featured" style="width:16px;height:16px;accent-color:var(--color-primary)">
+              <span class="form-label" style="margin:0">★ 추천 도서</span>
+            </label>
           </div>
         </div>
 
@@ -190,17 +218,92 @@
           <button id="admin-cancel" class="btn-outline" style="flex:1">취소</button>
           <button id="admin-save" class="btn-primary" style="flex:2">💾 저장하기</button>
         </div>
+
+        <!-- 등록된 도서 목록 -->
+        <div style="margin-top:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <strong style="font-size:13px;color:var(--color-text-2)">등록된 도서 <span id="admin-count" style="color:var(--color-primary)"></span></strong>
+          </div>
+          <div id="admin-book-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
       </div>
 
-      <!-- 등록된 도서 목록 -->
-      <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <strong style="font-size:13px;color:var(--color-text-2)">등록된 도서 <span id="admin-count" style="color:var(--color-primary)"></span></strong>
+      <!-- ▶ 배너 탭 -->
+      <div class="admin-tab-pane" id="admin-pane-banners">
+        <div class="admin-coming-soon">
+          <span style="font-size:40px">🎨</span>
+          <strong>배너 관리</strong>
+          <span style="color:var(--color-text-3);font-size:13px">v0.4에서 활성화됩니다</span>
         </div>
-        <div id="admin-book-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- ▶ 공지 탭 -->
+      <div class="admin-tab-pane" id="admin-pane-notices">
+        <div class="admin-coming-soon">
+          <span style="font-size:40px">📢</span>
+          <strong>공지 관리</strong>
+          <span style="color:var(--color-text-3);font-size:13px">v0.4에서 활성화됩니다</span>
+        </div>
+      </div>
+
+      <!-- ▶ 통계 탭 -->
+      <div class="admin-tab-pane" id="admin-pane-stats">
+        <div class="admin-coming-soon">
+          <span style="font-size:40px">📊</span>
+          <strong>통계 대시보드</strong>
+          <span style="color:var(--color-text-3);font-size:13px">v0.4에서 활성화됩니다</span>
+        </div>
+      </div>
+
+    </div><!-- /admin-panel__body -->
+  </aside>
+
+  <!-- ═══ 새 카테고리 만들기 모달 ═══ -->
+  <div class="modal-overlay" id="cat-modal-overlay">
+    <div class="modal-box" id="cat-modal">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <strong style="font-size:16px">새 카테고리 만들기</strong>
+        <button class="admin-panel__close" id="cat-modal-close">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label class="form-label" style="display:flex;justify-content:space-between">
+            카테고리 이름 *
+            <span id="cat-name-count" style="font-weight:400;color:var(--color-text-3)">0 / 20</span>
+          </label>
+          <input type="text" id="cat-modal-name" maxlength="20" placeholder="예: 고전 문학" class="form-input">
+        </div>
+        <div>
+          <label class="form-label">대표 색상</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="color-pick color-pick--active" data-cat-color="#3D3080" style="background:#3D3080"></button>
+            <button class="color-pick" data-cat-color="#F5D5E5" style="background:#F5D5E5"></button>
+            <button class="color-pick" data-cat-color="#FFD8B0" style="background:#FFD8B0"></button>
+            <button class="color-pick" data-cat-color="#B8DFD5" style="background:#B8DFD5"></button>
+            <button class="color-pick" data-cat-color="#DEC8F0" style="background:#DEC8F0"></button>
+            <button class="color-pick" data-cat-color="#F8B6A0" style="background:#F8B6A0"></button>
+            <button class="color-pick" data-cat-color="#FF6B35" style="background:#FF6B35"></button>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">적용 학년 (복수)</label>
+          <div style="display:flex;gap:6px">
+            <button class="chip chip--active" data-cat-grade="elementary">초등</button>
+            <button class="chip chip--active" data-cat-grade="middle">중등</button>
+            <button class="chip chip--active" data-cat-grade="high">고등</button>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">랜딩 진열 위치</label>
+          <select id="cat-modal-position" class="form-input"></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:20px">
+        <button id="cat-modal-cancel" class="btn-outline" style="flex:1">취소</button>
+        <button id="cat-modal-confirm" class="btn-primary" style="flex:2">✨ 카테고리 만들기</button>
       </div>
     </div>
-  </aside>
+  </div>
 
   <!-- 바텀 네비 (모바일) -->
   <nav class="bottom-nav">
@@ -211,9 +314,9 @@
     <a href="#" class="bottom-nav__item"><span>👤</span><span>My</span></a>
   </nav>
 
-  <script src="./assets/js/data.js"></script>
-  <script src="./assets/js/renderer.js"></script>
-  <script src="./assets/js/app.js"></script>
-  <script src="./assets/js/admin.js"></script>
+  <script src="./assets/js/data.js?v=3"></script>
+  <script src="./assets/js/renderer.js?v=3"></script>
+  <script src="./assets/js/app.js?v=3"></script>
+  <script src="./assets/js/admin.js?v=3"></script>
 </body>
 </html>

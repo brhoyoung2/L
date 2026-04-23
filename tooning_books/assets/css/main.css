@@ -437,6 +437,111 @@
 .admin-panel__close:hover { background: var(--color-border); }
 .admin-panel__body { flex: 1; overflow-y: auto; padding: 20px; }
 
+/* Admin tabs */
+.admin-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.admin-tab {
+  flex: 1;
+  padding: 12px 4px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.admin-tab--active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+.admin-tab__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.admin-tab-pane { display: none; }
+.admin-tab-pane--active { display: block; }
+.admin-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+/* Admin dropzone */
+.admin-dropzone {
+  width: 100%;
+  aspect-ratio: 2/3;
+  max-height: 180px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--color-chip);
+}
+.admin-dropzone:hover, .admin-dropzone--over { border-color: var(--color-primary); background: var(--color-primary-bg); }
+.admin-dropzone__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.admin-dropzone__preview {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Admin chip dashed */
+.chip--dashed { border-style: dashed !important; color: var(--color-text-3); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay--open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--color-card);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  width: min(420px, 90vw);
+  box-shadow: var(--shadow-popup);
+  transform: translateY(8px);
+  transition: transform 0.25s;
+}
+.modal-overlay--open .modal-box { transform: translateY(0); }
+
 
 /* ===== DETAIL PAGE ===== */
 .breadcrumb {
