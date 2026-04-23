@@ -62,13 +62,6 @@
   document.getElementById('hero-title').textContent = category.name;
 
   const catBooks = TB.getBooksInCategory(allBooks, catId);
-  const totalViews  = catBooks.reduce((s, b) => s + b.view_count, 0);
-  const totalLikes  = catBooks.reduce((s, b) => s + b.like_count, 0);
-
-  document.getElementById('hero-stats').innerHTML = `
-    <div class="cat-stat"><span>📚</span> ${catBooks.length}권</div>
-    <div class="cat-stat"><span>👁</span> ${totalViews.toLocaleString()}</div>
-    <div class="cat-stat"><span>❤️</span> ${totalLikes.toLocaleString()}</div>`;
 
   /* 학년 탭 (히어로용) */
   const grades = [
