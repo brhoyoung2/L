@@ -155,23 +155,49 @@ function castWebtoon(row) {
   };
 }
 
+/* ── 시트 book_id 번호 → 이미지 경로 자동 매핑 ── */
+const TITLE_IMAGE_MAP = {
+  '왕자와 거지':    './images/book_01.png',
+  '홍길동전':      './images/book_02.png',
+  '전우치전':      './images/book_03.png',
+  '박씨전':        './images/book_04.png',
+  '로빈슨 크루소':  './images/book_05.png',
+  '크리스마스 선물': './images/book_06.png',
+};
+
+function applyImageMap(book) {
+  if (book.cover_data_url || book.image_url) return book;
+  /* book_01, book_02 … book_06 형식 ID → 번호 그대로 매핑 */
+  const idMatch = String(book.book_id).match(/^book_(\d+)$/);
+  if (idMatch) {
+    const num = String(Number(idMatch[1])).padStart(2, '0');
+    return { ...book, image_url: `./images/book_${num}.png` };
+  }
+  /* 로컬 도서: 제목으로 매핑 */
+  if (TITLE_IMAGE_MAP[book.title]) {
+    return { ...book, image_url: TITLE_IMAGE_MAP[book.title] };
+  }
+  return book;
+}
+
 /* ── 공개 API ── */
 async function getBooks() {
   const raw = await fetchData('books');
-  const sheetBooks = raw.map(castBook).filter(b => !b.is_deleted && b.is_published);
+  const sheetBooks = raw.map(castBook).filter(b => !b.is_deleted && b.is_published).map(applyImageMap);
   try {
     const localRaw = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
-    const localBooks = localRaw.map(castBook).filter(b => !b.is_deleted && b.is_published);
+    const localBooks = localRaw.map(castBook).filter(b => !b.is_deleted && b.is_published).map(applyImageMap);
     return [...sheetBooks, ...localBooks];
   } catch { return sheetBooks; }
 }
 
 async function getCategories() {
   const raw = await fetchData('categories');
-  return raw
-    .map(castCategory)
-    .filter(c => !c.is_deleted)
-    .sort((a, b) => a.display_order - b.display_order);
+  const sheetCats = raw.map(castCategory).filter(c => !c.is_deleted).sort((a, b) => a.display_order - b.display_order);
+  try {
+    const localCats = JSON.parse(localStorage.getItem('tb_local_cats') || '[]').filter(c => !c.is_deleted);
+    return [...sheetCats, ...localCats];
+  } catch { return sheetCats; }
 }
 
 async function getWebtoons(bookId) {

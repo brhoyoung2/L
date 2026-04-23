@@ -60,11 +60,7 @@
 
   /* ── 섹션별 도서 렌더링 ── */
   const mainContent = document.getElementById('main-content');
-  const sectionsHtml = categories.map(cat => {
-    const catBooks = TB.getBooksInCategory(books, cat.category_id);
-    return TB.renderBookSection(cat, catBooks);
-  }).join('');
-  mainContent.innerHTML = sectionsHtml || '<div class="loading-state"><p>표시할 도서가 없습니다.</p></div>';
+  mainContent.innerHTML = buildSectionsHtml(books, categories);
 
   /* ── 웹툰 섹션 ── */
   const wtScroll = document.getElementById('webtoon-scroll');
@@ -82,11 +78,7 @@
       const [newBooks, newCats] = await Promise.all([TB.getBooks(), TB.getCategories()]);
       books = newBooks;
       categories = newCats;
-      const sectionsHtml = newCats.map(cat => {
-        const catBooks = TB.getBooksInCategory(newBooks, cat.category_id);
-        return TB.renderBookSection(cat, catBooks);
-      }).join('');
-      mainContent.innerHTML = sectionsHtml || '<div class="loading-state"><p>표시할 도서가 없습니다.</p></div>';
+      mainContent.innerHTML = buildSectionsHtml(newBooks, newCats);
     } catch(e) { console.error('섹션 새로고침 실패', e); }
   };
 
@@ -196,6 +188,33 @@
   window.addEventListener('resize', () => {
     if (mobileBar) mobileBar.style.display = window.innerWidth <= 767 ? 'block' : 'none';
   });
+
+  /* ── 섹션 HTML 빌더 (카테고리 + 미분류 로컬 도서 포함) ── */
+  function buildSectionsHtml(allBooks, allCats) {
+    const coveredIds = new Set();
+    const catHtml = allCats.map(cat => {
+      const catBooks = TB.getBooksInCategory(allBooks, cat.category_id);
+      catBooks.forEach(b => coveredIds.add(b.book_id));
+      return TB.renderBookSection(cat, catBooks);
+    }).join('');
+
+    const uncategorized = allBooks.filter(b =>
+      String(b.book_id).startsWith('local_') && !coveredIds.has(b.book_id)
+    );
+
+    const fallbackHtml = uncategorized.length
+      ? `<section class="book-section" id="section-local-new">
+          <div class="container">
+            <div class="section-header">
+              <div><h2 class="section-header__title">새로 추가된 도서</h2></div>
+            </div>
+            <div class="book-scroll">${uncategorized.map(renderBookCard).join('')}</div>
+          </div>
+        </section>`
+      : '';
+
+    return (fallbackHtml + catHtml) || '<div class="loading-state"><p>표시할 도서가 없습니다.</p></div>';
+  }
 
   /* ── 히어로 슬라이더 ── */
   let currentSlide = 0;

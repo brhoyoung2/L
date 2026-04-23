@@ -107,8 +107,9 @@
     cover.style.color = isColorDark(editState.cover_color) ? '#fff' : '#2A1F5C';
 
     const inner = document.getElementById('detail-cover-inner');
-    if (editState.cover_data_url) {
-      inner.innerHTML = `<img src="${editState.cover_data_url}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;z-index:1">`;
+    const coverSrc = editState.cover_data_url || book.image_url || null;
+    if (coverSrc) {
+      inner.innerHTML = `<img src="${coverSrc}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;z-index:1">`;
     } else {
       inner.innerHTML = renderCoverDeco(book) + '<span style="font-size:80px;z-index:1;position:relative">📚</span>';
     }

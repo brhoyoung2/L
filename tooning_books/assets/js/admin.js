@@ -77,6 +77,8 @@
     const cats = Array.from(document.querySelectorAll('[data-cat-select].chip--active'))
       .map(c => c.dataset.catSelect).join(',');
 
+    if (!cats) { alert('카테고리를 1개 이상 선택하세요.'); return; }
+
     const saved  = JSON.parse(localStorage.getItem('tb_local_books') || '[]');
     const isEdit = editIdx >= 0;
     const prev   = isEdit ? saved[editIdx] : null;
