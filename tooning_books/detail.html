@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="cache-control" content="no-cache">
-  <title>?�서 ?�세 ??TOONING BOOKS</title>
-  <link rel="stylesheet" href="./assets/css/tokens.css?v=19">
-  <link rel="stylesheet" href="./assets/css/components.css?v=19">
-  <link rel="stylesheet" href="./assets/css/main.css?v=19">
+  <title>도서 상세 — TOONING BOOKS</title>
+  <link rel="stylesheet" href="./assets/css/tokens.css?v=20">
+  <link rel="stylesheet" href="./assets/css/components.css?v=20">
+  <link rel="stylesheet" href="./assets/css/main.css?v=20">
   <link rel="icon" type="image/png" href="./images/favicon.png">
 </head>
 <body>
 
-  <!-- ?�═??HEADER ?�═??-->
+  <!-- ═══ HEADER ═══ -->
   <header class="site-header" id="site-header">
     <div class="container">
       <a href="./index.html" class="tooning-logo">
@@ -20,112 +20,113 @@
       </a>
       <div style="flex:1"></div>
       <div class="site-header__actions">
-        <span id="admin-badge" class="admin-badge" style="display:none">?�️ 관리자 모드</span>
-        <button class="btn-icon" id="admin-toggle-btn" title="관리자 ?�널">?�️</button>
-        <button class="btn-icon" title="?�림">?��</button>
-        <button class="btn-icon" title="?�이브러�?>?��</button>
-        <button class="btn-icon" title="?�로??>?��</button>
+        <span id="admin-badge" class="admin-badge" style="display:none">⚙️ 관리자 모드</span>
+        <button class="btn-icon" id="admin-toggle-btn" title="관리자 패널">⚙️</button>
+        <button class="btn-icon" title="알림">🔔</button>
+        <button class="btn-icon" title="라이브러리">📚</button>
+        <button class="btn-icon" title="프로필">👤</button>
       </div>
     </div>
   </header>
 
-  <!-- ?�═??EDIT 모드: ?�집 ?�태 배너 ?�═??-->
+  <!-- ═══ EDIT 모드: 편집 상태 배너 ═══ -->
   <div class="edit-banner" id="edit-banner" style="display:none">
     <div class="container">
       <div class="edit-banner__left">
-        <span>?�️</span>
-        <span>?�집 중인 ?�이지</span>
-        <span style="font-weight:400;color:var(--color-edit-text);opacity:0.7;font-size:13px">변경사??? ?�??버튼???�러??반영?�니??/span>
+        <span>✏️</span>
+        <span>편집 중인 페이지</span>
+        <span style="font-weight:400;color:var(--color-edit-text);opacity:0.7;font-size:13px">변경사항은 저장 버튼을 눌러야 반영됩니다</span>
       </div>
       <div class="edit-banner__right">
-        <span class="edit-status" id="edit-status">???�동 ?�?�됨 · 방금 ??/span>
+        <span class="edit-status" id="edit-status">⊙ 자동 저장됨 · 방금 전</span>
         <button class="btn-outline" id="preview-btn" style="padding:6px 14px;font-size:13px">미리보기</button>
-        <button class="btn-primary" id="publish-btn" style="padding:6px 16px;font-size:13px">???�????공개</button>
+        <button class="btn-primary" id="publish-btn" style="padding:6px 16px;font-size:13px">→ 저장 후 공개</button>
       </div>
     </div>
   </div>
 
-  <!-- ?�═??EDIT 모드: ?�디???�바 ?�═??-->
+  <!-- ═══ EDIT 모드: 에디터 툴바 ═══ -->
   <div class="editor-toolbar" id="editor-toolbar" style="display:none">
     <div class="container">
-      <button class="toolbar-btn" title="?�락 ?��???>¶ <span style="font-size:10px">??/span></button>
-      <button class="toolbar-btn" title="?�스???�기">A <span style="font-size:10px">??/span></button>
+      <button class="toolbar-btn" title="단락 스타일">¶ <span style="font-size:10px">▾</span></button>
+      <button class="toolbar-btn" title="텍스트 크기">A <span style="font-size:10px">▾</span></button>
       <div class="editor-toolbar__sep"></div>
       <button class="toolbar-btn toolbar-btn--active" title="굵게"><b>B</b></button>
-      <button class="toolbar-btn" title="기울??><i>I</i></button>
+      <button class="toolbar-btn" title="기울임"><i>I</i></button>
       <button class="toolbar-btn" title="밑줄"><u>U</u></button>
-      <button class="toolbar-btn" title="취소??><s>S</s></button>
+      <button class="toolbar-btn" title="취소선"><s>S</s></button>
       <div class="editor-toolbar__sep"></div>
-      <button class="toolbar-btn" title="?�스???�상">A̲ <span style="font-size:10px">??/span></button>
-      <button class="toolbar-btn" title="배경 ?�상">??<span style="font-size:10px">??/span></button>
+      <button class="toolbar-btn" title="텍스트 색상">A̲ <span style="font-size:10px">▾</span></button>
+      <button class="toolbar-btn" title="배경 색상">▣ <span style="font-size:10px">▾</span></button>
       <div class="editor-toolbar__sep"></div>
-      <button class="toolbar-btn" title="?��?지·?�상·링크 ?�입">+ <span style="font-size:10px">??/span></button>
+      <button class="toolbar-btn" title="이미지·영상·링크 삽입">+ <span style="font-size:10px">▾</span></button>
       <div class="editor-toolbar__sep"></div>
-      <button class="toolbar-btn" title="?�행 취소">??/button>
-      <button class="toolbar-btn" title="?�시 ?�행">??/button>
+      <button class="toolbar-btn" title="실행 취소">↩</button>
+      <button class="toolbar-btn" title="다시 실행">↪</button>
       <div style="flex:1"></div>
-      <button class="toolbar-btn" title="?��?�? style="color:var(--color-text-3)">?</button>
+      <button class="toolbar-btn" title="도움말" style="color:var(--color-text-3)">?</button>
     </div>
   </div>
 
-  <!-- ?�═??NAV ?�═??-->
+  <!-- ═══ NAV ═══ -->
   <nav class="site-nav">
     <div class="container">
-      <a class="site-nav__item" href="./index.html">??/a>
-      <a class="site-nav__item" href="category.html?id=cat_popular">?�기?�서</a>
+      <a class="site-nav__item" href="./index.html">홈</a>
+      <a class="site-nav__item" href="category.html?id=cat_popular">인기도서</a>
       <a class="site-nav__item" href="category.html">카테고리</a>
-      <a class="site-nav__item" href="event.html">?�벤??/a>
+      <a class="site-nav__item" href="event.html">이벤트</a>
+      <a class="site-nav__item" href="https://tooning.io" target="_blank">웹툰만들기</a>
     </div>
   </nav>
 
-  <!-- ?�═??MAIN ?�═??-->
+  <!-- ═══ MAIN ═══ -->
   <main>
     <div class="container">
 
-      <!-- 브레?�크??-->
+      <!-- 브레드크럼 -->
       <nav class="breadcrumb" id="breadcrumb">
-        <a href="./index.html">??/a>
-        <span class="breadcrumb__sep">??/span>
-        <a href="category.html?id=cat_popular" id="breadcrumb-cat">?�기 ?�서</a>
-        <span class="breadcrumb__sep">??/span>
-        <span id="breadcrumb-title">로딩 �?..</span>
+        <a href="./index.html">홈</a>
+        <span class="breadcrumb__sep">›</span>
+        <a href="category.html?id=cat_popular" id="breadcrumb-cat">인기 도서</a>
+        <span class="breadcrumb__sep">›</span>
+        <span id="breadcrumb-title">로딩 중...</span>
       </nav>
 
-      <!-- 로딩 ?�태 -->
+      <!-- 로딩 상태 -->
       <div class="loading-state" id="loading-state">
-        <div style="font-size:40px;margin-bottom:16px">?��</div>
-        <p>?�서 ?�보�?불러?�는 �?..</p>
+        <div style="font-size:40px;margin-bottom:16px">📖</div>
+        <p>도서 정보를 불러오는 중...</p>
       </div>
 
-      <!-- ?�서 ?�어�?(JS가 채�?) -->
+      <!-- 도서 히어로 (JS가 채움) -->
       <div id="detail-hero" style="display:none">
 
-        <!-- �??�어�?-->
+        <!-- 책 히어로 -->
         <div class="detail-hero">
           <div>
-            <!-- ?��? -->
+            <!-- 표지 -->
             <div class="detail-cover" id="detail-cover">
-              <div id="detail-cover-inner" style="font-size:80px;z-index:1">?��</div>
+              <div id="detail-cover-inner" style="font-size:80px;z-index:1">📚</div>
             </div>
 
-            <!-- ?�계 (?��? ?�래, ?�게) -->
+            <!-- 통계 (표지 아래, 작게) -->
             <div class="detail-cover-stats" id="detail-stats">
-              <span>?�� <strong id="stat-views">0</strong></span>
-              <span>?�️ <strong id="stat-likes">0</strong></span>
-              <span>?�� <strong id="stat-comments">0</strong></span>
-              <span>?�� <strong id="stat-webtoons">0</strong></span>
+              <span>👁 <strong id="stat-views">0</strong></span>
+              <span>❤️ <strong id="stat-likes">0</strong></span>
+              <span>💬 <strong id="stat-comments">0</strong></span>
+              <span>🎨 <strong id="stat-webtoons">0</strong></span>
             </div>
           </div>
 
           <div class="detail-info">
-            <!-- ?�르 ?�그 -->
+            <!-- 장르 태그 -->
             <div class="detail-tags" id="detail-tags"></div>
 
-            <!-- ?�목 -->
+            <!-- 제목 -->
             <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
-              <h1 class="detail-title" id="detail-title">??/h1>
-              <!-- EDIT ?�용 -->
-              <button id="title-edit-btn" class="edit-block-btn" style="display:none;margin-top:8px;flex-shrink:0" title="?�목 ?�집">??/button>
+              <h1 class="detail-title" id="detail-title">—</h1>
+              <!-- EDIT 전용 -->
+              <button id="title-edit-btn" class="edit-block-btn" style="display:none;margin-top:8px;flex-shrink:0" title="제목 편집">✎</button>
             </div>
 
             <p class="detail-author" id="detail-author"></p>
@@ -134,14 +135,15 @@
             <!-- CTA 버튼 -->
             <div class="detail-actions" id="detail-actions">
               <button class="btn-cta-large" id="make-webtoon-btn">
-                ????책으�??�툰 만들�?              </button>
-              <button class="btn-action" id="like-btn">?�️ <span id="like-count">0</span></button>
-              <button class="btn-action" id="share-btn">?�� 공유</button>
+                ✨ 이 책으로 웹툰 만들기
+              </button>
+              <button class="btn-action" id="like-btn">❤️ <span id="like-count">0</span></button>
+              <button class="btn-action" id="share-btn">📤 공유</button>
 
-              <!-- EDIT 모드 버튼??(기본 ?��?) -->
-              <button class="btn-action" id="edit-make-btn" style="display:none">???�툰 만들�?CTA</button>
-              <button class="btn-action" id="edit-like-btn" style="display:none">?�️ 좋아??버튼</button>
-              <button class="btn-action" id="edit-delete-btn" style="display:none;color:var(--color-danger);border-color:var(--color-danger)">?�� ??��</button>
+              <!-- EDIT 모드 버튼들 (기본 숨김) -->
+              <button class="btn-action" id="edit-make-btn" style="display:none">✨ 웹툰 만들기 CTA</button>
+              <button class="btn-action" id="edit-like-btn" style="display:none">❤️ 좋아요 버튼</button>
+              <button class="btn-action" id="edit-delete-btn" style="display:none;color:var(--color-danger);border-color:var(--color-danger)">🗑 삭제</button>
             </div>
           </div>
         </div>
@@ -149,122 +151,122 @@
         <!-- 본문 블록 -->
         <div style="border-top:1px solid var(--color-border);padding-top:40px">
           <div class="detail-body" id="detail-body">
-            <!-- JS가 detail_blocks�??�더 -->
+            <!-- JS가 detail_blocks를 렌더 -->
           </div>
         </div>
       </div>
 
-      <!-- ?�러 ?�태 -->
+      <!-- 에러 상태 -->
       <div id="error-state" style="display:none;padding:60px;text-align:center">
-        <div style="font-size:40px;margin-bottom:16px">?��</div>
-        <p style="color:var(--color-text-3)">?�서�?찾을 ???�습?�다.</p>
-        <a href="./index.html" class="btn-primary" style="display:inline-block;margin-top:16px;text-decoration:none">?�으�??�아가�?/a>
+        <div style="font-size:40px;margin-bottom:16px">😕</div>
+        <p style="color:var(--color-text-3)">도서를 찾을 수 없습니다.</p>
+        <a href="./index.html" class="btn-primary" style="display:inline-block;margin-top:16px;text-decoration:none">홈으로 돌아가기</a>
       </div>
 
     </div><!-- /container -->
 
-    <!-- ?�═????책으�?만든 ?�생 ?�툰 ?�═??-->
+    <!-- ═══ 이 책으로 만든 학생 웹툰 ═══ -->
     <section id="webtoon-section" class="book-section" style="background:var(--color-primary-bg);display:none">
       <div class="container">
         <div class="section-header">
           <div>
             <div class="section-header__label">USER WEBTOONS</div>
-            <h2 class="section-header__title">??책으�?만든 ?�생 ?�툰</h2>
+            <h2 class="section-header__title">이 책으로 만든 학생 웹툰</h2>
           </div>
-          <a class="section-header__more" href="#" id="webtoon-more-link">?�체 <span id="webtoon-total">0</span>�?보기 ??/a>
+          <a class="section-header__more" href="#" id="webtoon-more-link">전체 <span id="webtoon-total">0</span>개 보기 →</a>
         </div>
         <div class="book-scroll" id="webtoon-scroll"></div>
       </div>
     </section>
 
-    <!-- ?�═??관???�서 ?�═??-->
+    <!-- ═══ 관련 도서 ═══ -->
     <section id="related-section" class="book-section" style="display:none">
       <div class="container">
         <div class="section-header">
           <div>
             <div class="section-header__label">RELATED BOOKS</div>
-            <h2 class="section-header__title">관???�서</h2>
+            <h2 class="section-header__title">관련 도서</h2>
           </div>
         </div>
         <div class="book-scroll" id="related-scroll"></div>
       </div>
     </section>
 
-    <!-- ?�═???��? ?�션 ?�═??-->
+    <!-- ═══ 댓글 섹션 ═══ -->
     <section id="comment-section" style="display:none">
       <div class="container" style="padding-bottom:60px">
         <h3 style="font-size:20px;font-weight:800;margin:0 0 24px">
-          ?��? <span id="comment-count-label" style="color:var(--color-primary)">0</span>
+          댓글 <span id="comment-count-label" style="color:var(--color-primary)">0</span>
         </h3>
 
-        <!-- ?��? ?�력 -->
+        <!-- 댓글 입력 -->
         <div class="comment-input-row">
-          <div class="comment-avatar" style="background:var(--color-primary)">?��</div>
+          <div class="comment-avatar" style="background:var(--color-primary)">👤</div>
           <div style="flex:1">
-            <textarea class="form-textarea" id="comment-input" placeholder="??책에 ?�???�각???�눠보세??(v0.3: 로컬 ?�??" rows="3" style="margin-bottom:8px"></textarea>
+            <textarea class="form-textarea" id="comment-input" placeholder="이 책에 대한 생각을 나눠보세요 (v0.3: 로컬 저장)" rows="3" style="margin-bottom:8px"></textarea>
             <div style="display:flex;justify-content:flex-end;gap:8px">
               <button class="btn-outline" style="padding:7px 16px;font-size:13px" id="comment-cancel">취소</button>
-              <button class="btn-primary" style="padding:7px 16px;font-size:13px" id="comment-submit">?��? ?�성</button>
+              <button class="btn-primary" style="padding:7px 16px;font-size:13px" id="comment-submit">댓글 작성</button>
             </div>
           </div>
         </div>
 
-        <!-- ?��? 목록 -->
+        <!-- 댓글 목록 -->
         <div id="comment-list"></div>
       </div>
     </section>
   </main>
 
-  <!-- ?�═??FOOTER ?�═??-->
+  <!-- ═══ FOOTER ═══ -->
   <footer class="site-footer">
     <div class="container">
       <div class="tooning-logo tooning-logo--sm">
         <img src="./images/logo.png" alt="TOONING BOOKS" style="height:28px;display:block;object-fit:contain">
       </div>
-      <p class="site-footer__copy">© 2026 Toonsquare Inc. 교육???�툰 창작 ?�랫??/p>
+      <p class="site-footer__copy">© 2026 Toonsquare Inc. 교육용 웹툰 창작 플랫폼</p>
     </div>
   </footer>
 
-  <!-- ?�═??ADMIN PANEL ?�═??-->
+  <!-- ═══ ADMIN PANEL ═══ -->
   <div class="admin-overlay" id="admin-overlay"></div>
   <aside class="admin-panel" id="admin-panel">
     <div class="admin-panel__header">
       <div>
-        <div style="font-size:11px;color:var(--color-text-3);letter-spacing:1px;margin-bottom:4px">?�️ ADMIN</div>
-        <div class="admin-panel__title">관리자 ?�널</div>
+        <div style="font-size:11px;color:var(--color-text-3);letter-spacing:1px;margin-bottom:4px">⚙️ ADMIN</div>
+        <div class="admin-panel__title">관리자 패널</div>
       </div>
-      <button class="admin-panel__close" id="admin-close-btn">??/button>
+      <button class="admin-panel__close" id="admin-close-btn">✕</button>
     </div>
     <div class="admin-panel__body">
       <div style="background:var(--color-chip);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px">
-        <p style="font-size:14px;font-weight:700;margin:0 0 10px">?�재 ?�서 ?�집</p>
+        <p style="font-size:14px;font-weight:700;margin:0 0 10px">현재 도서 편집</p>
         <button class="btn-primary" style="width:100%;margin-bottom:8px" id="admin-edit-mode-btn">
-          ?�️ EDIT 모드�??�환
+          ✏️ EDIT 모드로 전환
         </button>
         <button class="btn-outline" style="width:100%" id="admin-read-mode-btn">
-          ?�� READ 모드�?보기
+          👁 READ 모드로 보기
         </button>
       </div>
       <div style="background:var(--color-danger-bg);border-radius:var(--radius-lg);padding:16px">
-        <p style="font-size:13px;font-weight:700;color:var(--color-danger);margin:0 0 8px">?�험 ?�역</p>
+        <p style="font-size:13px;font-weight:700;color:var(--color-danger);margin:0 0 8px">위험 영역</p>
         <button class="btn-outline" style="width:100%;color:var(--color-danger);border-color:var(--color-danger);font-size:13px" id="admin-unpublish-btn">
-          ?�� 비공�??�환 (v0.4+)
+          🔒 비공개 전환 (v0.4+)
         </button>
       </div>
     </div>
   </aside>
 
-  <!-- 바�? ?�비 (모바?? -->
+  <!-- 바텀 네비 (모바일) -->
   <nav class="bottom-nav">
-    <a href="./index.html" class="bottom-nav__item"><span>?��</span><span>??/span></a>
-    <a href="category.html" class="bottom-nav__item"><span>?��</span><span>카테고리</span></a>
-    <a href="#" class="bottom-nav__item"><span>?�️</span><span>즐겨찾기</span></a>
-    <a href="#" class="bottom-nav__item"><span>?��</span><span>My</span></a>
+    <a href="./index.html" class="bottom-nav__item"><span>🏠</span><span>홈</span></a>
+    <a href="category.html" class="bottom-nav__item"><span>📚</span><span>카테고리</span></a>
+    <a href="https://tooning.io" target="_blank" class="bottom-nav__fab">✨</a>
+    <a href="#" class="bottom-nav__item"><span>❤️</span><span>즐겨찾기</span></a>
+    <a href="#" class="bottom-nav__item"><span>👤</span><span>My</span></a>
   </nav>
 
-  <script src="./assets/js/data.js?v=19"></script>
-  <script src="./assets/js/renderer.js?v=19"></script>
-  <script src="./assets/js/detail.js?v=19"></script>
+  <script src="./assets/js/data.js?v=20"></script>
+  <script src="./assets/js/renderer.js?v=20"></script>
+  <script src="./assets/js/detail.js?v=20"></script>
 </body>
 </html>
-
