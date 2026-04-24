@@ -15,14 +15,24 @@
 
   /* ── 데이터 로드 ── */
   let books = [], categories = [], webtoons = [];
+  console.group('[TB] 앱 초기화');
+  console.log('1. 데이터 로드 시작');
   try {
     [books, categories, webtoons] = await Promise.all([
       TB.getBooks(), TB.getCategories(), TB.getWebtoons()
     ]);
+    console.log(`2. 데이터 로드 완료 — 도서 ${books.length}권, 카테고리 ${categories.length}개, 웹툰 ${webtoons.length}개`);
   } catch (err) {
-    console.error('데이터 로드 실패', err);
-    document.getElementById('main-content').innerHTML =
-      '<div class="loading-state"><div style="font-size:40px">😕</div><p>데이터를 불러올 수 없습니다.</p></div>';
+    console.error('데이터 로드 실패:', err);
+    const mainEl = document.getElementById('main-content');
+    if (mainEl) mainEl.innerHTML = `
+      <div class="loading-state">
+        <div style="font-size:40px">😕</div>
+        <p>데이터를 불러올 수 없습니다.</p>
+        <p style="font-size:12px;color:var(--color-text-3);margin-top:8px">${err.message}</p>
+        <button onclick="location.reload()" style="margin-top:16px;padding:8px 20px;background:var(--color-primary);color:#fff;border:none;border-radius:20px;cursor:pointer;font-size:14px">새로고침</button>
+      </div>`;
+    console.groupEnd();
     return;
   }
 
@@ -59,11 +69,15 @@
         };
       })
     : (heroByTitle.length ? heroByTitle : (featured.length ? featured : books.slice(0, 6)));
+  console.log('3. 히어로 빌드 시작, 슬라이드 수:', heroBooks.length);
   try { buildHero(heroBooks); } catch(e) { console.error('buildHero 오류:', e); }
 
   /* ── 섹션별 도서 렌더링 ── */
+  console.log('4. 섹션 렌더링 시작');
   const mainContent = document.getElementById('main-content');
   mainContent.innerHTML = buildSectionsHtml(books, categories);
+  console.log('5. 섹션 렌더링 완료');
+  console.groupEnd();
 
   /* ── 웹툰 섹션 ── */
   const wtScroll = document.getElementById('webtoon-scroll');

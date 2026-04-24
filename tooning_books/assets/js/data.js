@@ -37,20 +37,33 @@ function _cacheSet(tab, data) {
   } catch { /* 저장 실패 무시 */ }
 }
 
-/* ── Sheets fetch ── */
+/* ── Sheets fetch (8초 타임아웃) ── */
 async function fetchSheet(tabName) {
   const cached = _cacheGet(tabName);
-  if (cached) return cached;
+  if (cached) { console.log(`[TB] 캐시 사용: ${tabName}`); return cached; }
 
   const url = `https://opensheet.elk.sh/${SHEET_ID}/${encodeURIComponent(tabName)}`;
-  const res  = await fetch(url, { cache: 'no-cache' });
+  console.log(`[TB] Sheets 요청 시작: ${tabName}`);
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+
+  let res;
+  try {
+    res = await fetch(url, { cache: 'no-cache', signal: ctrl.signal });
+  } catch (err) {
+    clearTimeout(timer);
+    throw new Error(`Sheets 네트워크 오류(${tabName}): ${err.message}`);
+  }
+  clearTimeout(timer);
+
   if (!res.ok) throw new Error(`Sheets HTTP ${res.status}: ${tabName}`);
   const data = await res.json();
 
-  /* opensheet는 빈 시트에 [{...빈 객체}]를 반환하기도 함 */
   if (!Array.isArray(data) || data.length === 0) throw new Error(`Sheet empty: ${tabName}`);
-  if (Object.keys(data[0]).length === 0) throw new Error(`Sheet has no headers: ${tabName}`);
+  if (Object.keys(data[0]).length === 0) throw new Error(`Sheet 헤더 없음: ${tabName}`);
 
+  console.log(`[TB] Sheets 로드 완료: ${tabName} (${data.length}행)`);
   _cacheSet(tabName, data);
   return data;
 }
@@ -64,9 +77,13 @@ const BASE_PATH = (() => {
 })();
 
 async function fetchMock(name) {
-  const res = await fetch(`${BASE_PATH}data/${name.toLowerCase()}.mock.json`);
-  if (!res.ok) throw new Error(`Mock not found: ${name}`);
-  return res.json();
+  const url = `${BASE_PATH}data/${name.toLowerCase()}.mock.json`;
+  console.log(`[TB] Mock 로드: ${url}`);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Mock 파일 없음(${res.status}): ${url}`);
+  const data = await res.json();
+  console.log(`[TB] Mock 로드 완료: ${name} (${data.length}행)`);
+  return data;
 }
 
 /* ── 통합 fetch (Sheets → mock fallback) ── */
