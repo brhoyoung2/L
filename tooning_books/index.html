@@ -11,6 +11,19 @@
   <link rel="icon" type="image/png" href="./images/favicon.png">
 </head>
 <body>
+<script>
+/* 진단 스크립트 — 나중에 제거 */
+console.log('[DIAG] body 파싱 완료, 인라인 스크립트 실행됨');
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('[DIAG] DOMContentLoaded 발생');
+});
+window.addEventListener('error', function(e) {
+  console.error('[DIAG] 전역 오류:', e.message, e.filename, e.lineno);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('[DIAG] 미처리 Promise 거부:', e.reason);
+});
+</script>
 
   <!-- ?�═??HEADER ?�═??-->
   <header class="site-header">
